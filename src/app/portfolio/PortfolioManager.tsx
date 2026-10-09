@@ -11,6 +11,7 @@ import {
   buildPositions,
   suggestedRiskRatio,
 } from "@/lib/portfolio";
+import { RiskResult } from "@/lib/risk";
 import { fmt, pct, usePersistentState } from "@/lib/storage";
 
 interface PriceInfo {
@@ -63,7 +64,10 @@ export default function PortfolioManager() {
   const realized = rows.reduce((s, r) => s + r.realized * fx(r.market), 0);
   const defensive = rows.filter((r) => DEFENSIVE.includes(r.assetClass)).reduce((s, r) => s + r.value, 0);
   const riskRatio = total > 0 ? (total - defensive) / total : null;
-  const target = settings.targetRisk ?? suggestedRiskRatio(settings.age);
+  const [risk] = usePersistentState<RiskResult | null>("risk.result.v1", null);
+  // 年齡建議（王伯達）與風險屬性上限（CodeGym 1-2）取較保守者
+  const suggested = Math.min(suggestedRiskRatio(settings.age), risk?.type.riskRatio ?? 1);
+  const target = settings.targetRisk ?? suggested;
   const concentrated = rows.filter((r) => total > 0 && r.value / total > CONCENTRATION_LIMIT);
 
   const byClass = Object.entries(
@@ -174,7 +178,7 @@ export default function PortfolioManager() {
             <input
               className="w-16"
               type="number"
-              placeholder={String(Math.round(suggestedRiskRatio(settings.age) * 100))}
+              placeholder={String(Math.round(suggested * 100))}
               value={settings.targetRisk === null ? "" : Math.round(settings.targetRisk * 100)}
               onChange={(e) =>
                 setSettings({ ...settings, targetRisk: e.target.value === "" ? null : Number(e.target.value) / 100 })
