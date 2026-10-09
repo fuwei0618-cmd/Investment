@@ -96,14 +96,17 @@ export const SECTORS: Sector[] = [
     etf: "XLE",
     phases: ["recovery", "slowdown"],
     auto: {
-      id: "WCESTUS1",
-      label: "美國原油庫存年增（不含戰略儲備）",
-      transform: "yoyPct",
-      unit: "%",
-      judge: (s) =>
-        s.at(-1)!.value < 0
-          ? { favorable: true, text: "庫存下降，有支撐" }
-          : { favorable: false, text: "庫存上升" },
+      // 原油庫存（WCESTUS1）從 FRED 抓不到資料，先用 WTI 油價方向近似
+      id: "DCOILWTICO",
+      label: "WTI 油價（近 3 個月變化）",
+      unit: "美元",
+      judge: (s) => {
+        const prev = valueDaysAgo(s, 90);
+        const diff = prev === undefined ? 0 : s.at(-1)!.value - prev;
+        return diff > 0
+          ? { favorable: true, text: `油價走升（+${diff.toFixed(1)}）` }
+          : { favorable: false, text: `油價走弱（${diff.toFixed(1)}）` };
+      },
     },
   },
   {
