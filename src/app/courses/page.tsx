@@ -8,7 +8,7 @@ export default function CoursesPage() {
       <header>
         <h1 className="text-2xl font-semibold">課程對照</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          每個單元對應到網頁的哪一頁。複習某堂課時，點右邊的標籤就能直接打開對應功能。
+          每個單元對應到網頁的哪一頁，灰字是依文字稿整理的單元重點，括號內是網頁上對應的功能。複習某堂課時，點右邊的標籤就能直接打開。
         </p>
       </header>
       {COURSES.map((c) => (
@@ -31,9 +31,17 @@ export default function CoursesPage() {
                   {ch.units.map((x) => {
                     const m = x.module ? findModule(x.module) : null;
                     return (
-                      <li key={x.code} className="flex items-center gap-2 py-1.5">
+                      <li key={x.code} className="flex items-start gap-2 py-1.5">
                         <span className="w-12 shrink-0 tabular-nums text-zinc-500">{x.code}</span>
-                        <span className="flex-1">{x.title}</span>
+                        <span className="flex-1">
+                          {x.title}
+                          {x.point && (
+                            <span className="mt-0.5 block text-xs text-zinc-500">
+                              {x.point}
+                              {x.feature && <span className="text-blue-600 dark:text-blue-400">（{x.feature}）</span>}
+                            </span>
+                          )}
+                        </span>
                         {m ? (
                           <Link
                             href={`/${m.slug}`}

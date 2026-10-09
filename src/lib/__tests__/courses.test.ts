@@ -29,4 +29,10 @@ describe("課程對照", () => {
       expect(new Set(codes).size, c.name).toBe(codes.length);
     }
   });
+
+  it("已上架的課程每個單元都有依文字稿整理的重點", () => {
+    for (const c of COURSES.filter((c) => c.status === "available"))
+      for (const ch of c.chapters)
+        for (const x of ch.units) expect(x.point, `${c.name} ${x.code}`).toBeTruthy();
+  });
 });
