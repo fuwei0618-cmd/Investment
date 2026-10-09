@@ -116,7 +116,7 @@ function ResultCard({ result }: { result: RiskResult }) {
         建議高風險資產上限 <strong>{Math.round(result.type.riskRatio * 100)}%</strong>
         ，持股頁會再和你的年齡建議比較，取較保守的一邊。
         <Link href="/portfolio" className="ml-1 text-blue-600">
-          前往持股與損益 →
+          前往持股與 ETF 健檢 →
         </Link>
       </p>
       <p className="text-xs text-zinc-500">

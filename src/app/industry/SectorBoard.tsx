@@ -26,7 +26,7 @@ export default function SectorBoard({ signals }: { signals: Record<string, Signa
       <div className="rounded-lg border border-zinc-200 bg-white p-4 text-sm dark:border-zinc-800 dark:bg-zinc-900">
         目前象限：<strong>{phase.name}</strong>（在
         <Link href="/macro" className="mx-1 text-blue-600">
-          總經羅盤
+          全球脈動
         </Link>
         切換）。M平方 建議產業：{phase.sector}
       </div>

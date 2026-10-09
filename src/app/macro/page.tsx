@@ -1,3 +1,4 @@
+import CourseRefs from "@/components/CourseRefs";
 import { Suspense } from "react";
 import { INDICATORS, MANUAL_CHARTS, applyTransform } from "@/lib/macro";
 import { getSeries } from "@/lib/fred";
@@ -50,8 +51,8 @@ export default function MacroPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm text-zinc-500">步驟 3・M平方 總經 2-1、2-2、3-7、4-1；總經X產業X個股 2、5 章</p>
-        <h1 className="text-2xl font-semibold">總經羅盤</h1>
+        <p className="text-sm text-zinc-500">第 8 章</p>
+        <h1 className="text-2xl font-semibold">全球脈動</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           M平方的研究核心是「循環為主、數據為輔」：先看景氣反轉指標，再判斷所在象限，最後決定資產配置。數據預設看年增率。
         </p>
@@ -76,6 +77,7 @@ export default function MacroPage() {
         <h2 className="text-lg font-medium">景氣象限與資產配置</h2>
         <PhasePicker />
       </section>
+      <CourseRefs slug="macro" />
     </div>
   );
 }

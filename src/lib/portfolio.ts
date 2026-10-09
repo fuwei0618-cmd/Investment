@@ -1,4 +1,4 @@
-// 持股與損益：平均成本法計算部位，依王伯達的「高風險 / 防禦」分類算配置比例。
+// 持股與 ETF 健檢：平均成本法計算部位，依王伯達的「高風險 / 防禦」分類算配置比例。
 
 export type Market = "TW" | "US";
 export type AssetClass = "stock" | "reit" | "bond" | "cash" | "commodity" | "crypto";
