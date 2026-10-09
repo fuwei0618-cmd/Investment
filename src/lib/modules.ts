@@ -44,9 +44,9 @@ export const MODULES: AppModule[] = [
     step: 4,
     title: "產業雷達",
     question: "該投什麼產業？",
-    summary: "五大產業觀察指標、三大要領檢核（成長、門檻、競爭）。",
+    summary: "依景氣象限挑板塊，五大產業觀察指標、三大要領檢核（成長、門檻、競爭）。",
     courses: ["總經X產業X個股 3 章"],
-    status: "planned",
+    status: "ready",
   },
   {
     slug: "stock",
