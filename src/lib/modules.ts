@@ -28,7 +28,7 @@ export const MODULES: AppModule[] = [
     question: "我能承擔多少風險？",
     summary: "20 題問卷（0–100 分、五型），對照人生階段建議高風險:防禦比例。",
     courses: ["CodeGym 1-2", "王伯達 4-1、4-2"],
-    status: "planned",
+    status: "ready",
   },
   {
     slug: "macro",
