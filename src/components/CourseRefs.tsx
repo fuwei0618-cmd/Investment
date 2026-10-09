@@ -19,9 +19,12 @@ export default function CourseRefs({ slug }: { slug: string }) {
             </p>
             <ul className="mt-1 space-y-0.5 text-zinc-600 dark:text-zinc-400">
               {units.map((x) => (
-                <li key={x.code}>
-                  <span className="mr-2 inline-block w-12 tabular-nums text-zinc-500">{x.code}</span>
-                  {x.title}
+                <li key={x.code} className="flex gap-2">
+                  <span className="w-12 shrink-0 tabular-nums text-zinc-500">{x.code}</span>
+                  <span>
+                    {x.title}
+                    {x.point && <span className="block text-xs text-zinc-500">{x.point}</span>}
+                  </span>
                 </li>
               ))}
             </ul>
