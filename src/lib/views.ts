@@ -109,3 +109,136 @@ export const CITY: Place[] = [
   { id: "port", icon: "🚢", name: "港口與物流", x: 45, y: 255, sector: "工業", chain: "industrial", does: "把城裡做的東西運到國外，也把原料和商品運進來。", feeds: ["mall", "factory"], companies: "長榮海運、陽明、UPS" },
   { id: "homes", icon: "🏘️", name: "住宅區", x: 300, y: 255, sector: "房地產", does: "你住的地方。你付的房租、電費、網路費、買菜錢，就是上面每一棟建築的收入。", feeds: ["bank", "mall"], companies: "建商、REITs" },
 ];
+
+// 上中下游：每條產業鏈都能切成這三段，同一段的公司，賺錢方式和景氣反應很像。
+export const STAGES = [
+  {
+    stage: "上游" as const,
+    icon: "⛏️",
+    plain: "賣原料、機器、零件給別人做東西",
+    like: "像賣麵粉和烤箱給麵包店",
+    money: "訂單一次很大，景氣一好最先接到單，景氣一差也最先被砍單，股價起伏最大。",
+    watch: "下游客戶的訂單和庫存：客戶東西賣得好，才會跟上游多買。",
+  },
+  {
+    stage: "中游" as const,
+    icon: "🏭",
+    plain: "把原料做成產品，或替品牌代工",
+    like: "像麵包店本身",
+    money: "靠做得多、做得好、做得便宜賺錢。技術領先的少數幾家能賺很多，其他家常在拚價格。",
+    watch: "產能有沒有滿、毛利率（每賣 100 元扣掉成本剩多少）有沒有往上。",
+  },
+  {
+    stage: "下游" as const,
+    icon: "🛍️",
+    plain: "把東西賣到你手上，或提供服務",
+    like: "像便利商店把麵包賣給你",
+    money: "離你最近，靠品牌和通路讓你一直回來買。景氣變化傳到這裡最慢，也比較穩。",
+    watch: "大家還買不買：營收、來客數、訂閱人數。",
+  },
+];
+
+// 台灣 vs 美國：兩邊股市裡，各產業佔多少。
+// 美國：S&P 500，chartrow.com 2026-10-09 估計值。台灣：本站依台積電約佔大盤四成多、電子股為主粗估，只看大概。
+export const MARKET_MIX: { sector: string; us: number; tw: number }[] = [
+  { sector: "資訊科技", us: 39.7, tw: 75 },
+  { sector: "金融", us: 11.5, tw: 10 },
+  { sector: "通訊服務", us: 9.6, tw: 3 },
+  { sector: "醫療保健", us: 9.1, tw: 1 },
+  { sector: "非必需消費", us: 8.9, tw: 2 },
+  { sector: "工業", us: 7.9, tw: 3 },
+  { sector: "必需消費", us: 4.4, tw: 1.5 },
+  { sector: "能源", us: 3.6, tw: 0.5 },
+  { sector: "公用事業", us: 2.0, tw: 0.5 },
+  { sector: "房地產", us: 1.6, tw: 0.5 },
+  { sector: "原材料", us: 1.5, tw: 3 },
+];
+
+export const TW_US = {
+  tw: {
+    flag: "🇹🇼",
+    name: "台灣",
+    strong: "幫全世界「做」東西：晶圓代工、封測、伺服器組裝、零組件。大多在產業鏈的中游。",
+    feel: "台積電一家就約佔台股四成多，大盤漲跌幾乎跟著電子股和 AI 訂單走。",
+    risk: "太集中：電子景氣一轉弱，整個台股都會受影響；客戶多在國外，也要看匯率和國際關係。",
+  },
+  us: {
+    flag: "🇺🇸",
+    name: "美國",
+    strong: "「設計」和「賣」東西：晶片設計、雲端、軟體、平台、品牌、藥廠。大多在上游的設計和下游的品牌。",
+    feel: "科技約佔四成，但醫療、金融、消費、工業也都有一定份量，比較分散。",
+    risk: "大型科技股很貴、佔比越來越高；美國利率和美元一動，全世界股市都會跟著動。",
+  },
+};
+
+// 同一條鏈上，美國公司常是台灣公司的客戶。
+export const TW_US_PAIRS: { us: string; tw: string; how: string; chain: string }[] = [
+  { us: "輝達（設計 AI 晶片）", tw: "台積電（代工製造）", how: "輝達畫設計圖，台積電照圖把晶片做出來。", chain: "semi-ai" },
+  { us: "微軟、亞馬遜（雲端）", tw: "廣達、緯穎（組伺服器）", how: "雲端公司買伺服器蓋資料中心，台灣廠負責組裝。", chain: "cloud-software" },
+  { us: "蘋果（手機品牌）", tw: "鴻海、大立光（組裝、鏡頭）", how: "蘋果設計和賣 iPhone，台灣廠做零件和組裝。", chain: "semi-ai" },
+  { us: "特斯拉（電動車）", tw: "台達電、和大（電源、齒輪）", how: "車廠買零組件，台灣廠是供應商。", chain: "ev" },
+];
+
+// 大趨勢：會影響很多年、跨好幾個產業的長期方向。
+export interface Trend {
+  key: string;
+  icon: string;
+  name: string;
+  what: string;
+  sectors: string[];
+  chains: string[];
+  examples: string;
+  watch: string;
+  careful: string;
+}
+
+export const TRENDS: Trend[] = [
+  {
+    key: "ai", icon: "🤖", name: "AI 與算力",
+    what: "大家都在用 AI，需要大量晶片和資料中心來算，從晶片、伺服器、電力到軟體都被帶動。",
+    sectors: ["資訊科技", "通訊服務", "公用事業"], chains: ["semi-ai", "cloud-software"],
+    examples: "輝達、台積電、廣達、微軟",
+    watch: "大型雲端公司每季說要花多少錢蓋資料中心（資本支出）。",
+    careful: "期待已經很高、股價很貴；如果 AI 賺不到錢，雲端公司少花錢，整條鏈都會受影響。",
+  },
+  {
+    key: "aging", icon: "👵", name: "高齡化",
+    what: "全世界越來越多老人，看病、吃藥、照顧和保險的需求每年都在增加，景氣差也不太會少。",
+    sectors: ["醫療保健", "金融"], chains: ["healthcare", "finance"],
+    examples: "禮來、嬌生、美敦力、國泰金",
+    watch: "新藥有沒有通過、健保和藥價政策。",
+    careful: "新藥研發常失敗，政府壓藥價也會讓藥廠少賺。",
+  },
+  {
+    key: "power", icon: "⚡", name: "缺電與能源轉型",
+    what: "AI 資料中心、電動車都很吃電，各國又要減碳，所以要蓋更多綠電、電網和儲能。",
+    sectors: ["公用事業", "工業", "能源"], chains: ["energy", "industrial"],
+    examples: "台達電、華城、奇異維諾瓦、新紀元能源",
+    watch: "用電量成長、政府能源政策、電價。",
+    careful: "很靠政策和補貼，利率高時蓋電廠的成本也變高。",
+  },
+  {
+    key: "supply", icon: "🌏", name: "供應鏈搬家",
+    what: "美中對立、關稅和疫情經驗，讓工廠從中國搬到美國、墨西哥、東南亞和台灣，叫「去全球化」。",
+    sectors: ["工業", "原材料", "資訊科技"], chains: ["industrial", "semi-ai"],
+    examples: "鴻海、台積電美國廠、卡特彼勒",
+    watch: "關稅新聞、各國蓋廠補貼、海外工廠的進度。",
+    careful: "搬家很花錢，新廠成本比較高，短期可能讓毛利變差。",
+  },
+  {
+    key: "ev", icon: "🔋", name: "電動車與自駕",
+    what: "車子從燒油改成用電，再慢慢變成會自己開的電腦，需要電池、功率晶片和軟體。",
+    sectors: ["非必需消費", "資訊科技", "原材料"], chains: ["ev"],
+    examples: "特斯拉、比亞迪、台達電",
+    watch: "每月電動車賣多少台、電池價格。",
+    careful: "價格戰很兇，補貼一退，銷量和車廠獲利都可能下滑。",
+  },
+  {
+    key: "digital", icon: "📱", name: "數位生活與訂閱",
+    what: "看劇、聽音樂、付款、買東西、上課都搬到手機上，平台按月收費或賺廣告。",
+    sectors: ["通訊服務", "資訊科技", "金融"], chains: ["telecom-media", "cloud-software", "finance"],
+    examples: "Netflix、Google、Visa、中華電信",
+    watch: "訂閱人數、每個用戶付多少錢。",
+    careful: "用戶成長到頂後，靠漲價撐營收；新的競爭者也很多。",
+  },
+];
