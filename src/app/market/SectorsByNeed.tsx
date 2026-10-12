@@ -2,7 +2,7 @@
 
 import { PHASES } from "@/lib/macro";
 import { usePersistentState } from "@/lib/storage";
-import { PHASE_SECTORS } from "@/lib/compass";
+import { PHASE_SECTORS, sectorFits } from "@/lib/compass";
 import type { PhaseKey } from "@/lib/industry";
 import { NEED_SECTORS } from "@/lib/compassData";
 import { chainsOfSector } from "@/lib/chains";
@@ -18,10 +18,10 @@ export default function SectorsByNeed() {
   const [phase] = usePersistentState<string>("macro.phase.v1", "expansion");
   const p = PHASES.find((x) => x.key === phase) ?? PHASES[0];
   const pick = PHASE_SECTORS[p.key as PhaseKey];
-  const fits = (sector: string) => pick.sectors.some((s) => sector.includes(s) || s.includes(sector));
+  const fits = (sector: string) => sectorFits(pick.sectors, sector);
   const sorted = [...NEED_SECTORS].sort((a, b) => Number(fits(b.sector)) - Number(fits(a.sector)));
   return (
-    <div data-tour="sectors" className="space-y-3">
+    <div className="space-y-3">
       <p className="text-sm">
         你在第 3 關選的是<strong className="mx-1">{p.name}</strong>，羅盤建議：<strong>{pick.focus}</strong>。亮起來的是現在比較順風的產業。
       </p>

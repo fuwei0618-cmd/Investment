@@ -24,6 +24,11 @@ export const PHASE_SECTORS: Record<PhaseKey, { focus: string; sectors: string[] 
   },
 };
 
+// 產業名稱比對：「科技」對到「資訊科技」；不能用包含比對，否則「必需消費」會誤中「非必需消費」。
+export function sectorFits(picked: string[], sector: string) {
+  return picked.some((s) => s === sector || (s === "科技" && sector === "資訊科技"));
+}
+
 // Step 7：依獲利紀錄與營收成長選評價方式。
 export type ValuationMethod = "pe" | "pb" | "ps";
 

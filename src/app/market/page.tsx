@@ -16,6 +16,7 @@ import WorldFacets from "./WorldFacets";
 import CompassHub, { HubStep } from "./CompassHub";
 import ChainExplorer from "./ChainExplorer";
 import SectorsByNeed from "./SectorsByNeed";
+import DayMap from "./DayMap";
 import WinnerChecklist from "./WinnerChecklist";
 import ValuationCalc from "./ValuationCalc";
 
@@ -215,7 +216,17 @@ function Tool({ step }: { step: number }) {
         </div>
       );
     case 4:
-      return <SectorsByNeed />;
+      return (
+        <div className="space-y-4">
+          <DayMap />
+          <details>
+            <summary className="cursor-pointer font-medium">看完整產業表（何時好、看什麼、長期趨勢）</summary>
+            <div className="mt-2">
+              <SectorsByNeed />
+            </div>
+          </details>
+        </div>
+      );
     case 5:
       return (
         <div className="space-y-4">
@@ -289,7 +300,7 @@ function Level({ s }: { s: CompassStep }) {
             <AutoAnswer step={s.step as 1 | 2 | 3} />
           </Suspense>
         ) : s.step === 4 ? (
-          <p>看你在第 3 關選的季節，下面亮起來的就是順風產業。</p>
+          <p>看你在第 3 關選的季節，下面標「順風」的就是現在比較有利的產業。</p>
         ) : (
           <p>{HANDS_ON[s.step]}</p>
         )}
