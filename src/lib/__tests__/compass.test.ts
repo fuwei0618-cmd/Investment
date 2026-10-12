@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FRED_VIEW, decide, estimatePhase, pickMethod } from "../compass";
+import { FRED_VIEW, decide, estimatePhase, pickMethod, sectorFits } from "../compass";
 
 describe("投資羅盤", () => {
   it("依成長與物價相對平均判斷象限", () => {
@@ -32,5 +32,13 @@ describe("羅盤數據顯示", () => {
         { date: "2026-09-01", value: 309 },
       ]),
     ).toBeCloseTo(3);
+  });
+});
+
+describe("順風產業比對", () => {
+  it("必需消費不會誤中非必需消費，科技對到資訊科技", () => {
+    expect(sectorFits(["非必需消費"], "必需消費")).toBe(false);
+    expect(sectorFits(["科技"], "資訊科技")).toBe(true);
+    expect(sectorFits(["必需消費"], "必需消費")).toBe(true);
   });
 });
