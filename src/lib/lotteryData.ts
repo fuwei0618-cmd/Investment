@@ -1,5 +1,5 @@
 import { cacheLife } from "next/cache";
-import { Lottery, hasMarketPrice, parseTwse, phaseOf } from "./lottery";
+import { Lottery, parseTwse, phaseOf } from "./lottery";
 
 // 台灣時間的今天
 export function todayTw() {
@@ -22,7 +22,7 @@ export async function getLotteries(): Promise<Lottery[] | null> {
   }
 }
 
-// 已經在交易的股票（增資、轉上市）用最近收盤價當市價。
+// 最近收盤價。FinMind 也有興櫃價，所以初上市、初上櫃也查得到。
 export async function getClose(code: string): Promise<{ price: number; date: string } | null> {
   "use cache";
   try {
@@ -50,6 +50,6 @@ export async function getActive(today: string) {
   if (!list) return null;
   const active = list.map((l) => ({ l, phase: phaseOf(l, today) })).filter((x) => x.phase !== null);
   return Promise.all(
-    active.map(async ({ l, phase }) => ({ l, phase: phase!, close: hasMarketPrice(l, today) ? await getClose(l.code) : null })),
+    active.map(async ({ l, phase }) => ({ l, phase: phase!, close: await getClose(l.code) })),
   );
 }
