@@ -40,6 +40,7 @@ const GROUP_OF = (n: number): HubStep["group"] => (n <= 3 ? "world" : n <= 5 ? "
 // 每關最後「想看更多」的延伸頁。
 const DEEPER: Record<number, { href: string; text: string }> = {
   1: { href: "/macro", text: "更多總經數字與圖表" },
+  2: { href: "/usd", text: "💵 美元專區：現在美元貴不貴" },
   3: { href: "/macro", text: "十張圖逐張看" },
   5: { href: "/industry", text: "產業燈號與三要領打分卡" },
 };
@@ -371,7 +372,12 @@ export default function MarketPage() {
   }));
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">看市場</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-semibold">看市場</h1>
+        <Link href="/usd" className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+          💵 美元專區 →
+        </Link>
+      </div>
       <Suspense fallback={<AskBox auto={ASK_AUTO} facts={{ chains: CHAIN_TITLES }} />}>
         <Ask />
       </Suspense>
