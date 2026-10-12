@@ -156,7 +156,7 @@ export default function WorldFacets({ us }: { us: React.ReactNode }) {
   const [f, setF] = useState<(typeof FACETS)[number]["key"]>("us");
   return (
     <div className="space-y-3">
-      <div className="flex gap-1 overflow-x-auto text-xs">
+      <div data-tour="facets" className="flex gap-1 overflow-x-auto text-xs">
         {FACETS.map((x) => (
           <button
             key={x.key}

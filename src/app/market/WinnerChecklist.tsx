@@ -11,7 +11,7 @@ export default function WinnerChecklist() {
   const groups = [...new Set(CHECKLIST.map((c) => c.group))];
   const passed = CHECKLIST.filter((c) => state.checks[c.key]).length;
   return (
-    <div className="space-y-3 text-sm">
+    <div data-tour="checklist" className="space-y-3 text-sm">
       <label className="flex items-center gap-2">
         <span className="shrink-0">公司</span>
         <input

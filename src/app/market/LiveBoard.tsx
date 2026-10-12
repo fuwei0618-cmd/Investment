@@ -113,12 +113,12 @@ export default function LiveBoard({
   const ot = overlayId ? TILES.find((x) => x.id === overlayId) : undefined;
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div data-tour="cards" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {ready.map((id, i) => (
           <Card key={id} id={id} series={data[id]!} active={id === sel} onClick={() => setSel(id)} delay={i * 60} />
         ))}
       </div>
-      <div key={sel} className="animate-rise space-y-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
+      <div key={sel} data-tour="chart" className="animate-rise space-y-2 rounded-lg border border-zinc-200 p-3 dark:border-zinc-800">
         <div className="flex items-start justify-between gap-2">
           <p className="font-medium">{t.name}</p>
           {overlayId && sel === "SP500" && (

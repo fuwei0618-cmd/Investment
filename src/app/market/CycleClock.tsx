@@ -65,7 +65,7 @@ export default function CycleClock({
 
   return (
     <div className="space-y-3">
-      <div className="relative mx-auto max-w-sm">
+      <div data-tour="clock" className="relative mx-auto max-w-sm">
         <svg viewBox={`0 0 ${S} ${S}`} className="w-full select-none">
           {CORNERS.map((c) => (
             <g key={c.key} onClick={() => setPicked(c.key)} className="cursor-pointer">
@@ -132,7 +132,7 @@ export default function CycleClock({
         藍點是過去 2 年景氣走過的路，會動的大點是現在。景氣像時鐘一樣逆時針轉：復甦 → 擴張 → 趨緩 → 衰退，再回到復甦。
       </p>
       {compassPhase && (
-        <div className={`rounded-md p-3 text-sm ${agree ? "bg-emerald-50 dark:bg-emerald-950" : "bg-amber-50 dark:bg-amber-950"}`}>
+        <div data-tour="rulers" className={`rounded-md p-3 text-sm ${agree ? "bg-emerald-50 dark:bg-emerald-950" : "bg-amber-50 dark:bg-amber-950"}`}>
           <p className="font-medium">兩把尺</p>
           <p>
             看「成長＋物價」（羅盤）：<strong>{nameOf(compassPhase)}</strong>；看「成長＋加速度」（時鐘）：

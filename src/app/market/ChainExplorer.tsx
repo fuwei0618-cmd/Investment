@@ -55,7 +55,7 @@ export default function ChainExplorer() {
           <span className="block font-medium">{chain.oneLine}</span>
         </p>
 
-        <ol className="space-y-0">
+        <ol data-tour="chain" className="space-y-0">
           {chain.segments.map((x, i) => (
             <li key={x.name}>
               {i > 0 && <div className="ml-5 h-3 w-0.5 bg-zinc-300 dark:bg-zinc-700" />}
@@ -90,7 +90,7 @@ export default function ChainExplorer() {
             <span className="text-zinc-500">往哪裡發展：</span>
             {s.trend}
           </p>
-          <div>
+          <div data-tour="companies">
             <p className="mb-1 text-zinc-500">由哪些公司組成（點一家，到第 6 關檢查它是不是贏家）：</p>
             <div className="flex flex-wrap gap-1.5">
               {s.companies.map((c) => (

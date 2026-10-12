@@ -24,7 +24,7 @@ export default function WhatIf({ latest }: { latest: Record<string, number | nul
   }, [sc]);
 
   return (
-    <div className="space-y-3">
+    <div data-tour="whatif" className="space-y-3">
       <div className="flex flex-wrap gap-1.5">
         {SCENARIOS.map((s) => (
           <button

@@ -73,3 +73,16 @@ select {
 .animate-grow {
   animation: grow 900ms ease-out both;
 }
+
+@keyframes tour-pulse {
+  50% {
+    outline-color: rgb(251 191 36 / 0.35);
+  }
+}
+
+.tour-focus {
+  outline: 3px solid rgb(251 191 36);
+  outline-offset: 4px;
+  border-radius: 0.5rem;
+  animation: tour-pulse 1.4s ease-in-out infinite;
+}
