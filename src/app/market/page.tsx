@@ -12,6 +12,9 @@ import { getIndproYoy, getLiveSeries } from "@/lib/liveData";
 import LiveBoard from "./LiveBoard";
 import CycleClock from "./CycleClock";
 import WhatIf from "./WhatIf";
+import WorldFacets from "./WorldFacets";
+import CompassHub, { HubStep } from "./CompassHub";
+import ChainExplorer from "./ChainExplorer";
 import SectorsByNeed from "./SectorsByNeed";
 import WinnerChecklist from "./WinnerChecklist";
 import ValuationCalc from "./ValuationCalc";
@@ -28,11 +31,15 @@ const QUESTION: Record<number, string> = {
   8: "該買還是不買？",
 };
 
-const GROUPS = [
-  { name: "看世界", plain: "先看大環境：景氣好不好、錢多不多", steps: [1, 2, 3], deeper: { href: "/macro", text: "更多總經數字與圖表" } },
-  { name: "看產業", plain: "再挑順風、有前途的產業", steps: [4, 5], deeper: { href: "/industry", text: "產業燈號與三要領打分卡" } },
-  { name: "看公司", plain: "最後挑公司、算價格、決定買賣", steps: [6, 7, 8], deeper: null },
-];
+const SHORT: Record<number, string> = { 1: "景氣", 2: "資金", 3: "季節", 4: "順風產業", 5: "產業鏈", 6: "贏家公司", 7: "值多少", 8: "買或賣" };
+const GROUP_OF = (n: number): HubStep["group"] => (n <= 3 ? "world" : n <= 5 ? "industry" : "company");
+
+// 每關最後「想看更多」的延伸頁。
+const DEEPER: Record<number, { href: string; text: string }> = {
+  1: { href: "/macro", text: "更多總經數字與圖表" },
+  3: { href: "/macro", text: "十張圖逐張看" },
+  5: { href: "/industry", text: "產業燈號與三要領打分卡" },
+};
 
 const HANDS_ON: Record<number, string> = {
   5: "換你動手：挑一個你有興趣的產業，用下面三個問題檢查。",
@@ -78,7 +85,7 @@ async function AutoAnswer({ step }: { step: 1 | 2 | 3 }) {
 
 // 〈15單元看懂經濟運行〉補充的單元，和羅盤單元一起列在每關最後。
 const MACRO_UNITS: Record<number, string> = {
-  1: "1-1、1-3、2-3、4-1",
+  1: "1-1、1-3、2-3、2-4、4-1",
   2: "3-1、3-5、3-6、3-7",
   3: "2-1、2-2、3-7",
 };
@@ -170,9 +177,13 @@ function Tool({ step }: { step: number }) {
   switch (step) {
     case 1:
       return (
-        <Suspense fallback={<Loading />}>
-          <Board level={1} overlay="PAYEMS" />
-        </Suspense>
+        <WorldFacets
+          us={
+            <Suspense fallback={<Loading />}>
+              <Board level={1} overlay="PAYEMS" />
+            </Suspense>
+          }
+        />
       );
     case 2:
       return (
@@ -207,7 +218,9 @@ function Tool({ step }: { step: number }) {
       return <SectorsByNeed />;
     case 5:
       return (
-        <div className="space-y-2">
+        <div className="space-y-4">
+          <ChainExplorer />
+          <p className="font-medium">用三個問題檢查任何產業</p>
           <ol className="list-inside list-decimal space-y-1">
             <li>市場夠大嗎？未來三年每年成長超過 10%</li>
             <li>別人很難搶嗎？有關鍵材料、技術或平台，至少一項</li>
@@ -258,10 +271,7 @@ function Tool({ step }: { step: number }) {
 
 function Level({ s }: { s: CompassStep }) {
   return (
-    <section
-      id={`level-${s.step}`}
-      className="scroll-mt-4 space-y-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
-    >
+    <section className="space-y-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <header className="flex gap-3">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-400 font-semibold text-zinc-900">
           {s.step}
@@ -318,51 +328,26 @@ function Level({ s }: { s: CompassStep }) {
         課程：總經X產業X個股 {s.units.join("、")}
         {MACRO_UNITS[s.step] && `；15單元看懂經濟運行 ${MACRO_UNITS[s.step]}`}
       </p>
+      {DEEPER[s.step] && (
+        <Link href={DEEPER[s.step].href} className="block text-sm text-blue-600">
+          想看更多：{DEEPER[s.step].text} →
+        </Link>
+      )}
     </section>
   );
 }
 
 export default function MarketPage() {
+  const steps: HubStep[] = COMPASS_STEPS.map((s) => ({
+    step: s.step,
+    short: SHORT[s.step],
+    question: QUESTION[s.step],
+    group: GROUP_OF(s.step),
+  }));
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold">看市場</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          8 關由大到小：先看世界，再挑產業，最後挑公司。每關先給答案，想知道為什麼再點開。
-        </p>
-        <div className="rounded-lg bg-zinc-900 p-4 text-sm text-zinc-100 dark:bg-zinc-800">
-          <p className="font-medium">🐕 一句話記住：經濟是主人，股價是狗</p>
-          <p className="mt-1 text-zinc-300">
-            狗（股價）會跑前跑後、亂叫（新聞），但最後一定跟著主人（經濟）走。所以先看主人往哪走（第 1 關），再看牽繩的人在放錢還是收錢（第 2 關），就知道現在是哪一季（第 3 關）。
-          </p>
-          <p className="mt-1 text-xs text-zinc-400">M平方〈15單元看懂經濟運行〉1-1；8 關架構來自〈總經X產業X個股〉動態投資思維羅盤。</p>
-        </div>
-        <nav className="flex flex-wrap gap-1 text-sm">
-          {COMPASS_STEPS.map((s) => (
-            <a key={s.step} href={`#level-${s.step}`} className="rounded bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
-              {s.step}. {QUESTION[s.step]}
-            </a>
-          ))}
-        </nav>
-      </header>
-      {GROUPS.map((g) => (
-        <div key={g.name} className="space-y-4">
-          <h2 className="text-sm font-medium text-zinc-500">
-            {g.name}・{g.plain}
-          </h2>
-          {g.steps.map((n) => (
-            <Level key={n} s={COMPASS_STEPS[n - 1]} />
-          ))}
-          {g.deeper && (
-            <p className="text-sm">
-              想看更多？
-              <Link href={g.deeper.href} className="ml-1 text-blue-600">
-                {g.deeper.text} →
-              </Link>
-            </p>
-          )}
-        </div>
-      ))}
+    <div className="space-y-4">
+      <h1 className="text-2xl font-semibold">看市場</h1>
+      <CompassHub steps={steps} panels={COMPASS_STEPS.map((s) => <Level key={s.step} s={s} />)} />
       <CourseRefs slug="compass" />
     </div>
   );
