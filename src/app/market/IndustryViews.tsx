@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CITY, GICS, GICS_NOTES, LIFE, Place } from "@/lib/views";
+import { CITY, GICS, GICS_NOTES, LIFE, MARKET_MIX, Place, STAGES, TRENDS, TW_US, TW_US_PAIRS } from "@/lib/views";
 import { NEED_SECTORS } from "@/lib/compassData";
 import { CHAINS } from "@/lib/chains";
 import { usePersistentState } from "@/lib/storage";
@@ -12,6 +12,9 @@ const VIEWS = [
   { key: "day", label: "🕗 你的一天" },
   { key: "city", label: "🏙️ 一座城市" },
   { key: "life", label: "🍚 食衣住行" },
+  { key: "stage", label: "🔗 上中下游" },
+  { key: "twus", label: "⚖️ 台灣vs美國" },
+  { key: "trend", label: "🚀 大趨勢" },
   { key: "gics", label: "📋 課程標準" },
 ] as const;
 type ViewKey = (typeof VIEWS)[number]["key"];
@@ -192,6 +195,198 @@ function LifeView() {
   );
 }
 
+// 上中下游：把每條產業鏈的同一段放在一起比。
+function StageView() {
+  const [stage, setStage] = useState<(typeof STAGES)[number]["stage"]>("上游");
+  const st = STAGES.find((x) => x.stage === stage)!;
+  return (
+    <div className="space-y-3">
+      <p>每條產業鏈都能切成上游、中游、下游三段。同一段的公司，不管在哪個產業，賺錢方式和遇到景氣的反應都很像。</p>
+      <div className="flex items-stretch gap-1">
+        {STAGES.map((x, i) => (
+          <div key={x.stage} className="flex flex-1 items-center gap-1">
+            <button
+              onClick={() => setStage(x.stage)}
+              className={`flex flex-1 flex-col items-center rounded-lg border py-2 transition-transform ${
+                x.stage === stage ? "scale-105 border-amber-400 bg-amber-50 dark:bg-amber-950" : "border-zinc-200 dark:border-zinc-800"
+              }`}
+            >
+              <span className="text-2xl">{x.icon}</span>
+              <span className="text-xs font-medium">{x.stage}</span>
+            </button>
+            {i < STAGES.length - 1 && <span className="text-zinc-400">→</span>}
+          </div>
+        ))}
+      </div>
+      <div key={stage} className="animate-rise space-y-3">
+        <div className="space-y-1 rounded-md bg-zinc-50 p-3 dark:bg-zinc-900">
+          <p className="font-medium">
+            {st.plain}
+            <span className="ml-1.5 text-xs font-normal text-zinc-500">{st.like}</span>
+          </p>
+          <p>
+            <span className="text-zinc-500">怎麼賺錢：</span>
+            {st.money}
+          </p>
+          <p>
+            <span className="text-zinc-500">要看什麼：</span>
+            {st.watch}
+          </p>
+        </div>
+        <p className="text-xs text-zinc-500">各產業的{stage}：</p>
+        <ul className="space-y-2">
+          {CHAINS.flatMap((c) =>
+            c.segments
+              .filter((g) => g.stage === stage)
+              .map((g) => (
+                <li key={c.key + g.name} className="space-y-1 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
+                  <p className="font-medium">
+                    {g.name}
+                    <span className="ml-1.5 text-xs font-normal text-zinc-500">{c.title}</span>
+                    <Tailwind sector={c.sector} />
+                  </p>
+                  <p>{g.does}</p>
+                  <p className="text-xs text-zinc-500">
+                    {g.companies.map((co) => `${co.name}${co.market === "台" ? "🇹🇼" : co.market === "美" ? "🇺🇸" : ""}`).join("、")}
+                  </p>
+                  <ChainLink chain={c.key} />
+                </li>
+              )),
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// 台灣 vs 美國：兩邊股市由哪些產業組成、各強在哪。
+function TwUsView() {
+  const max = Math.max(...MARKET_MIX.flatMap((m) => [m.us, m.tw]));
+  return (
+    <div className="space-y-3">
+      <p>同樣叫「股市」，台灣和美國長得很不一樣。先看兩邊各產業佔多少，就知道大盤漲跌主要跟著誰。</p>
+      <div className="grid grid-cols-2 gap-2">
+        {[TW_US.tw, TW_US.us].map((m) => (
+          <div key={m.name} className="space-y-1 rounded-md border border-zinc-200 p-3 text-xs dark:border-zinc-800">
+            <p className="text-sm font-medium">
+              {m.flag} {m.name}
+            </p>
+            <p>
+              <span className="text-zinc-500">強項：</span>
+              {m.strong}
+            </p>
+            <p>
+              <span className="text-zinc-500">特色：</span>
+              {m.feel}
+            </p>
+            <p>
+              <span className="text-zinc-500">要小心：</span>
+              {m.risk}
+            </p>
+          </div>
+        ))}
+      </div>
+      <div className="space-y-1.5">
+        <p className="flex gap-3 text-xs text-zinc-500">
+          <span>各產業佔整個股市幾 %</span>
+          <span>
+            <span className="text-emerald-600">■</span> 台灣
+          </span>
+          <span>
+            <span className="text-blue-600">■</span> 美國
+          </span>
+        </p>
+        {MARKET_MIX.map((m, i) => (
+          <div key={m.sector} className="animate-rise grid grid-cols-[4.5rem_1fr] items-center gap-2 text-xs" style={{ animationDelay: `${i * 40}ms` }}>
+            <span>{m.sector}</span>
+            <span className="space-y-0.5">
+              <span className="flex items-center gap-1">
+                <span className="h-2 rounded-full bg-emerald-500" style={{ width: `${(m.tw / max) * 85}%` }} />
+                <span className="text-zinc-500">{m.tw}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 rounded-full bg-blue-500" style={{ width: `${(m.us / max) * 85}%` }} />
+                <span className="text-zinc-500">{m.us}</span>
+              </span>
+            </span>
+          </div>
+        ))}
+        <p className="text-xs text-zinc-500">美國是 S&amp;P 500 在 2026 年 10 月的估計；台灣是本站依台積電約佔四成多、電子股為主粗估的，只看大概。</p>
+      </div>
+      <p className="font-medium">同一條鏈上，美國公司常是台灣公司的客戶</p>
+      <ul className="space-y-2">
+        {TW_US_PAIRS.map((p) => (
+          <li key={p.us} className="space-y-1 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
+            <p className="flex flex-wrap items-center gap-1.5">
+              <span>🇺🇸 {p.us}</span>
+              <span className="text-zinc-400">⇄</span>
+              <span>🇹🇼 {p.tw}</span>
+            </p>
+            <p className="text-zinc-600 dark:text-zinc-400">{p.how}</p>
+            <ChainLink chain={p.chain} />
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-zinc-500">所以美國大客戶說要多花錢（例如多蓋資料中心），常常是台灣供應商的好消息。</p>
+    </div>
+  );
+}
+
+// 大趨勢：會影響很多年、跨好幾個產業的長期方向。
+function TrendView() {
+  const [open, setOpen] = useState("ai");
+  const t = TRENDS.find((x) => x.key === open)!;
+  return (
+    <div className="space-y-3">
+      <p>景氣季節幾年就換一輪，但有些方向會走十年以上，而且一次帶動好幾個產業。點一個趨勢，看它推動了誰。</p>
+      <div className="grid grid-cols-3 gap-2">
+        {TRENDS.map((x) => (
+          <button
+            key={x.key}
+            onClick={() => setOpen(x.key)}
+            className={`flex flex-col items-center rounded-lg border px-1 py-2 transition-transform ${
+              x.key === open ? "scale-105 border-amber-400 bg-amber-50 dark:bg-amber-950" : "border-zinc-200 dark:border-zinc-800"
+            }`}
+          >
+            <span className="text-2xl">{x.icon}</span>
+            <span className="text-xs font-medium">{x.name}</span>
+          </button>
+        ))}
+      </div>
+      <div key={open} className="animate-rise space-y-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
+        <p>{t.what}</p>
+        <p className="flex flex-wrap items-center gap-1">
+          <span className="text-zinc-500">帶動的產業：</span>
+          {t.sectors.map((s) => (
+            <span key={s} className="rounded bg-zinc-100 px-1.5 text-xs dark:bg-zinc-800">
+              {s}
+              <Tailwind sector={s} />
+            </span>
+          ))}
+        </p>
+        <p>
+          <span className="text-zinc-500">例子：</span>
+          {t.examples}
+        </p>
+        <p>
+          <span className="text-zinc-500">要看什麼：</span>
+          {t.watch}
+        </p>
+        <p>
+          <span className="text-zinc-500">要小心：</span>
+          {t.careful}
+        </p>
+        <div className="flex flex-col items-start gap-1">
+          {t.chains.map((c) => (
+            <ChainLink key={c} chain={c} />
+          ))}
+        </div>
+      </div>
+      <p className="text-xs text-zinc-500">趨勢對，不代表股價一定對：大家都看好的東西常常已經很貴，還是要走完第 6、7 關。</p>
+    </div>
+  );
+}
+
 // 課程講的產業分類標準 GICS：11 個板塊、25 個行業組。
 function GicsView() {
   const [open, setOpen] = useState<string | null>(null);
@@ -256,7 +451,7 @@ function GicsView() {
   );
 }
 
-// 第 4 關：同一群產業，換四種角度看。
+// 第 4 關：同一群產業，換七種角度看。
 export default function IndustryViews() {
   const [view, setView] = usePersistentState<ViewKey>("market.industryView.v1", "day");
   const { phaseName, focus } = useTailwind();
@@ -279,7 +474,21 @@ export default function IndustryViews() {
         第 3 關的季節是「{phaseName}」，羅盤建議：{focus}。標「順風」的就是現在比較有利的產業。
       </p>
       <div key={view} className="animate-rise">
-        {view === "day" ? <DayMap /> : view === "city" ? <CityMap /> : view === "life" ? <LifeView /> : <GicsView />}
+        {view === "day" ? (
+          <DayMap />
+        ) : view === "city" ? (
+          <CityMap />
+        ) : view === "life" ? (
+          <LifeView />
+        ) : view === "stage" ? (
+          <StageView />
+        ) : view === "twus" ? (
+          <TwUsView />
+        ) : view === "trend" ? (
+          <TrendView />
+        ) : (
+          <GicsView />
+        )}
       </div>
     </div>
   );

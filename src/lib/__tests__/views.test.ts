@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CITY, GICS, LIFE } from "../views";
+import { CITY, GICS, LIFE, MARKET_MIX, TRENDS, TW_US_PAIRS } from "../views";
 import { CHAINS } from "../chains";
 import { NEED_SECTORS } from "../compassData";
 
@@ -25,5 +25,22 @@ describe("產業的幾種看法", () => {
       if (c.chain) expect(chainKeys.has(c.chain)).toBe(true);
       for (const f of c.feeds) expect(ids.has(f)).toBe(true);
     }
+  });
+});
+
+describe("新增的三種角度", () => {
+  it("台灣、美國比重的產業都存在，加起來約 100", () => {
+    const names = NEED_SECTORS.map((n) => n.sector);
+    const keys = CHAINS.map((c) => c.key);
+    for (const m of MARKET_MIX) expect(names).toContain(m.sector);
+    const us = MARKET_MIX.reduce((a, m) => a + m.us, 0);
+    const tw = MARKET_MIX.reduce((a, m) => a + m.tw, 0);
+    expect(Math.abs(us - 100)).toBeLessThan(2);
+    expect(Math.abs(tw - 100)).toBeLessThan(2);
+    for (const t of TRENDS) {
+      for (const s of t.sectors) expect(names).toContain(s);
+      for (const c of t.chains) expect(keys).toContain(c);
+    }
+    for (const p of TW_US_PAIRS) expect(keys).toContain(p.chain);
   });
 });
