@@ -29,9 +29,12 @@ export default function Nav() {
           投資羅盤
         </Link>
         <div className="flex items-center gap-1 overflow-x-auto text-sm">
-          {MODULES.map((m) =>
-            item(`/${m.slug}`, `${m.group === "agent" ? m.order + ". " : ""}${m.title}`, m.status === "planned"),
-          )}
+          {MODULES.map((m) => (
+            <span key={m.slug} className="contents">
+              {item(`/${m.slug}`, `${m.group === "agent" ? m.order + ". " : ""}${m.title}`, m.status === "planned")}
+              {m.group === "compass" && <span className="mx-1 h-4 w-px shrink-0 bg-zinc-300 dark:bg-zinc-700" />}
+            </span>
+          ))}
           <span className="mx-1 h-4 w-px shrink-0 bg-zinc-300 dark:bg-zinc-700" />
           {item("/courses", "課程對照")}
         </div>
