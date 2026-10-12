@@ -10,7 +10,7 @@ function findTarget(target: string, level: number, tries = 15): Promise<HTMLElem
   return new Promise((resolve) => {
     const look = (n: number) => {
       const el = document.querySelector<HTMLElement>(
-        target === "compass" || target === "chips" ? `[data-tour="${target}"]` : `#hub-panel[data-level="${level}"] [data-tour="${target}"]`,
+        ["compass", "chips", "ask"].includes(target) ? `[data-tour="${target}"]` : `#hub-panel[data-level="${level}"] [data-tour="${target}"]`,
       );
       if (el || n <= 0) resolve(el);
       else setTimeout(() => look(n - 1), 200);

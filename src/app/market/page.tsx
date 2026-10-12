@@ -18,6 +18,8 @@ import ChainExplorer from "./ChainExplorer";
 import SectorsByNeed from "./SectorsByNeed";
 import WinnerChecklist from "./WinnerChecklist";
 import ValuationCalc from "./ValuationCalc";
+import AskBox from "./AskBox";
+import Terms from "@/components/Terms";
 
 // 每關用一個白話問題當標題，課程名稱放旁邊。
 const QUESTION: Record<number, string> = {
@@ -167,7 +169,9 @@ function Watch({ w }: { w: WatchItem }) {
         )}
       </div>
       <p className="text-zinc-600 dark:text-zinc-400">{w.plain}</p>
-      <p className="mt-1">怎麼看：{w.rule}</p>
+      <p className="mt-1">
+        怎麼看：<Terms text={w.rule} />
+      </p>
       {w.source && <p className="text-xs text-zinc-500">去哪找：{w.source}</p>}
     </li>
   );
@@ -258,7 +262,9 @@ function Tool({ step }: { step: number }) {
             <summary className="cursor-pointer text-zinc-500">合理倍數怎麼抓</summary>
             <ul className="mt-1 list-inside list-disc text-zinc-600 dark:text-zinc-400">
               {FAIR_MULTIPLE.map((f) => (
-                <li key={f}>{f}</li>
+                <li key={f}>
+                  <Terms text={f} />
+                </li>
               ))}
             </ul>
           </details>
@@ -307,10 +313,14 @@ function Level({ s }: { s: CompassStep }) {
           <p>{s.why}</p>
           <ul className="list-inside list-disc">
             {s.decide.map((d) => (
-              <li key={d}>{d}</li>
+              <li key={d}>
+                <Terms text={d} />
+              </li>
             ))}
           </ul>
-          <p className="rounded-md bg-amber-50 p-2 dark:bg-amber-950">課程案例：{s.example}</p>
+          <p className="rounded-md bg-amber-50 p-2 dark:bg-amber-950">
+            課程案例：<Terms text={s.example} />
+          </p>
         </div>
       </details>
 
@@ -347,6 +357,7 @@ export default function MarketPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">看市場</h1>
+      <AskBox />
       <CompassHub steps={steps} panels={COMPASS_STEPS.map((s) => <Level key={s.step} s={s} />)} />
       <CourseRefs slug="compass" />
     </div>
