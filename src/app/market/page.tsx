@@ -15,8 +15,7 @@ import WhatIf from "./WhatIf";
 import WorldFacets from "./WorldFacets";
 import CompassHub, { HubStep } from "./CompassHub";
 import ChainExplorer from "./ChainExplorer";
-import SectorsByNeed from "./SectorsByNeed";
-import DayMap from "./DayMap";
+import IndustryViews from "./IndustryViews";
 import WinnerChecklist from "./WinnerChecklist";
 import ValuationCalc from "./ValuationCalc";
 import AskBox from "./AskBox";
@@ -235,17 +234,7 @@ function Tool({ step }: { step: number }) {
         </div>
       );
     case 4:
-      return (
-        <div className="space-y-4">
-          <DayMap />
-          <details>
-            <summary className="cursor-pointer font-medium">看完整產業表（何時好、看什麼、長期趨勢）</summary>
-            <div className="mt-2">
-              <SectorsByNeed />
-            </div>
-          </details>
-        </div>
-      );
+      return <IndustryViews />;
     case 5:
       return (
         <div className="space-y-4">
