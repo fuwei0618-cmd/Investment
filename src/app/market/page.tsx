@@ -374,9 +374,14 @@ export default function MarketPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">看市場</h1>
-        <Link href="/usd" className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
-          💵 美元專區 →
-        </Link>
+        <div className="flex gap-1.5">
+          <Link href="/usd" className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+            💵 美元
+          </Link>
+          <Link href="/lottery" className="rounded-full bg-amber-50 px-3 py-1.5 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            🎟️ 抽籤
+          </Link>
+        </div>
       </div>
       <Suspense fallback={<AskBox auto={ASK_AUTO} facts={{ chains: CHAIN_TITLES }} />}>
         <Ask />
