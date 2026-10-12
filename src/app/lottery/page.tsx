@@ -31,7 +31,7 @@ async function Board() {
       {PHASES.map((ph) => {
         const items = rows
           .filter((r) => r.phase === ph.key)
-          .map((r) => ({ ...r, v: judge(r.l, r.close?.price ?? null) }))
+          .map((r) => ({ ...r, v: judge(r.l, r.close?.price ?? null, today) }))
           .sort((a, b) => order[a.v.tone] - order[b.v.tone] || a.l.end.localeCompare(b.l.end));
         return (
           <section key={ph.key} className="space-y-2">

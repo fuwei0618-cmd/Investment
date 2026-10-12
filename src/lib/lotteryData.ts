@@ -50,6 +50,6 @@ export async function getActive(today: string) {
   if (!list) return null;
   const active = list.map((l) => ({ l, phase: phaseOf(l, today) })).filter((x) => x.phase !== null);
   return Promise.all(
-    active.map(async ({ l, phase }) => ({ l, phase: phase!, close: hasMarketPrice(l) ? await getClose(l.code) : null })),
+    active.map(async ({ l, phase }) => ({ l, phase: phase!, close: hasMarketPrice(l, today) ? await getClose(l.code) : null })),
   );
 }

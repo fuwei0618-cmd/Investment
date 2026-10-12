@@ -53,8 +53,8 @@ export function parseTwse(json: { fields?: string[]; data?: string[][] }): Lotte
     .filter((x) => x.start !== "");
 }
 
-// 還沒上市（初上市、初上櫃）的股票沒有市價。
-export const hasMarketPrice = (l: Lottery) => !l.market.startsWith("初");
+// 初上市、初上櫃的股票要到上市那天才有市價。
+export const hasMarketPrice = (l: Lottery, today: string) => !l.market.startsWith("初") || (l.listing !== "" && today >= l.listing);
 
 export type Phase = "open" | "soon" | "drawn";
 
@@ -75,10 +75,10 @@ export interface Verdict {
   tone: "good" | "meh" | "bad" | "unknown";
 }
 
-export function judge(l: Lottery, marketPrice: number | null): Verdict {
+export function judge(l: Lottery, marketPrice: number | null, today: string): Verdict {
   const cost = l.price !== null ? Math.round(l.price * l.shares) : null;
   if (l.price === null || marketPrice === null) {
-    return { gain: null, pct: null, cost, breakEven: null, word: hasMarketPrice(l) ? "暫時查不到市價" : "還沒上市，沒有市價可比", tone: "unknown" };
+    return { gain: null, pct: null, cost, breakEven: null, word: hasMarketPrice(l, today) ? "暫時查不到市價" : "還沒上市，沒有市價可比", tone: "unknown" };
   }
   const gain = Math.round((marketPrice - l.price) * l.shares);
   const pct = ((marketPrice - l.price) / l.price) * 100;

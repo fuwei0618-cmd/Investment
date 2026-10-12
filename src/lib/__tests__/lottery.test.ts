@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { judge, parseTwse, phaseOf, rocToIso } from "../lottery";
+import { hasMarketPrice, judge, parseTwse, phaseOf, rocToIso } from "../lottery";
 
 const json = {
   fields: ["序號", "抽籤日期", "證券名稱", "證券代號", "發行市場", "申購開始日", "申購結束日", "承銷股數", "實際承銷股數", "承銷價(元)", "實際承銷價(元)", "撥券日期(上市、上櫃日期)", "主辦券商", "申購股數", "總承銷金額(元)", "總合格件", "中籤率(%)", "取消公開抽籤 "],
@@ -34,14 +34,21 @@ describe("股票抽籤", () => {
     expect(phaseOf(b, "2026-11-30")).toBeNull();
   });
 
+  it("初上櫃到上市那天才有市價", () => {
+    const [a, b] = parseTwse(json);
+    expect(hasMarketPrice(a, "2026-10-28")).toBe(false);
+    expect(hasMarketPrice(a, "2026-10-29")).toBe(true);
+    expect(hasMarketPrice(b, "2026-10-01")).toBe(true);
+  });
+
   it("算一張賺多少、划算的中籤率", () => {
     const [a, b] = parseTwse(json);
-    expect(judge(a, null).tone).toBe("unknown");
-    const v = judge(b, 70);
+    expect(judge(a, null, "2026-10-13").tone).toBe("unknown");
+    const v = judge(b, 70, "2026-10-13");
     expect(v.gain).toBe(17500);
     expect(v.tone).toBe("good");
     expect(v.breakEven!).toBeCloseTo((20 / 17450) * 100);
-    expect(judge(b, 50).tone).toBe("bad");
-    expect(judge(b, 54).tone).toBe("meh");
+    expect(judge(b, 50, "2026-10-13").tone).toBe("bad");
+    expect(judge(b, 54, "2026-10-13").tone).toBe("meh");
   });
 });
