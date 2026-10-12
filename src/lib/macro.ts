@@ -77,7 +77,7 @@ export const INDICATORS: Indicator[] = [
     id: "ICSA",
     title: "每週初領失業金年增",
     unit: "%",
-    source: "總經 2-3",
+    source: "產業 2-1",
     rule: "領先 GDP 約 6–12 個月；年增持續走高代表就業轉弱",
     transform: "yoyPct",
     judge: (v) => (v > 10 ? { signal: "warn", text: "明顯上升" } : { signal: "neutral", text: "持續觀察" }),

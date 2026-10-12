@@ -6,7 +6,12 @@ import { getSeries } from "@/lib/fred";
 import { FRED_VIEW } from "@/lib/compass";
 import { COMPASS_STEPS, CompassStep, FAIR_MULTIPLE, LIFECYCLE, WatchItem } from "@/lib/compassData";
 import { getTodayAnswers } from "@/lib/todayData";
-import QuadrantPicker from "./QuadrantPicker";
+import { INDICATORS, applyTransform } from "@/lib/macro";
+import { TILES, clockTrail, tilesOf } from "@/lib/live";
+import { getIndproYoy, getLiveSeries } from "@/lib/liveData";
+import LiveBoard from "./LiveBoard";
+import CycleClock from "./CycleClock";
+import WhatIf from "./WhatIf";
 import SectorsByNeed from "./SectorsByNeed";
 import WinnerChecklist from "./WinnerChecklist";
 import ValuationCalc from "./ValuationCalc";
@@ -71,9 +76,76 @@ async function AutoAnswer({ step }: { step: 1 | 2 | 3 }) {
   );
 }
 
-async function Quadrant() {
-  const t = await getTodayAnswers();
-  return <QuadrantPicker auto={t.season?.phase ?? null} growth={t.growth} inflation={t.inflation} />;
+// 〈15單元看懂經濟運行〉補充的單元，和羅盤單元一起列在每關最後。
+const MACRO_UNITS: Record<number, string> = {
+  1: "1-1、1-3、2-3、4-1",
+  2: "3-1、3-5、3-6、3-7",
+  3: "2-1、2-2、3-7",
+};
+
+async function Board({ level, overlay }: { level: number; overlay?: string }) {
+  const ids = tilesOf(level).map((t) => t.id);
+  const data = await getLiveSeries(ids);
+  return <LiveBoard ids={ids} data={data} overlayId={overlay} />;
+}
+
+async function Scenarios() {
+  const data = await getLiveSeries(TILES.map((t) => t.id));
+  const latest = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v?.at(-1)?.value ?? null]));
+  return <WhatIf latest={latest} />;
+}
+
+async function Clock() {
+  const [yoy, t] = await Promise.all([getIndproYoy(), getTodayAnswers()]);
+  const { avg, trail } = clockTrail(yoy ?? []);
+  return <CycleClock avg={avg} trail={trail} compassPhase={t.season?.phase ?? null} />;
+}
+
+// 〈15單元〉4-1 十張圖裡能自動抓的反轉指標，亮幾顆紅燈。燈數對應的動作是本站自訂，不是課程規則。
+async function Alarms() {
+  const data = await Promise.all(INDICATORS.map((i) => getSeries(i.id)));
+  const rows = INDICATORS.map((ind, i) => {
+    const raw = data[i];
+    const v = raw ? applyTransform(raw, ind.transform).at(-1)?.value : undefined;
+    return { ind, verdict: v === undefined ? null : ind.judge(v) };
+  }).filter((r) => r.verdict);
+  if (!rows.length) return null;
+  const warn = rows.filter((r) => r.verdict!.signal === "warn").length;
+  const pct = Math.round((warn / rows.length) * 100);
+  const msg = warn <= 1 ? "照原本計畫" : warn <= 3 ? "多留一點現金，分批進出" : "偏防守，等警報解除";
+  return (
+    <div className="space-y-2 rounded-md border border-zinc-200 p-3 text-sm dark:border-zinc-800">
+      <p className="font-medium">
+        景氣反轉警報：{warn} / {rows.length} 顆亮紅燈
+      </p>
+      <div className="h-3 overflow-hidden rounded-full bg-gradient-to-r from-emerald-200 via-amber-200 to-red-300 dark:from-emerald-900 dark:via-amber-900 dark:to-red-900">
+        <div className="animate-grow h-full origin-left rounded-full bg-zinc-900/70 dark:bg-white/70" style={{ width: `${Math.max(pct, 3)}%` }} />
+      </div>
+      <p>現在建議：{msg}（本站自訂的參考，不是課程規則）</p>
+      <ul className="flex flex-wrap gap-1 text-xs">
+        {rows.map((r) => (
+          <li
+            key={r.ind.id}
+            className={`rounded px-1.5 py-0.5 ${
+              r.verdict!.signal === "warn" ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" : "bg-zinc-100 dark:bg-zinc-800"
+            }`}
+          >
+            {r.ind.title}：{r.verdict!.text}
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-zinc-500">
+        課程：總經 4-1 十張圖。
+        <Link href="/macro" className="ml-1 text-blue-600">
+          看每張圖 →
+        </Link>
+      </p>
+    </div>
+  );
+}
+
+function Loading() {
+  return <div className="h-40 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />;
 }
 
 function Watch({ w }: { w: WatchItem }) {
@@ -96,11 +168,40 @@ function Watch({ w }: { w: WatchItem }) {
 
 function Tool({ step }: { step: number }) {
   switch (step) {
+    case 1:
+      return (
+        <Suspense fallback={<Loading />}>
+          <Board level={1} overlay="PAYEMS" />
+        </Suspense>
+      );
+    case 2:
+      return (
+        <div className="space-y-4">
+          <Suspense fallback={<Loading />}>
+            <Board level={2} />
+          </Suspense>
+          <div className="space-y-2">
+            <p className="font-medium">如果……會怎樣？</p>
+            <p className="text-zinc-600 dark:text-zinc-400">經濟是一台會連鎖反應的機器。點一個情境，看它一步一步怎麼傳下去。</p>
+            <Suspense fallback={<Loading />}>
+              <Scenarios />
+            </Suspense>
+          </div>
+        </div>
+      );
     case 3:
       return (
-        <Suspense fallback={<p className="text-zinc-500">讀取中…</p>}>
-          <Quadrant />
-        </Suspense>
+        <div className="space-y-4">
+          <Suspense fallback={<Loading />}>
+            <Clock />
+          </Suspense>
+          <Suspense fallback={<Loading />}>
+            <Board level={3} />
+          </Suspense>
+          <Suspense fallback={<Loading />}>
+            <Alarms />
+          </Suspense>
+        </div>
       );
     case 4:
       return <SectorsByNeed />;
@@ -213,7 +314,10 @@ function Level({ s }: { s: CompassStep }) {
           </ul>
         </details>
       )}
-      <p className="text-xs text-zinc-500">課程：總經X產業X個股 {s.units.join("、")}</p>
+      <p className="text-xs text-zinc-500">
+        課程：總經X產業X個股 {s.units.join("、")}
+        {MACRO_UNITS[s.step] && `；15單元看懂經濟運行 ${MACRO_UNITS[s.step]}`}
+      </p>
     </section>
   );
 }
@@ -224,8 +328,15 @@ export default function MarketPage() {
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">看市場</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          8 關由大到小：先看世界，再挑產業，最後挑公司。每關先給答案，想知道為什麼再點開。內容來自 M平方〈總經X產業X個股〉的動態投資思維羅盤。
+          8 關由大到小：先看世界，再挑產業，最後挑公司。每關先給答案，想知道為什麼再點開。
         </p>
+        <div className="rounded-lg bg-zinc-900 p-4 text-sm text-zinc-100 dark:bg-zinc-800">
+          <p className="font-medium">🐕 一句話記住：經濟是主人，股價是狗</p>
+          <p className="mt-1 text-zinc-300">
+            狗（股價）會跑前跑後、亂叫（新聞），但最後一定跟著主人（經濟）走。所以先看主人往哪走（第 1 關），再看牽繩的人在放錢還是收錢（第 2 關），就知道現在是哪一季（第 3 關）。
+          </p>
+          <p className="mt-1 text-xs text-zinc-400">M平方〈15單元看懂經濟運行〉1-1；8 關架構來自〈總經X產業X個股〉動態投資思維羅盤。</p>
+        </div>
         <nav className="flex flex-wrap gap-1 text-sm">
           {COMPASS_STEPS.map((s) => (
             <a key={s.step} href={`#level-${s.step}`} className="rounded bg-zinc-100 px-2 py-0.5 dark:bg-zinc-800">
