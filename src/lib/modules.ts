@@ -1,7 +1,7 @@
 // App 主架構：以 CodeGym〈AI Agent 投資系統實戰課〉九章為主軸，
-// 前面加上兩個基礎設定（財務目標、風險屬性）。各課單元對應見 courses.ts。
+// 前面加上兩個基礎設定（財務目標、風險屬性），並以 M平方「動態投資思維羅盤」8 步當新手的投資主線。各課單元對應見 courses.ts。
 export type ModuleStatus = "ready" | "planned";
-export type ModuleGroup = "foundation" | "agent";
+export type ModuleGroup = "compass" | "foundation" | "agent";
 
 export interface AppModule {
   slug: string;
@@ -14,6 +14,15 @@ export interface AppModule {
 }
 
 export const MODULES: AppModule[] = [
+  {
+    slug: "compass",
+    group: "compass",
+    order: 0,
+    title: "思維羅盤",
+    question: "從哪裡開始看？",
+    summary: "8 步由大到小：看懂世界景氣與資金 → 挑順風產業 → 找贏勢股、算目標價、決定買賣。全部白話。",
+    status: "ready",
+  },
   {
     slug: "goals",
     group: "foundation",
@@ -120,5 +129,6 @@ export function findModule(slug: string) {
 }
 
 export function moduleLabel(m: AppModule) {
+  if (m.group === "compass") return "主線";
   return m.group === "foundation" ? `基礎 ${m.order}` : `第 ${m.order} 章`;
 }
