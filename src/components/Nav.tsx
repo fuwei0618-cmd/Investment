@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 // 整個網站只有三區。子頁面歸屬到所在的區，讓目前位置一直亮著。
 const AREAS = [
   { href: "/money", label: "我的錢", match: ["/money", "/goals", "/risk", "/portfolio"] },
-  { href: "/market", label: "看市場", match: ["/market", "/macro", "/industry", "/usd"] },
+  { href: "/market", label: "看市場", match: ["/market", "/macro", "/industry", "/usd", "/lottery"] },
   { href: "/courses", label: "課程", match: ["/courses"] },
 ];
 
