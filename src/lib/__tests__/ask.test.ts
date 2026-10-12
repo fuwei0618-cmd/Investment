@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSystem, parseSections, splitLevels } from "../ask";
+import { buildPrompt, buildSystem, parseSections, splitLevels } from "../ask";
 import { findTerms } from "../glossary";
 
 describe("問 AI", () => {
@@ -20,6 +20,18 @@ describe("問 AI", () => {
     const out = parseSections("先說一句\n\n## 一句話結論\n不錯\n\n## 要小心什麼\n- 貴\n- 景氣");
     expect(out.map((s) => s.title)).toEqual(["回答", "一句話結論", "要小心什麼"]);
     expect(out[2].body).toBe("- 貴\n- 景氣");
+  });
+
+  it("從聊天畫面複製回來、標題沒有 ## 也能切段", () => {
+    const out = parseSections("**一句話結論**\n還不錯\n\n要小心什麼：\n太貴了\n普通的一句話");
+    expect(out.map((s) => s.title)).toEqual(["一句話結論", "要小心什麼"]);
+    expect(out[1].body).toBe("太貴了\n普通的一句話");
+  });
+
+  it("免費模式的提示包含規則和問題", () => {
+    const p = buildPrompt({ date: "2026-10-12", chains: [] }, "  聯發科可以買嗎 ");
+    expect(p).toContain("## 一句話結論");
+    expect(p.endsWith("我的問題：聯發科可以買嗎")).toBe(true);
   });
 
   it("把「第 N 關」切出來做連結", () => {
