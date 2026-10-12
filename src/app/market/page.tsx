@@ -121,7 +121,7 @@ async function Alarms() {
   const pct = Math.round((warn / rows.length) * 100);
   const msg = warn <= 1 ? "照原本計畫" : warn <= 3 ? "多留一點現金，分批進出" : "偏防守，等警報解除";
   return (
-    <div className="space-y-2 rounded-md border border-zinc-200 p-3 text-sm dark:border-zinc-800">
+    <div data-tour="alarm" className="space-y-2 rounded-md border border-zinc-200 p-3 text-sm dark:border-zinc-800">
       <p className="font-medium">
         景氣反轉警報：{warn} / {rows.length} 顆亮紅燈
       </p>
@@ -282,7 +282,7 @@ function Level({ s }: { s: CompassStep }) {
         </div>
       </header>
 
-      <div className="rounded-md bg-zinc-50 p-3 dark:bg-zinc-800/50">
+      <div data-tour="answer" className="rounded-md bg-zinc-50 p-3 dark:bg-zinc-800/50">
         <p className="mb-1 text-xs text-zinc-500">今天的答案</p>
         {s.step <= 3 ? (
           <Suspense fallback={<p className="text-zinc-500">讀取中…</p>}>

@@ -53,7 +53,7 @@ export default function ValuationCalc() {
   const ok = v.price > 0 && target > 0;
   const result = ok ? decide(target, v.price, v.expected) : null;
   return (
-    <div className="space-y-4 text-sm">
+    <div data-tour="valuation" className="space-y-4 text-sm">
       <div className="space-y-2">
         <p className="font-medium">1. 這家公司是哪一種？</p>
         <label className="flex items-center gap-2">

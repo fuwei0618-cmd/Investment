@@ -21,7 +21,7 @@ export default function SectorsByNeed() {
   const fits = (sector: string) => pick.sectors.some((s) => sector.includes(s) || s.includes(sector));
   const sorted = [...NEED_SECTORS].sort((a, b) => Number(fits(b.sector)) - Number(fits(a.sector)));
   return (
-    <div className="space-y-3">
+    <div data-tour="sectors" className="space-y-3">
       <p className="text-sm">
         你在第 3 關選的是<strong className="mx-1">{p.name}</strong>，羅盤建議：<strong>{pick.focus}</strong>。亮起來的是現在比較順風的產業。
       </p>

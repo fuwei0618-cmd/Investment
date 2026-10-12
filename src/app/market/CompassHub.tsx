@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Tour from "./Tour";
 
 export interface HubStep {
   step: number;
@@ -47,6 +48,11 @@ export default function CompassHub({ steps, panels }: { steps: HubStep[]; panels
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
+  const tourGo = useCallback((n: number) => {
+    history.replaceState(null, "", `#level-${n}`);
+    setCur(n);
+  }, []);
+
   function go(n: number, scroll = false) {
     history.replaceState(null, "", `#level-${n}`);
     setCur(n);
@@ -56,8 +62,9 @@ export default function CompassHub({ steps, panels }: { steps: HubStep[]; panels
   const n = steps.length;
   const now = steps[cur - 1];
   return (
-    <div className="space-y-4">
-      <section className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="space-y-4 pb-48">
+      <Tour go={tourGo} />
+      <section data-tour="compass" className="space-y-3 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mx-auto max-w-xs">
           <svg viewBox={`0 0 ${S} ${S}`} className="w-full select-none">
             {steps.map((s, i) => {
@@ -96,9 +103,15 @@ export default function CompassHub({ steps, panels }: { steps: HubStep[]; panels
           </p>
           <p>「動態」的意思是：世界變了就從第 1 關重新轉一次。經濟是主人、股價是狗，先看主人往哪走。</p>
         </div>
+        <button
+          onClick={() => window.dispatchEvent(new Event("market-tour"))}
+          className="w-full rounded-full bg-amber-400 py-2 text-sm font-medium text-zinc-900"
+        >
+          ▶ 第一次來？跟著導覽走一圈
+        </button>
       </section>
 
-      <nav className="sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto bg-[var(--background)]/95 px-4 py-2 backdrop-blur">
+      <nav data-tour="chips" className="sticky top-0 z-10 -mx-4 flex gap-1 overflow-x-auto bg-[var(--background)]/95 px-4 py-2 backdrop-blur">
         {steps.map((s) => (
           <button
             key={s.step}
@@ -112,7 +125,7 @@ export default function CompassHub({ steps, panels }: { steps: HubStep[]; panels
         ))}
       </nav>
 
-      <div id="hub-panel" key={cur} className="animate-rise scroll-mt-14">
+      <div id="hub-panel" data-level={cur} key={cur} className="animate-rise scroll-mt-14">
         {panels[cur - 1]}
       </div>
 
