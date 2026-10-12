@@ -31,7 +31,7 @@ export default function CourseRefs({ slug }: { slug: string }) {
           </div>
         ))}
         <Link href="/courses" className="text-blue-600">
-          看全部課程對照 →
+          看全部課程 →
         </Link>
       </div>
     </details>

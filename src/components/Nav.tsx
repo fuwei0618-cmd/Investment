@@ -2,41 +2,39 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MODULES } from "@/lib/modules";
+
+// 整個網站只有三區。子頁面歸屬到所在的區，讓目前位置一直亮著。
+const AREAS = [
+  { href: "/money", label: "我的錢", match: ["/money", "/goals", "/risk", "/portfolio"] },
+  { href: "/market", label: "看市場", match: ["/market", "/macro", "/industry"] },
+  { href: "/courses", label: "課程", match: ["/courses"] },
+];
 
 export default function Nav() {
   const pathname = usePathname();
-  const item = (href: string, label: string, dim = false) => {
-    const active = pathname === href;
-    return (
-      <Link
-        key={href}
-        href={href}
-        className={`shrink-0 rounded-md px-2.5 py-1.5 ${
-          active
-            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-            : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-        } ${dim ? "opacity-60" : ""}`}
-      >
-        {label}
-      </Link>
-    );
-  };
   return (
     <nav className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link href="/" className="shrink-0 font-semibold">
           投資羅盤
         </Link>
-        <div className="flex items-center gap-1 overflow-x-auto text-sm">
-          {MODULES.map((m) => (
-            <span key={m.slug} className="contents">
-              {item(`/${m.slug}`, `${m.group === "agent" ? m.order + ". " : ""}${m.title}`, m.status === "planned")}
-              {m.group === "compass" && <span className="mx-1 h-4 w-px shrink-0 bg-zinc-300 dark:bg-zinc-700" />}
-            </span>
-          ))}
-          <span className="mx-1 h-4 w-px shrink-0 bg-zinc-300 dark:bg-zinc-700" />
-          {item("/courses", "課程對照")}
+        <div className="ml-auto flex gap-1 text-sm">
+          {AREAS.map((a) => {
+            const active = a.match.includes(pathname);
+            return (
+              <Link
+                key={a.href}
+                href={a.href}
+                className={`rounded-md px-3 py-1.5 ${
+                  active
+                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                }`}
+              >
+                {a.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>

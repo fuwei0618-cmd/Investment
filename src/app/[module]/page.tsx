@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import CourseRefs from "@/components/CourseRefs";
-import { MODULES, findModule, moduleLabel } from "@/lib/modules";
+import { MODULES, findModule } from "@/lib/modules";
 
 export function generateStaticParams() {
   return MODULES.filter((m) => m.status === "planned").map((m) => ({ module: m.slug }));
@@ -12,7 +12,7 @@ export default async function PlannedModule({ params }: PageProps<"/[module]">) 
   if (!mod || mod.status !== "planned") notFound();
   return (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-500">{moduleLabel(mod)}・規劃中</p>
+      <p className="text-sm text-zinc-500">之後加入（AI Agent 課第 {mod.order} 章）</p>
       <h1 className="text-2xl font-semibold">{mod.title}</h1>
       <p>{mod.summary}</p>
       <CourseRefs slug={mod.slug} />

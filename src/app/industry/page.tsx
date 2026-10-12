@@ -1,3 +1,4 @@
+import Crumb from "@/components/Crumb";
 import CourseRefs from "@/components/CourseRefs";
 import { Suspense } from "react";
 import { applyTransform } from "@/lib/macro";
@@ -26,10 +27,10 @@ export default function IndustryPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm text-zinc-500">第 1 章</p>
-        <h1 className="text-2xl font-semibold">產業脈絡</h1>
+        <Crumb href="/market#level-4" area="看市場" here="第 4–5 關的產業工具" />
+        <h1 className="text-2xl font-semibold">產業燈號與打分卡</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          先由全球脈動的景氣象限挑出 EPS 增速較佳的板塊，再用三大要領檢查產業投資價值，最後才進入選股。
+          看市場第 4–5 關的工具：每個產業現在順不順風，以及用三個問題替產業打分數。
         </p>
       </header>
       <Suspense fallback={<p className="text-sm text-zinc-500">讀取產業指標中…</p>}>

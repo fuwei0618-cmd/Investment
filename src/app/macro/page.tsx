@@ -1,3 +1,4 @@
+import Crumb from "@/components/Crumb";
 import CourseRefs from "@/components/CourseRefs";
 import { Suspense } from "react";
 import { INDICATORS, MANUAL_CHARTS, applyTransform } from "@/lib/macro";
@@ -51,10 +52,10 @@ export default function MacroPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm text-zinc-500">第 8 章</p>
-        <h1 className="text-2xl font-semibold">全球脈動</h1>
+        <Crumb href="/market#level-1" area="看市場" here="第 1–3 關的更多數字" />
+        <h1 className="text-2xl font-semibold">總經數字總覽</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          M平方的研究核心是「循環為主、數據為輔」：先看景氣反轉指標，再判斷所在象限，最後決定資產配置。數據預設看年增率。
+          看市場第 1–3 關用到的數字，這裡列得更完整，每張圖都附「怎麼看」。
         </p>
       </header>
 

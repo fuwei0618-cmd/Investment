@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { COURSES } from "@/lib/courses";
-import { findModule, moduleLabel } from "@/lib/modules";
+import { placeOf } from "@/lib/modules";
 
 export default function CoursesPage() {
   return (
@@ -8,7 +8,7 @@ export default function CoursesPage() {
       <header>
         <h1 className="text-2xl font-semibold">課程對照</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          每個單元對應到網頁的哪一頁，灰字是依文字稿整理的單元重點，括號內是網頁上對應的功能。複習某堂課時，點右邊的標籤就能直接打開。
+          複習某堂課時，找到那個單元，點右邊的標籤就會打開網站上對應的地方。灰字是這個單元的重點。標「之後加入」的是還沒做的功能。
         </p>
       </header>
       {COURSES.map((c) => (
@@ -29,7 +29,7 @@ export default function CoursesPage() {
                 <h3 className="mb-1 text-sm font-medium">{ch.title}</h3>
                 <ul className="divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
                   {ch.units.map((x) => {
-                    const m = x.module ? findModule(x.module) : null;
+                    const m = x.module ? placeOf(x.module) : null;
                     return (
                       <li key={x.code} className="flex items-start gap-2 py-1.5">
                         <span className="w-12 shrink-0 tabular-nums text-zinc-500">{x.code}</span>
@@ -44,14 +44,14 @@ export default function CoursesPage() {
                         </span>
                         {m ? (
                           <Link
-                            href={`/${m.slug}`}
+                            href={m.href}
                             className={`shrink-0 rounded px-2 py-0.5 text-xs ${
-                              m.status === "ready"
+                              m.area !== "later"
                                 ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
                                 : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800"
                             }`}
                           >
-                            {moduleLabel(m)} {m.title}
+                            {m.label}
                           </Link>
                         ) : (
                           <span className="shrink-0 text-xs text-zinc-400">方法與工具</span>
