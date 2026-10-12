@@ -58,10 +58,21 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .animate-draw,
   .animate-rise,
-  .animate-grow {
+  .animate-grow,
+  .flow {
     animation: none;
     stroke-dashoffset: 0;
   }
+}
+
+/* 城市地圖的流向線：虛線往前跑 */
+@keyframes flow {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+.flow {
+  animation: flow 900ms linear infinite;
 }
 
 @keyframes grow {

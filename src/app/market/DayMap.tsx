@@ -1,34 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { PHASES } from "@/lib/macro";
-import { PHASE_SECTORS, sectorFits } from "@/lib/compass";
-import type { PhaseKey } from "@/lib/industry";
 import { SCENES } from "@/lib/daymap";
 import { CHAINS } from "@/lib/chains";
-import { usePersistentState } from "@/lib/storage";
-
-function openChain(key: string) {
-  try {
-    localStorage.setItem("market.chain.v1", JSON.stringify(key));
-  } catch {}
-  window.location.hash = "level-5";
-}
+import { openChain, useTailwind } from "./sectorTools";
 
 // 產業情境圖：你的一天從早到晚，每個場景背後是哪個產業、錢流到誰手上、現在順不順風。
 export default function DayMap() {
-  const [phase] = usePersistentState<string>("macro.phase.v1", "expansion");
   const [open, setOpen] = useState<number | null>(2);
-  const p = PHASES.find((x) => x.key === phase) ?? PHASES[0];
-  const pick = PHASE_SECTORS[p.key as PhaseKey];
-  const fits = (sector: string) => sectorFits(pick.sectors, sector);
+  const { phaseName, fits } = useTailwind();
 
   return (
-    <div data-tour="sectors" className="space-y-3 text-sm">
+    <div className="space-y-3 text-sm">
       <p>
         你一天花的每一塊錢，最後都流進某個產業。從早到晚走一遍，點一個場景，看錢流到誰手上。
         <span className="ml-1 rounded bg-emerald-100 px-1.5 text-xs text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">順風</span>
-        ＝依第 3 關「{p.name}」期，現在比較有利的產業。
+        ＝依第 3 關「{phaseName}」期，現在比較有利的產業。
       </p>
       <ol className="relative space-y-2 before:absolute before:top-3 before:bottom-3 before:left-[27px] before:w-1 before:rounded-full before:bg-gradient-to-b before:from-amber-300 before:via-sky-300 before:to-indigo-500">
         {SCENES.map((s, i) => {
