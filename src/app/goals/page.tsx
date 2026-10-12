@@ -1,3 +1,4 @@
+import Crumb from "@/components/Crumb";
 import CourseRefs from "@/components/CourseRefs";
 import GoalsCalculator from "./GoalsCalculator";
 
@@ -5,11 +6,10 @@ export default function GoalsPage() {
   return (
     <div className="space-y-4">
       <header>
-        <p className="text-sm text-zinc-500">基礎 1</p>
-        <h1 className="text-2xl font-semibold">財務目標試算</h1>
+        <Crumb href="/money" area="我的錢" here="第 1 步：設目標" />
+        <h1 className="text-2xl font-semibold">我要存多少錢才夠？</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          逐年推算薪資、投資收入與支出。累積結存轉負代表開始負債；退休所需資產用 4% 法則（年支出 × 25）。
-          儲蓄率目標 25%–50%，報酬率是最關鍵的因子。
+          把年紀、收入、花費填進去，網頁會一年一年幫你算：錢夠不夠用、退休前要存到多少。退休要準備的錢＝一年花費 × 25；收入能存下 25%～50% 最理想。
         </p>
       </header>
       <GoalsCalculator />

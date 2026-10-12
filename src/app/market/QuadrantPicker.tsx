@@ -29,7 +29,7 @@ export default function QuadrantPicker({
         <p className="text-sm">
           用目前數字粗估：美國經濟成長 {growth.toFixed(1)}%（平均約 {GROWTH_AVG}%）、物價年增 {inflation.toFixed(1)}%（平均約{" "}
           {INFLATION_AVG}%），落在<strong className="mx-1">{PHASES.find((p) => p.key === auto)?.name}</strong>
-          。這只是粗估，請搭配上面兩步的數字自己判斷，點下面的格子選定。
+          。這只是粗估，也可以看上面兩關的數字自己判斷，點下面的格子選定。
         </p>
       )}
       <div className="grid grid-cols-2 gap-2">

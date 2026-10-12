@@ -132,3 +132,25 @@ export function moduleLabel(m: AppModule) {
   if (m.group === "compass") return "主線";
   return m.group === "foundation" ? `基礎 ${m.order}` : `第 ${m.order} 章`;
 }
+
+// 網站只有三區：我的錢、看市場、課程。每個模組在新架構裡的位置。
+export interface Place {
+  area: "money" | "market" | "later";
+  label: string;
+  href: string;
+}
+
+const PLACES: Record<string, Place> = {
+  goals: { area: "money", label: "我的錢・1 設目標", href: "/goals" },
+  risk: { area: "money", label: "我的錢・2 測風險", href: "/risk" },
+  portfolio: { area: "money", label: "我的錢・3 看持股", href: "/portfolio" },
+  compass: { area: "market", label: "看市場", href: "/market" },
+  macro: { area: "market", label: "看市場・第 1–3 關", href: "/market#level-1" },
+  industry: { area: "market", label: "看市場・第 4–5 關", href: "/market#level-4" },
+  stock: { area: "market", label: "看市場・第 6–8 關", href: "/market#level-6" },
+};
+
+export function placeOf(slug: string): Place {
+  const m = findModule(slug);
+  return PLACES[slug] ?? { area: "later", label: `之後加入：${m?.title ?? slug}`, href: `/${slug}` };
+}
