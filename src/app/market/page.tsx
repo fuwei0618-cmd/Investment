@@ -20,6 +20,7 @@ import DayMap from "./DayMap";
 import WinnerChecklist from "./WinnerChecklist";
 import ValuationCalc from "./ValuationCalc";
 import AskBox from "./AskBox";
+import { CHAINS } from "@/lib/chains";
 import Terms from "@/components/Terms";
 
 // 每關用一個白話問題當標題，課程名稱放旁邊。
@@ -151,6 +152,20 @@ async function Alarms() {
         </Link>
       </p>
     </div>
+  );
+}
+
+// 網站有設 AI 金鑰才直接回答；沒有就走免費模式（改金鑰後要重新部署）。
+const ASK_AUTO = !!process.env.ANTHROPIC_API_KEY;
+const CHAIN_TITLES = CHAINS.map((c) => c.title);
+
+async function Ask() {
+  const t = await getTodayAnswers();
+  return (
+    <AskBox
+      auto={ASK_AUTO}
+      facts={{ economy: t.economy?.answer, money: t.money?.answer, season: t.season?.answer, chains: CHAIN_TITLES }}
+    />
   );
 }
 
@@ -368,7 +383,9 @@ export default function MarketPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">看市場</h1>
-      <AskBox />
+      <Suspense fallback={<AskBox auto={ASK_AUTO} facts={{ chains: CHAIN_TITLES }} />}>
+        <Ask />
+      </Suspense>
       <CompassHub steps={steps} panels={COMPASS_STEPS.map((s) => <Level key={s.step} s={s} />)} />
       <CourseRefs slug="compass" />
     </div>

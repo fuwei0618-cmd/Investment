@@ -13,6 +13,19 @@ export const LEVEL_NAMES: Record<number, string> = {
   8: "買或賣",
 };
 
+// 固定標題：AI 照這些標題回答，貼回來時也靠它們切段。
+export const STOCK_HEADINGS = [
+  "一句話結論",
+  "這家公司在做什麼",
+  "它在哪條產業鏈",
+  "現在景氣對它順不順",
+  "你聽到的消息靠不靠譜",
+  "要小心什麼",
+  "想自己確認，去羅盤看",
+];
+export const IDEA_HEADINGS = ["一句話回答", "白話解釋", "舉個例子", "跟羅盤哪一關有關"];
+const KNOWN = new Set([...STOCK_HEADINGS, ...IDEA_HEADINGS]);
+
 export interface AskFacts {
   date: string; // YYYY-MM-DD
   economy?: string | null;
@@ -43,25 +56,25 @@ export function buildSystem(f: AskFacts) {
 - 事實要先用網路搜尋確認（公司在做什麼、最近營收或新聞）。查不到就直接說查不到，不要猜。
 
 如果他貼的是一支股票、一家公司或一則新聞，固定用下面這些標題，每個標題用「## 」開頭，順序不變：
-## 一句話結論
-## 這家公司在做什麼
-## 它在哪條產業鏈
-## 現在景氣對它順不順
-## 你聽到的消息靠不靠譜
-## 要小心什麼
-## 想自己確認，去羅盤看
+${STOCK_HEADINGS.map((h) => `## ${h}`).join("\n")}
 
 如果他問的是一般觀念（例如「什麼是本益比」「升息為什麼股票會跌」），改用這些標題：
-## 一句話回答
-## 白話解釋
-## 舉個例子
-## 跟羅盤哪一關有關
+${IDEA_HEADINGS.map((h) => `## ${h}`).join("\n")}
 
 網站上的「動態投資思維羅盤」有 8 關：${levels}。提到關卡時一律寫成「第 N 關」（N 是數字），網站會把它變成可以點的連結。
 網站上有這些產業鏈可以對照：${f.chains.join("、")}。
 
 今天是 ${f.date}。網站依美國官方數字算出的今天判斷如下，談景氣時以此為準，並用一句話說明它對這家公司的意思：
 ${today || "（今天的數字暫時抓不到，景氣部分請自己搜尋最新情況並註明）"}`;
+}
+
+// 免費模式：整段複製到 Claude／ChatGPT 免費版用的提示。
+export function buildPrompt(f: AskFacts, q: string) {
+  return `${buildSystem(f)}
+
+請上網查證後，照上面的規則回答。
+
+我的問題：${q.trim()}`;
 }
 
 export interface Section {
@@ -74,9 +87,12 @@ export function parseSections(text: string): Section[] {
   const out: Section[] = [];
   let cur: Section | null = null;
   for (const line of text.split("\n")) {
+    // 「## 標題」或從聊天畫面複製時只剩下標題文字（可能帶粗體或冒號）都算標題。
     const m = line.match(/^#{1,3}\s+(.+?)\s*$/);
-    if (m) {
-      cur = { title: m[1], body: "" };
+    const bare = line.replace(/[*#：:\s]/g, "");
+    const title = m ? m[1].replace(/\*\*/g, "") : KNOWN.has(bare) ? bare : null;
+    if (title) {
+      cur = { title, body: "" };
       out.push(cur);
     } else {
       if (!cur) {

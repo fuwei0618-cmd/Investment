@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ASK_MAX, LEVEL_NAMES, parseSections, splitLevels } from "@/lib/ask";
+import { ASK_MAX, AskFacts, LEVEL_NAMES, buildPrompt, parseSections, splitLevels } from "@/lib/ask";
 import { usePersistentState } from "@/lib/storage";
 
 interface Note {
@@ -76,13 +76,19 @@ function Answer({ note }: { note: Note }) {
           </ul>
         </details>
       )}
-      <p className="text-xs text-zinc-500">AI 整理，可能有錯；不是買賣建議。重要的數字請到第 6、7 關自己確認。</p>
+      <p className="text-xs text-zinc-500">AI 整理，可能有錯，也不是買賣建議。重要的數字請到第 6、7 關自己確認。</p>
     </div>
   );
 }
 
+const FREE_AI = [
+  { name: "Claude", url: (p: string) => `https://claude.ai/new?q=${encodeURIComponent(p)}` },
+  { name: "ChatGPT", url: (p: string) => `https://chatgpt.com/?q=${encodeURIComponent(p)}` },
+];
+
 // 看市場最上面：貼上聽到的名牌或新聞，AI 用白話整理；每次問的都存進「我的問答本」。
-export default function AskBox() {
+// auto＝網站設了金鑰，直接在這裡回答；否則用免費模式：複製提示到 Claude／ChatGPT 免費版，再把回答貼回來。
+export default function AskBox({ auto, facts }: { auto: boolean; facts: Omit<AskFacts, "date"> }) {
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,6 +96,8 @@ export default function AskBox() {
   const [pass, setPass] = usePersistentState("ask.passcode.v1", "");
   const [notes, setNotes] = usePersistentState<Note[]>("ask.notes.v1", []);
   const [shown, setShown] = useState<string | null>(null);
+  const [free, setFree] = useState<{ q: string; prompt: string; copied: boolean } | null>(null);
+  const [pasted, setPasted] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
 
   // 其他地方（例如第 6 關）可以帶一句話過來。
@@ -103,9 +111,37 @@ export default function AskBox() {
     return () => window.removeEventListener("ask-prefill", fill);
   }, []);
 
+  function save(text: string, answer: string, sources: Note["sources"]) {
+    const note: Note = { id: `${Date.now()}`, q: text, answer, sources, at: new Date().toISOString() };
+    setNotes([note, ...notes].slice(0, 100));
+    setShown(note.id);
+    setQ("");
+  }
+
+  // 免費模式第一步：組好提示、複製起來，接著讓他選要開哪個 AI。
+  async function startFree(text: string) {
+    const prompt = buildPrompt({ ...facts, date: new Date().toISOString().slice(0, 10) }, text);
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(prompt);
+      copied = true;
+    } catch {}
+    setFree({ q: text, prompt, copied });
+    setPasted("");
+    setError(null);
+  }
+
+  function saveFree() {
+    if (!free || !pasted.trim()) return;
+    save(free.q, pasted.trim(), []);
+    setFree(null);
+    setPasted("");
+  }
+
   async function ask() {
     const text = q.trim();
     if (!text || busy) return;
+    if (!auto) return startFree(text);
     setBusy(true);
     setError(null);
     try {
@@ -120,18 +156,12 @@ export default function AskBox() {
         setError(pass ? "通關密語不對，再輸入一次。" : "請先輸入通關密語。");
         return;
       }
-      if (data.error === "not-configured") {
-        setError("AI 還沒開通：需要在 Vercel 設定 ANTHROPIC_API_KEY。設定好之後這裡就能用。");
-        return;
-      }
+      if (data.error === "not-configured") return startFree(text);
       if (!res.ok) {
         setError(data.error ?? "查詢失敗，稍後再試。");
         return;
       }
-      const note: Note = { id: `${Date.now()}`, q: text, answer: data.answer, sources: data.sources ?? [], at: new Date().toISOString() };
-      setNotes([note, ...notes].slice(0, 100));
-      setShown(note.id);
-      setQ("");
+      save(text, data.answer, data.sources ?? []);
       setNeedPass(false);
     } catch {
       setError("連不上網路，稍後再試。");
@@ -184,10 +214,66 @@ export default function AskBox() {
         disabled={busy || !q.trim()}
         className="w-full rounded-full bg-amber-400 py-2 text-sm font-medium text-zinc-900 disabled:opacity-50"
       >
-        {busy ? "AI 正在上網查資料、整理中（大約半分鐘）…" : "幫我整理"}
+        {busy ? "AI 正在上網查資料、整理中（大約半分鐘）…" : auto ? "幫我整理" : "幫我整理（用免費版 AI）"}
       </button>
       {busy && <div className="h-1 animate-pulse rounded-full bg-amber-300" />}
       {error && <p className="rounded-md bg-red-50 p-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{error}</p>}
+
+      {free && (
+        <div className="animate-rise space-y-2 rounded-md border border-amber-300 p-3 text-sm dark:border-amber-700">
+          <p>
+            <strong>① </strong>
+            {free.copied ? "問題和回答規則已經複製好了。" : "問題已經準備好了。"}
+          </p>
+          <div>
+            <p>
+              <strong>② </strong>打開一個免費 AI，{free.copied ? "如果框裡是空的就貼上，" : ""}按送出：
+            </p>
+            <div className="mt-1 flex gap-2">
+              {FREE_AI.map((a) => (
+                <a
+                  key={a.name}
+                  href={a.url(free.prompt)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 rounded-full bg-zinc-900 py-1.5 text-center text-white dark:bg-zinc-100 dark:text-zinc-900"
+                >
+                  開 {a.name}
+                </a>
+              ))}
+            </div>
+          </div>
+          <p>
+            <strong>③ </strong>等它回答完，按回答下方的「複製」，回來貼在這裡：
+          </p>
+          <textarea
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            rows={4}
+            placeholder="把 AI 的回答整段貼上"
+            className="w-full rounded-md border border-zinc-300 bg-transparent p-2 dark:border-zinc-700"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={saveFree}
+              disabled={!pasted.trim()}
+              className="flex-1 rounded-full bg-amber-400 py-1.5 font-medium text-zinc-900 disabled:opacity-50"
+            >
+              存進問答本
+            </button>
+            <button onClick={() => setFree(null)} className="rounded-full bg-zinc-100 px-4 py-1.5 dark:bg-zinc-800">
+              取消
+            </button>
+          </div>
+          {!free.copied && (
+            <details className="text-xs text-zinc-500">
+              <summary className="cursor-pointer">AI 那邊的框是空的？手動複製這段</summary>
+              <textarea readOnly value={free.prompt} rows={4} className="mt-1 w-full rounded-md border border-zinc-300 bg-transparent p-2 dark:border-zinc-700" />
+            </details>
+          )}
+          <p className="text-xs text-zinc-500">免費、不需要任何金鑰。免費版 AI 有每天次數限制。</p>
+        </div>
+      )}
 
       {current && (
         <div className="space-y-2 text-sm">
