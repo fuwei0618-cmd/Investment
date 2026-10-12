@@ -53,8 +53,9 @@ export function parseTwse(json: { fields?: string[]; data?: string[][] }): Lotte
     .filter((x) => x.start !== "");
 }
 
-// 初上市、初上櫃的股票要到上市那天才有市價。
-export const hasMarketPrice = (l: Lottery, today: string) => !l.market.startsWith("初") || (l.listing !== "" && today >= l.listing);
+// 初上市、初上櫃的股票掛牌前已經在興櫃交易，用興櫃價當參考價；上市那天起才是正式市價。
+export const isNewListing = (l: Lottery) => l.market.startsWith("初");
+export const priceLabel = (l: Lottery, today: string) => (isNewListing(l) && !(l.listing !== "" && today >= l.listing) ? "興櫃價" : "市價");
 
 export type Phase = "open" | "soon" | "drawn";
 
@@ -75,16 +76,17 @@ export interface Verdict {
   tone: "good" | "meh" | "bad" | "unknown";
 }
 
-export function judge(l: Lottery, marketPrice: number | null, today: string): Verdict {
+export function judge(l: Lottery, marketPrice: number | null): Verdict {
   const cost = l.price !== null ? Math.round(l.price * l.shares) : null;
   if (l.price === null || marketPrice === null) {
-    return { gain: null, pct: null, cost, breakEven: null, word: hasMarketPrice(l, today) ? "暫時查不到市價" : "還沒上市，沒有市價可比", tone: "unknown" };
+    return { gain: null, pct: null, cost, breakEven: null, word: "暫時查不到市價", tone: "unknown" };
   }
   const gain = Math.round((marketPrice - l.price) * l.shares);
   const pct = ((marketPrice - l.price) / l.price) * 100;
   const net = gain - WIN_FEE;
   const breakEven = net > 0 ? (FEE / net) * 100 : null;
   if (net <= 0) return { gain, pct, cost, breakEven, word: "別抽：市價沒有比承銷價高", tone: "bad" };
-  if (pct < 5 || gain < 3000) return { gain, pct, cost, breakEven, word: "賺很少，可抽可不抽", tone: "meh" };
+  // 從抽籤到掛牌還有一週，價差太薄容易被跌掉。
+  if (pct < 15 || gain < 10000) return { gain, pct, cost, breakEven, word: "價差薄，可抽可不抽", tone: "meh" };
   return { gain, pct, cost, breakEven, word: "值得抽", tone: "good" };
 }

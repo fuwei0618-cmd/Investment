@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Crumb from "@/components/Crumb";
-import { FEE, Phase, WIN_FEE, judge } from "@/lib/lottery";
+import { FEE, Phase, WIN_FEE, isNewListing, judge, priceLabel } from "@/lib/lottery";
 import { getActive, todayTw } from "@/lib/lotteryData";
 
 const PHASES: { key: Phase; title: string; empty: string }[] = [
@@ -31,7 +31,7 @@ async function Board() {
       {PHASES.map((ph) => {
         const items = rows
           .filter((r) => r.phase === ph.key)
-          .map((r) => ({ ...r, v: judge(r.l, r.close?.price ?? null, today) }))
+          .map((r) => ({ ...r, v: judge(r.l, r.close?.price ?? null) }))
           .sort((a, b) => order[a.v.tone] - order[b.v.tone] || a.l.end.localeCompare(b.l.end));
         return (
           <section key={ph.key} className="space-y-2">
@@ -63,7 +63,7 @@ async function Board() {
                       <p className="font-medium tabular-nums">{l.price ?? "未定"}</p>
                     </div>
                     <div className="rounded bg-zinc-50 py-1.5 dark:bg-zinc-900">
-                      <p className="text-xs text-zinc-500">市價</p>
+                      <p className="text-xs text-zinc-500">{priceLabel(l, today)}</p>
                       <p className="font-medium tabular-nums">{close ? close.price : "—"}</p>
                     </div>
                     <div className="rounded bg-zinc-50 py-1.5 dark:bg-zinc-900">
@@ -75,8 +75,9 @@ async function Board() {
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400">
                     {v.cost !== null && <>帳戶要先放 {money(v.cost)} 元。</>}
-                    {v.pct !== null && <>市價比承銷價{v.pct >= 0 ? "高" : "低"} {Math.abs(v.pct).toFixed(1)}%。</>}
+                    {v.pct !== null && <>{priceLabel(l, today)}比承銷價{v.pct >= 0 ? "高" : "低"} {Math.abs(v.pct).toFixed(1)}%。</>}
                     {v.breakEven !== null && <>中籤率高於 {v.breakEven < 0.01 ? "0.01" : v.breakEven.toFixed(2)}% 就划算。</>}
+                    {isNewListing(l) && priceLabel(l, today) === "興櫃價" && <>興櫃價只是參考，掛牌後會變。</>}
                     {l.winRate !== null && <strong className="ml-1">實際中籤率 {l.winRate}%。</strong>}
                   </p>
                 </li>
@@ -114,7 +115,7 @@ export default function LotteryPage() {
         <ul className="list-inside list-disc space-y-0.5 text-zinc-600 dark:text-zinc-400">
           <li>「抽中約賺」是用現在的市價算的，從抽籤到上市還有幾天，股價可能下跌。</li>
           <li>熱門股的中籤率常不到 1%，大多數時候只是付 {FEE} 元。</li>
-          <li>初上市、初上櫃的股票還沒有市價，這裡算不出來，要自己看同業股價判斷。</li>
+          <li>初上市、初上櫃用的是「興櫃價」：掛牌前在興櫃交易的價格，成交量小、起伏大，正式掛牌後可能跟它差很多。</li>
         </ul>
         <p className="text-xs text-zinc-500">資料：台灣證交所公開申購公告、FinMind 收盤價，每幾小時更新。不是投資建議。</p>
       </section>
