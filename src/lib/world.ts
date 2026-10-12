@@ -34,7 +34,7 @@ export const POPULATION: Population[] = [
   { country: "美國", youngMinusOld: -1, growth: 0.5, medianAge: 39 },
   { country: "中國", youngMinusOld: 2, growth: -0.1, medianAge: 40 },
   { country: "台灣", youngMinusOld: -8, growth: -0.1, medianAge: 45 },
-  { country: "南韓", youngMinusOld: -8, growth: -0.1, medianAge: 46 },
+  { country: "南韓", youngMinusOld: -9, growth: -0.1, medianAge: 46 },
   { country: "德國", youngMinusOld: -9, growth: 0.1, medianAge: 45 },
   { country: "日本", youngMinusOld: -18, growth: -0.5, medianAge: 49 },
 ];

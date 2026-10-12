@@ -9,6 +9,15 @@ const FACETS = [
   { key: "pop", label: "人口：長線有沒有人" },
 ] as const;
 
+// 點太近的國家，名字往旁邊挪一點避免疊在一起。
+const LABEL: Record<string, [number, number, "start" | "middle" | "end"]> = {
+  墨西哥: [-10, 4, "end"],
+  南韓: [-12, 4, "end"],
+  台灣: [0, -11, "middle"],
+  德國: [12, 4, "start"],
+  澳洲: [0, 18, "middle"],
+};
+
 const PARTS = [
   { key: "consume", label: "消費", color: "bg-sky-500" },
   { key: "invest", label: "投資", color: "bg-emerald-500" },
@@ -92,7 +101,7 @@ function PopulationMap() {
           <text x={6} y={S - 8} className="fill-red-500 text-[11px] font-semibold">
             變老又在縮
           </text>
-          <text x={S - 6} y={C - 5} textAnchor="end" className="fill-zinc-400 text-[10px]">
+          <text x={S - 6} y={S - 8} textAnchor="end" className="fill-zinc-400 text-[10px]">
             人口增加 →
           </text>
           <text x={C + 5} y={30} className="fill-zinc-400 text-[10px]">
@@ -114,9 +123,9 @@ function PopulationMap() {
                   className={on ? "fill-blue-600" : "fill-zinc-500/70"}
                 />
                 <text
-                  x={x(c.growth)}
-                  y={y(c.youngMinusOld) - 11}
-                  textAnchor="middle"
+                  x={x(c.growth) + (LABEL[c.country]?.[0] ?? 0)}
+                  y={y(c.youngMinusOld) + (LABEL[c.country]?.[1] ?? -11)}
+                  textAnchor={LABEL[c.country]?.[2] ?? "middle"}
                   className={`text-[11px] ${on ? "fill-blue-600 font-semibold" : "fill-zinc-600 dark:fill-zinc-300"}`}
                 >
                   {c.country}
@@ -129,7 +138,7 @@ function PopulationMap() {
       <div className="rounded-md border border-zinc-200 p-3 dark:border-zinc-800">
         <p className="font-medium">{p.country}</p>
         <p>
-          小孩比老人多 {p.youngMinusOld} 個百分點、人口一年 {p.growth > 0 ? "增加" : "減少"} {Math.abs(p.growth)}%、一半的人超過 {p.medianAge} 歲。
+          小孩比老人{p.youngMinusOld >= 0 ? "多" : "少"} {Math.abs(p.youngMinusOld)} 個百分點、人口一年 {p.growth > 0 ? "增加" : "減少"} {Math.abs(p.growth)}%、一半的人超過 {p.medianAge} 歲。
         </p>
         <p className="text-zinc-600 dark:text-zinc-400">{POP_TEXT[q]}。</p>
         <p className="mt-1 text-xs text-zinc-500">點圖上的國家換一個看。</p>
