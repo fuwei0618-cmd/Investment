@@ -29,6 +29,8 @@ button{font-family:inherit}
 
 /* header */
 h1{font-size:1.35rem;font-weight:900;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;letter-spacing:.01em}
+h1 .back{font-size:.78rem;font-weight:700;color:var(--muted);text-decoration:none;margin-right:10px;border:1.5px solid var(--line);border-radius:999px;padding:3px 10px;vertical-align:middle}
+h1 .back[hidden]{display:none}
 h1 .score{font-size:.8rem;font-weight:800;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--fg);cursor:pointer}
 h1 .score:hover{border-color:var(--gold)}
 .howto{display:flex;gap:8px;margin:0 0 12px}
@@ -195,12 +197,17 @@ body.docked .bigbtn{bottom:calc(46vh + 10px)}
   body{overflow-anchor:none}
   .fcard{min-height:0}
   .fwrap .card{display:block;height:100%;max-height:36vh;font-size:.9rem;overflow:auto;border-color:var(--gold);box-shadow:0 -6px 24px rgba(0,0,0,.14);position:relative}
-  .fwrap .card>svg{height:96px;max-height:96px;width:100%}
-  .fwrap .card .in{padding:8px 12px 10px}
-  .fwrap .card h2{font-size:1rem;margin:0 0 6px}
-  .fwrap .card .verdict{font-size:.86rem;padding:8px 10px}
-  .fwrap .card .play{margin-bottom:6px}
-  .fwrap .card .btn,.fwrap .card .opt{font-size:.86rem;padding:6px 10px}
+  .fwrap .card>svg{width:100%;height:auto;max-height:none}
+  .fwrap .card .in{padding:6px 10px 8px}
+  .fwrap .card .tag{font-size:.6rem;padding:1px 7px;margin-bottom:3px}
+  .fwrap .card h2{font-size:.88rem;margin:0 0 5px}
+  .fwrap .card .verdict{font-size:.76rem;padding:6px 9px;line-height:1.35}
+  .fwrap .card .play{margin-bottom:5px;gap:5px}
+  .fwrap .card .play>span{font-size:.72rem}
+  .fwrap .card .btn,.fwrap .card .opt{font-size:.76rem;padding:5px 8px}
+  .fwrap .card .opts{gap:5px;margin-bottom:6px}
+  .fwrap .card .log div{font-size:.72rem;padding:4px 8px}
+  .fwrap .card .minib{font-size:.7rem;padding:3px 8px;top:6px;right:8px}
   .fwrap .card .log{margin-top:6px}
   .fwrap .card.mini>svg{display:none}
   .fwrap .card.mini .in>*{display:none}
@@ -354,7 +361,7 @@ body.docked .bigbtn{bottom:calc(46vh + 10px)}
 @media (min-width:960px){.tree{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}.story{grid-column:1/-1}.cpanel[hidden]{display:block}}
 </style>
 
-<h1><span>🥖 麵包店大富翁</span><span class="score"><span id="scoreBox">🎒 貼紙 <span id="score" class="num">0</span>/37</span></span></h1>
+<h1><span><a class="back" id="back" href="/market" hidden>← 看市場</a>🥖 麵包店大富翁</span><span class="score"><span id="scoreBox">🎒 貼紙 <span id="score" class="num">0</span>/37</span></span></h1>
 
 <div class="left" id="left"><div class="howto"><span><b>①</b>擲骰子，走格子</span><span><b>②</b>每一站玩一個小動作</span><span><b>③</b>收集貼紙，走完一圈</span></div>
 <div class="map" id="map">
@@ -692,5 +699,6 @@ score();album();go(0,false);renderTree();
 document.getElementById('scoreBox').onclick=function(){album();document.getElementById('bag').hidden=false;};document.getElementById('bag').onclick=function(e){if(e.target.id==='bag')e.target.hidden=true;};
 function wide(){if(window.innerWidth>=960){document.getElementById('sheet').hidden=false;document.getElementById('cpanel').hidden=false;renderCenter();}else{document.getElementById('cpanel').hidden=true;}}
 wide();window.addEventListener('resize',wide);
+if(/^\/game\//.test(location.pathname)){document.getElementById('back').hidden=false;}
 })();
 </script>
