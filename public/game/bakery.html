@@ -1,0 +1,677 @@
+<title>麵包店大富翁</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: paper board-game look. One radius (14px), one gutter (16px), one shadow. Header card on top (title + how-to), sticky progress strip, board, dice bar, station card, sticker row, album. Map docks bottom (phone) or right (desktop). */
+:root{
+  --bg:#f4eee2; --paper:#fffdf8; --fg:#241c12; --muted:#8a7a63; --line:#e6dcc8; --line2:#d9ccb3;
+  --z1:#4d7fd1; --z2:#d98a2b; --z3:#d2554f; --gold:#f2b63c; --gold2:#c98a12; --ok:#2f9e63; --bad:#d2554f;
+  --chip:#f3ead8; --chip-fg:#4a3b24; --card:#fffdf8;
+  --sky:#d6e9f6; --ground:#dcc99a; --house:#f3dfbd; --water:#4d7fd1;
+  --r:14px; --sh:0 1px 2px rgba(60,40,10,.06),0 6px 16px rgba(60,40,10,.08);
+  --font:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#18150f; --paper:#221d16; --fg:#f3ebdd; --muted:#a6977f; --line:#352d22; --line2:#45392a;
+  --z1:#7ea6ea; --z2:#e6a24f; --z3:#e8736d; --gold:#f0bd4f; --gold2:#a9770e; --ok:#5fc68a; --bad:#e8736d;
+  --chip:#2f281f; --chip-fg:#f3ebdd; --card:#221d16;
+  --sky:#2b3f55; --ground:#5a4b33; --house:#6b5a43; --water:#7ea6ea;
+  --sh:0 1px 2px rgba(0,0,0,.4),0 6px 16px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#18150f; --paper:#221d16; --fg:#f3ebdd; --muted:#a6977f; --line:#352d22; --line2:#45392a;
+  --z1:#7ea6ea; --z2:#e6a24f; --z3:#e8736d; --gold:#f0bd4f; --gold2:#a9770e; --ok:#5fc68a; --bad:#e8736d;
+  --chip:#2f281f; --chip-fg:#f3ebdd; --card:#221d16;
+  --sky:#2b3f55; --ground:#5a4b33; --house:#6b5a43; --water:#7ea6ea;
+  --sh:0 1px 2px rgba(0,0,0,.4),0 6px 16px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);line-height:1.5;padding-inline:16px;padding-block:14px 80px;max-width:520px;margin-inline:auto;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+
+/* header */
+h1{font-size:1.35rem;font-weight:900;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;letter-spacing:.01em}
+h1 .score{font-size:.8rem;font-weight:800;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px 10px;color:var(--fg);cursor:pointer}
+h1 .score:hover{border-color:var(--gold)}
+.howto{display:flex;gap:8px;margin:0 0 12px}
+.howto span{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;font-size:.76rem;font-weight:700;line-height:1.3;min-width:0;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.howto b{font-size:1.1rem;color:var(--fg)}
+
+/* sticky progress strip */
+.map{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:8px 10px;margin:0 0 12px}
+.map .steps{display:flex;align-items:center;gap:4px}
+.map .zone{display:flex;align-items:center;gap:4px;padding:3px 6px 3px 8px;border-radius:999px;flex:1;min-width:0;justify-content:center;background:var(--chip)}
+.map .zone[data-z="1"] .zl{color:var(--z1)}.map .zone[data-z="2"] .zl{color:var(--z2)}.map .zone[data-z="3"] .zl{color:var(--z3)}
+.map .zl{font-size:.74rem;font-weight:900;margin-right:2px;white-space:nowrap}
+.map .st{width:22px;height:22px;border-radius:50%;background:var(--paper);border:1.5px solid var(--line2);font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center;color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.map .st.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.map .st.now{background:var(--gold);border-color:var(--gold2);color:#241c12;transform:scale(1.2)}
+.map .arrow{color:var(--line2);font-size:.7rem}
+.map .now-line{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:.8rem;line-height:1.3;align-items:baseline}
+.map .now-line b{font-weight:900}
+.map .now-line .next{color:var(--muted);white-space:nowrap;font-size:.76rem}
+.map .now-line a{color:var(--z1);font-weight:800;text-decoration:none}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px;background:var(--paper);border:1px solid var(--line);padding:8px;border-radius:calc(var(--r) + 4px);box-shadow:var(--sh);aspect-ratio:1;max-width:100%;position:relative}
+.cell{all:unset;cursor:pointer;background:var(--bg);border-radius:12px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.66rem;font-weight:800;text-align:center;padding:8px 2px 4px;min-width:0;line-height:1.15;color:var(--fg);transition:transform .15s}
+.cell:active{transform:scale(.96)}
+.cell:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.cell .ic{font-size:1.45rem;line-height:1}
+.cell .bar{position:absolute;left:10px;right:10px;top:0;height:4px;border-radius:0 0 4px 4px}
+.cell[data-zone="1"] .bar{background:var(--z1)}.cell[data-zone="2"] .bar{background:var(--z2)}.cell[data-zone="3"] .bar{background:var(--z3)}
+.cell.corner{background:var(--chip);color:var(--muted)}
+.cell.here{background:var(--paper);box-shadow:0 0 0 2.5px var(--gold),var(--sh)}
+.cell.done::after{content:"";position:absolute;right:6px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.center{grid-column:2/4;grid-row:2/4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:var(--chip)}
+.center .logo{font-size:2.1rem;line-height:1}
+.center .t{font-weight:900;font-size:.92rem;letter-spacing:.04em}
+.center .legend{display:flex;gap:4px;font-size:.6rem;font-weight:800}
+.center .legend span{padding:1px 7px;border-radius:999px;color:#fff}
+.token{position:absolute;width:30px;height:30px;font-size:24px;line-height:30px;text-align:center;transition:left .4s cubic-bezier(.4,0,.2,1),top .4s cubic-bezier(.4,0,.2,1);pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.3));z-index:3}
+@media (prefers-reduced-motion:reduce){.token{transition:none}}
+
+/* dice bar */
+.ctrl{display:flex;gap:10px;align-items:center;margin:12px 0;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 14px 6px 6px;box-shadow:var(--sh)}
+.ctrl button{all:unset;cursor:pointer;background:var(--fg);color:var(--bg);font-weight:900;padding:10px 18px;border-radius:999px;font-size:.98rem;transition:transform .15s}
+.ctrl button:active{transform:scale(.96)}
+.ctrl button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.ctrl button[disabled]{opacity:.45}
+.die{width:40px;height:40px;border-radius:10px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.2rem;flex:none}
+.die.roll{animation:shake .4s}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-15deg)}75%{transform:rotate(15deg)}}
+@media (prefers-reduced-motion:reduce){.die.roll{animation:none}}
+#where{color:var(--muted);font-size:.84rem;flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* station card */
+.card{background:var(--card);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);overflow:hidden;box-shadow:var(--sh)}
+.card.event{border-color:var(--gold)}
+.card svg{display:block;width:100%;height:auto;max-width:100%}
+.in{padding:14px 16px 16px}
+.tag{display:inline-block;font-size:.68rem;font-weight:800;color:#fff;border-radius:999px;padding:2px 9px;margin-bottom:6px;letter-spacing:.04em}
+h2{margin:0 0 10px;font-size:1.2rem;font-weight:900;line-height:1.3;text-wrap:balance}
+.play{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.play>span{font-size:.8rem;color:var(--muted);font-weight:700}
+.btn{all:unset;cursor:pointer;background:var(--chip);color:var(--chip-fg);font-weight:900;padding:10px 16px;border-radius:999px;font-size:.95rem;border:2px solid transparent;transition:transform .15s}
+.btn:active{transform:scale(.96)}
+.btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn.on{border-color:var(--gold);background:var(--paper)}
+.btn.big{font-size:1rem;padding:12px 20px}
+.btn[disabled]{opacity:.35;cursor:default}
+input[type=range]{flex:1;min-width:120px;accent-color:var(--gold2);height:32px}
+.verdict{position:relative;margin:0;font-weight:800;font-size:.98rem;padding:12px 14px;border-radius:var(--r);background:var(--chip);color:var(--chip-fg);line-height:1.45}
+.verdict::before{content:"";position:absolute;top:-8px;left:22px;border:8px solid transparent;border-top:0;border-bottom-color:var(--chip)}
+.verdict.ok{background:color-mix(in srgb,var(--ok) 16%,var(--chip))}.verdict.ok::before{border-bottom-color:color-mix(in srgb,var(--ok) 16%,var(--chip))}
+.verdict.bad{background:color-mix(in srgb,var(--bad) 16%,var(--chip))}.verdict.bad::before{border-bottom-color:color-mix(in srgb,var(--bad) 16%,var(--chip))}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.opt{all:unset;cursor:pointer;background:var(--chip);color:var(--chip-fg);border-radius:var(--r);padding:10px 6px;text-align:center;font-size:.78rem;font-weight:700;border:2px solid transparent;min-width:0;line-height:1.5;transition:transform .15s}
+.opt:active{transform:scale(.97)}
+.opt .big{font-size:1.6rem;display:block;margin-bottom:2px}
+.opt.win{border-color:var(--ok);background:var(--paper)}.opt.lose{opacity:.45}
+.opt:focus-visible{outline:3px solid var(--gold)}
+.num{font-variant-numeric:tabular-nums;font-weight:900}
+.wheel{transition:transform 1.4s cubic-bezier(.2,.8,.2,1);transform-origin:180px 80px}
+@media (prefers-reduced-motion:reduce){.wheel{transition:none}}
+
+/* stickers */
+.badges{display:none}
+.badges::-webkit-scrollbar{display:none}
+.badge{all:unset;cursor:pointer;flex:none;width:80px;height:92px;scroll-snap-align:start;animation:pop .45s cubic-bezier(.3,1.5,.6,1)}
+.badge:focus-visible .face{outline:3px solid var(--fg)}
+.badge .inner{position:relative;width:100%;height:100%}
+.badge .face{position:absolute;inset:0;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 4px;text-align:center;line-height:1.15}
+.badge .front{background:linear-gradient(180deg,var(--gold),#e9a92a);color:#241c12;font-weight:900;font-size:.72rem;box-shadow:0 2px 0 var(--gold2),0 4px 10px rgba(60,40,10,.15)}
+.badge .front .em{font-size:1.75rem;line-height:1;margin-bottom:2px}
+.badge .front small{font-weight:600;font-size:.58rem;opacity:.75}
+.badge .back{display:none}
+.badge.play .front{box-shadow:0 0 0 3px var(--z3),0 2px 0 var(--gold2);transform:translateY(-4px)}
+.badge .front{transition:transform .2s,box-shadow .2s}
+@keyframes pop{0%{transform:scale(.2) rotate(-20deg)}100%{transform:scale(1) rotate(0)}}
+.fly{position:fixed;z-index:50;font-size:1.6rem;pointer-events:none;transition:transform .7s cubic-bezier(.3,0,.6,1),opacity .7s;will-change:transform}
+.score.bump{animation:bump .4s}
+@keyframes bump{50%{transform:scale(1.3);background:var(--gold)}}
+.confetti{position:fixed;z-index:49;width:8px;height:8px;border-radius:2px;pointer-events:none;animation:cf .9s ease-out forwards}
+@keyframes cf{to{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.badge,.score.bump,.confetti{animation:none}.fly{transition:none}}
+.tip{display:none}
+.log{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.log div{font-size:.8rem;color:var(--muted);padding:6px 10px;border-radius:10px;background:var(--paper);border:1px dashed var(--line2);animation:fadein .4s}
+.log div b{color:var(--fg)}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}}
+.tc.new{animation:tcpulse 1.2s 2}
+@keyframes tcpulse{50%{transform:scale(1.15);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 40%,transparent)}}
+.lv .stn .hd{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;font-weight:900;font-size:.8rem;margin-bottom:5px}
+.lv .stn .hd small{font-weight:600;color:var(--muted);font-size:.7rem}
+.lv .stn.fold .chips,.lv .stn.fold .tx{display:none}
+.lv .stn.fold .hd{margin-bottom:0}
+.lv .stn.lit .hd{font-size:.86rem}
+@media (prefers-reduced-motion:reduce){.tc.new,.log div{animation:none}}
+svg .sp{transform-box:fill-box;transform-origin:center}
+svg .bounce{animation:sbounce .5s 3}
+svg .grow{animation:sgrow .6s 2}
+svg .shake{animation:sshake .4s 3}
+svg .dim{opacity:.25;transition:opacity .3s}
+@keyframes sbounce{50%{transform:translateY(-12px)}}
+@keyframes sgrow{50%{transform:scale(1.5)}}
+@keyframes sshake{25%{transform:translateX(-6px) rotate(-6deg)}75%{transform:translateX(6px) rotate(6deg)}}
+svg .bub{animation:sbub 1.6s forwards;font-weight:900}
+@keyframes sbub{0%{opacity:0;transform:translateY(10px) scale(.5)}20%{opacity:1;transform:translateY(0) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+@media (prefers-reduced-motion:reduce){svg .bounce,svg .grow,svg .shake{animation:none}}
+
+/* album */
+.bag[hidden]{display:none}
+.bag{position:fixed;inset:0;z-index:45;background:rgba(30,20,10,.45);display:flex;align-items:flex-start;justify-content:center;padding:70px 16px 16px}
+.album{background:var(--paper);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);padding:14px 16px;box-shadow:var(--sh);width:100%;max-width:480px;max-height:80vh;overflow:auto}
+.album .x{all:unset;cursor:pointer;font-size:1.1rem;color:var(--muted);padding:0 6px}
+.album h3{margin:0 0 10px;font-size:1rem;font-weight:900;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.album h3 span:last-child{font-size:.76rem;font-weight:600;color:var(--muted);text-align:right;min-width:0}
+.album .row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.album .row b{font-size:.7rem;color:#fff;border-radius:999px;padding:2px 8px;flex:none;margin-top:6px}
+.slots{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.slot{all:unset;width:38px;height:38px;border-radius:10px;background:var(--chip);display:flex;align-items:center;justify-content:center;font-size:1.15rem;color:var(--line2);cursor:pointer}
+.slot.got{background:linear-gradient(180deg,var(--gold),#e9a92a);box-shadow:0 2px 0 var(--gold2);color:#241c12}
+.slot:focus-visible{outline:2px solid var(--fg)}
+
+/* big map */
+.bigbtn{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--fg);color:var(--bg);font-weight:900;border-radius:999px;padding:11px 16px;box-shadow:0 6px 18px rgba(0,0,0,.28);border:0;font-size:.92rem;cursor:pointer}
+.sheet[hidden]{display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:40;height:46vh;background:var(--paper);color:var(--fg);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(0,0,0,.18);display:flex;flex-direction:column;border-radius:18px 18px 0 0}
+.sheet .pane{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 16px calc(14px + env(safe-area-inset-bottom,0px));max-width:520px;width:100%;margin-inline:auto}
+body.docked{padding-bottom:calc(46vh + 24px)}
+body.docked .bigbtn{bottom:calc(46vh + 10px)}
+/* landscape / desktop: three columns, map always open */
+@media (min-width:960px){
+  body{max-width:1440px;display:grid;grid-template-columns:340px minmax(0,1fr) 380px;grid-template-rows:auto auto auto auto auto 1fr;grid-template-areas:"h1 howto ctrl" "board board board" "card card card" "map map map" "sheet sheet sheet" "cpanel cpanel cpanel";column-gap:20px;row-gap:12px;align-items:start;padding-block:16px 40px}
+  h1{grid-area:h1;margin:0;align-self:center}
+  .left{display:contents}
+  .howto{grid-area:howto;margin:0}
+  .map{grid-area:map;margin:0;position:static;border-radius:var(--r) var(--r) 0 0;border-bottom:0;box-shadow:none}
+  .board{grid-area:board;width:100%}
+  .ctrl{grid-area:ctrl;margin:0}
+  .card{grid-area:card;position:relative;overflow:visible;max-height:none}
+  #cardph{grid-area:card;display:none}
+  #cardph.on{display:block}
+  .fwrap{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:min(1408px,calc(100vw - 32px));z-index:40;display:flex;flex-direction:column;gap:8px}
+  .fwrap[hidden]{display:none}
+  .frow{display:grid;grid-template-columns:300px minmax(0,1fr);gap:10px;align-items:stretch;max-height:36vh}
+  body{overflow-anchor:none}
+  .fcard{min-height:0}
+  .fwrap .card{display:block;height:100%;max-height:36vh;font-size:.9rem;overflow:auto;border-color:var(--gold);box-shadow:0 -6px 24px rgba(0,0,0,.14);position:relative}
+  .fwrap .card>svg{height:96px;max-height:96px;width:100%}
+  .fwrap .card .in{padding:8px 12px 10px}
+  .fwrap .card h2{font-size:1rem;margin:0 0 6px}
+  .fwrap .card .verdict{font-size:.86rem;padding:8px 10px}
+  .fwrap .card .play{margin-bottom:6px}
+  .fwrap .card .btn,.fwrap .card .opt{font-size:.86rem;padding:6px 10px}
+  .fwrap .card .log{margin-top:6px}
+  .fwrap .card.mini>svg{display:none}
+  .fwrap .card.mini .in>*{display:none}
+  .fwrap .card.mini .in>.tag,.fwrap .card.mini .in>h2{display:block;margin:0 0 4px}
+  .fwrap .card .minib{display:block}
+  .fsheet{min-height:0;background:var(--paper);border:1px solid var(--gold);border-radius:calc(var(--r) + 4px);box-shadow:0 -6px 24px rgba(0,0,0,.14);padding:0 12px 8px;max-height:36vh;overflow:auto}
+  .fsheet .tree{gap:4px 12px}
+  .fsheet .lv .lt{font-size:.82rem;padding-bottom:2px}
+  .fsheet .lv .lt small{font-size:.66rem}
+  .fsheet .lv .sts{gap:2px}
+  .fsheet .lv .stn{font-size:.76rem}
+  .fsheet .lv .stn .hd{font-size:.76rem;margin-bottom:2px}
+  .fsheet .lv .stn .chips{gap:3px}
+  .fsheet .tc{font-size:.68rem;padding:2px 7px}
+  .fsheet .story{font-size:.76rem;padding:6px 10px;margin-top:6px}
+  .fsheet h3{margin:0;font-size:.86rem;font-weight:900;padding:6px 0 5px;border-bottom:1px solid var(--line);margin-bottom:5px;position:sticky;top:0;background:var(--paper);z-index:2;display:flex;justify-content:space-between;align-items:center}
+  .fsheet h3 .close,.fsheet .crumb,.fsheet .scen{display:none}
+  .fsheet .tree{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+  .fsheet .story{grid-column:1/-1}
+  .fmap{margin:0;position:static;border:1px solid var(--gold);border-radius:var(--r);box-shadow:0 -6px 24px rgba(0,0,0,.14)}
+  .fmap .now-line a{display:none}
+  .allb{cursor:pointer;border:1.5px solid var(--line);background:var(--paper);color:var(--fg);border-radius:999px;font-size:.74rem;font-weight:800;padding:3px 10px;font-family:inherit;margin-right:6px}
+.h3r{display:flex;align-items:center}
+.minib{display:none;position:absolute;top:8px;right:10px;z-index:2;cursor:pointer;border:1.5px solid var(--line);background:var(--paper);color:var(--fg);border-radius:999px;font-size:.78rem;font-weight:800;padding:4px 10px;font-family:inherit}
+  .sheet .scen{display:none}
+  .sheet .crumb{display:none}
+  .cpanel{grid-area:cpanel;position:static}
+  .ctrl{margin:0;align-self:center}
+  .board{display:flex;gap:6px;padding:8px;align-items:stretch;aspect-ratio:auto}
+  .board .center{display:none}
+  .cell{flex:1;min-width:0;min-height:62px;padding:6px 2px;font-size:.72rem}
+  .cell[data-i="0"]{order:0}.cell[data-i="1"]{order:1}.cell[data-i="2"]{order:2}.cell[data-i="3"]{order:3}.cell[data-i="4"]{order:4}.cell[data-i="5"]{order:5}.cell[data-i="6"]{order:6}.cell[data-i="7"]{order:7}.cell[data-i="8"]{order:8}.cell[data-i="9"]{order:9}.cell[data-i="10"]{order:10}.cell[data-i="11"]{order:11}
+  .cell.corner{flex:.8}
+  .card{display:grid;grid-template-columns:320px minmax(0,1fr);align-items:stretch}
+  .card>svg{height:100%;object-fit:cover;max-height:220px}
+  .card>.in:only-child{grid-column:1/-1}
+  .card .in{padding:12px 18px 14px}
+  .card h2{margin-top:2px}
+  .card .log{flex-direction:row;flex-wrap:wrap}
+  .card .log div{flex:1 1 240px}
+  .cpanel.wall{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;padding:14px 16px 18px}
+  .cpanel.wall .wcol{min-width:0}
+  .cpanel.wall .whd{display:block;text-align:center;border-radius:999px;padding:8px 10px;font-weight:900;font-size:.95rem;margin:0 auto 10px;max-width:260px;border:2px solid transparent}
+  .cpanel.wall .whd small{display:block;font-weight:600;font-size:.7rem;opacity:.85}
+  .cpanel.wall .whd[data-z="1"]{background:color-mix(in srgb,var(--z1) 16%,var(--paper));color:var(--z1);border-color:var(--z1)}
+  .cpanel.wall .whd[data-z="2"]{background:color-mix(in srgb,var(--z2) 16%,var(--paper));color:var(--z2);border-color:var(--z2)}
+  .cpanel.wall .whd[data-z="3"]{background:color-mix(in srgb,var(--z3) 16%,var(--paper));color:var(--z3);border-color:var(--z3)}
+  .cpanel.wall .qc{min-height:62px;padding:8px 9px}
+  .cpanel.wall .qc .em{font-size:1.25rem}
+  .cpanel.wall .qc .tt{font-size:.8rem}
+  .cpanel.wall .qc .tg{font-size:.68rem}
+  .cpanel.wall .wlist{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+  .cpanel.wall .sc{margin:0;cursor:pointer}
+  .cpanel.wall .sc .chain{display:flex}
+  .cpanel.wall .sc .why{display:block}
+  .cpanel.wall .sc .st{font-size:.82rem}
+
+  .sheet{display:flex;grid-area:sheet;position:static;height:auto;max-height:none;margin-top:-12px;border:1px solid var(--line);border-top:1px dashed var(--line);border-radius:0 0 calc(var(--r) + 4px) calc(var(--r) + 4px);box-shadow:var(--sh)}
+  .sheet .close{display:none}
+  .sheet .pane{max-width:none}
+  .bigbtn{display:none}
+  body.docked{padding-bottom:40px}
+}
+.sheet h3{margin:0;font-size:.95rem;font-weight:900;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:2;background:var(--paper);padding:12px 0 8px;border-bottom:1px solid var(--line)}
+.sheet h3::before{content:"";position:absolute;top:5px;left:50%;width:36px;height:4px;border-radius:2px;background:var(--line2);transform:translateX(-50%)}
+.sheet .close{all:unset;cursor:pointer;font-size:1.1rem;padding:2px 8px;color:var(--muted)}
+.crumb{font-size:.84rem;font-weight:800;margin:10px 0;line-height:1.5;padding:8px 10px;background:var(--chip);border-radius:10px}
+.crumb .sep{color:var(--muted);margin:0 5px}
+.tree{display:flex;flex-direction:column;gap:14px}
+.lv{padding:0}
+.lv .lt{font-weight:900;font-size:.92rem;display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;align-items:baseline;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.lv[data-z="1"] .lt{border-color:var(--z1)}.lv[data-z="2"] .lt{border-color:var(--z2)}.lv[data-z="3"] .lt{border-color:var(--z3)}
+.lv .lt small{font-weight:600;color:var(--muted);font-size:.72rem}
+.lv .sts{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.lv .stn{font-size:.82rem;opacity:.55;padding:0 0 0 8px;border-left:2px solid var(--line)}
+.lv .stn > b{display:block;margin-bottom:5px;font-size:.8rem}
+.lv .stn .chips{display:flex;flex-wrap:wrap;gap:5px}
+.tc{all:unset;cursor:pointer;border-radius:999px;padding:3px 9px;font-size:.72rem;font-weight:700;background:var(--chip);color:var(--muted);line-height:1.4}
+.tc.got{background:var(--gold);color:#241c12}
+.tc.hot{background:var(--z3);color:#fff}
+.tc:focus-visible{outline:2px solid var(--fg)}
+.tx{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--chip);font-size:.8rem;line-height:1.5}
+.tx b{display:inline;font-size:.82rem}
+.lv .stn.lit{opacity:1;border-left-color:var(--gold)}
+.lv.lit .stn{opacity:.8}
+.scen{margin-top:10px}
+.qwrap{margin-top:8px}
+.qx{display:grid;grid-template-columns:52px 1fr 1fr;font-size:.68rem;color:var(--muted);font-weight:700;text-align:center;margin-bottom:3px}
+.qx span:first-child{text-align:left}
+.quad{display:grid;grid-template-columns:52px 1fr 1fr;grid-template-rows:1fr 1fr;gap:4px}
+.qy{font-size:.68rem;color:var(--muted);font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;background:var(--chip);border-radius:8px}
+.qc{all:unset;cursor:pointer;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:8px 8px;display:flex;flex-direction:column;gap:3px;min-width:0;min-height:64px}
+.qc .em{font-size:1.3rem;line-height:1}
+.qc .tt{font-weight:800;font-size:.76rem;line-height:1.25}
+.qc .tg{font-size:.66rem;font-weight:700;color:#fff;border-radius:999px;padding:1px 6px;align-self:flex-start;background:var(--muted)}
+.qc .tg.go{background:var(--ok)}.qc .tg.wait{background:var(--z2)}.qc .tg.no{background:var(--bad)}
+.qc.on{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent);background:color-mix(in srgb,var(--gold) 12%,var(--paper))}
+.qc:focus-visible{outline:2px solid var(--fg)}
+.sc.on{margin-top:8px}
+.cpanel{background:var(--paper);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);box-shadow:var(--sh);padding:12px 16px 16px}
+.cpanel[hidden]{display:none}
+.ctabs{display:flex;gap:6px;margin-bottom:10px}
+.ctab{all:unset;cursor:pointer;flex:1;text-align:center;padding:8px 6px;border-radius:999px;font-weight:900;font-size:.88rem;background:var(--chip);color:var(--muted);border:2px solid transparent}
+.ctab[data-z="1"].on{background:color-mix(in srgb,var(--z1) 18%,var(--paper));color:var(--z1);border-color:var(--z1)}
+.ctab[data-z="2"].on{background:color-mix(in srgb,var(--z2) 18%,var(--paper));color:var(--z2);border-color:var(--z2)}
+.ctab[data-z="3"].on{background:color-mix(in srgb,var(--z3) 18%,var(--paper));color:var(--z3);border-color:var(--z3)}
+.ctab small{display:block;font-weight:600;font-size:.68rem;opacity:.8}
+.ctab.allb{flex:0 0 auto;padding-inline:14px}
+.ctab.allb.on{background:var(--fg);color:var(--paper);border-color:var(--fg)}
+.cpanel .lh{display:flex;align-items:baseline;gap:8px;font-weight:900;font-size:.95rem;margin:14px 0 2px;padding-top:12px;border-top:1px dashed var(--line)}
+.cpanel .lh:first-of-type{margin-top:4px;padding-top:0;border-top:0}
+.cpanel .lh small{font-weight:600;color:var(--muted);font-size:.78rem}
+.cpanel .lh[data-z="1"]{color:var(--z1)}.cpanel .lh[data-z="2"]{color:var(--z2)}.cpanel .lh[data-z="3"]{color:var(--z3)}
+.cpanel.all .qc{min-height:62px;padding:8px 10px}
+.cpanel.all .qc .em{font-size:1.3rem}
+.cpanel.all .qc .tt{font-size:.84rem}
+.cpanel .qwrap{margin-top:4px}
+.cpanel .quad{grid-template-rows:auto auto}
+.cpanel .qc{min-height:84px;padding:12px}
+.cpanel .qc .em{font-size:1.7rem}
+.cpanel .qc .tt{font-size:.9rem}
+.cpanel .qc .tg{font-size:.74rem}
+.cpanel .chint{font-size:.78rem;color:var(--muted);margin-top:8px;text-align:center}
+.scen .sh{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;width:100%;font-weight:900;font-size:.82rem;padding:6px 8px;border-radius:10px;background:var(--chip)}
+.scen .sh small{font-weight:600;color:var(--muted);font-size:.7rem}
+.scen.fold .sc,.scen.fold .qwrap{display:none}
+.sc{margin-top:6px;border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;background:var(--paper)}
+.sc.on{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 35%,transparent)}
+.sc .st{font-weight:800;font-size:.8rem;display:flex;justify-content:space-between;gap:6px;align-items:center}
+
+.sc .st small{font-weight:700;font-size:.7rem;color:#fff;border-radius:999px;padding:1px 7px;background:var(--muted);white-space:nowrap}
+.sc .st small.go{background:var(--ok)}.sc .st small.wait{background:var(--z2)}.sc .st small.no{background:var(--bad)}
+.sc:not(.on) .chain,.sc:not(.on) .why{display:none}
+.sc{padding:7px 10px}
+.sc .chain{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:8px}
+.sc .chain .ar{color:var(--muted);font-size:.8rem}
+.sc .chain .tc{pointer-events:none}
+.sc .chain .tc.step{background:var(--z3);color:#fff;transform:scale(1.1)}
+.sc .why{margin-top:6px;font-size:.78rem;color:var(--muted);line-height:1.45}
+.sc.on .why{color:var(--fg)}
+.story{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--chip);font-size:.84rem;line-height:1.5;color:var(--muted)}
+@media (min-width:960px){.sheet .close,.map .now-line a,.sheet h3::before{display:none}}
+@media (min-width:960px){.tree{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}.story{grid-column:1/-1}.cpanel[hidden]{display:block}}
+</style>
+
+<h1><span>🥖 麵包店大富翁</span><span class="score"><span id="scoreBox">🎒 貼紙 <span id="score" class="num">0</span>/37</span></span></h1>
+
+<div class="left" id="left"><div class="howto"><span><b>①</b>擲骰子，走格子</span><span><b>②</b>每一站玩一個小動作</span><span><b>③</b>收集貼紙，走完一圈</span></div>
+<div class="map" id="map">
+  <div class="steps">
+    <div class="zone" data-z="1"><span class="zl">鎮</span><span class="st" data-s="1">1</span><span class="st" data-s="2">2</span><span class="st" data-s="4">3</span></div><span class="arrow">▶</span>
+    <div class="zone" data-z="2"><span class="zl">街</span><span class="st" data-s="5">4</span><span class="st" data-s="7">5</span></div><span class="arrow">▶</span>
+    <div class="zone" data-z="3"><span class="zl">店</span><span class="st" data-s="8">6</span><span class="st" data-s="10">7</span><span class="st" data-s="11">8</span></div>
+  </div>
+  <div class="now-line"><span id="nowTxt"><b>現在：起點</b> 還沒出發</span><span class="next" id="nextTxt">下一站：1 鎮民</span></div>
+</div>
+<div class="board" id="board">
+  <button class="cell corner" data-i="0"><span class="ic">🚩</span>起點</button>
+  <button class="cell" data-i="1" data-zone="1"><span class="bar"></span><span class="ic">🏘️</span>1 鎮民</button>
+  <button class="cell" data-i="2" data-zone="1"><span class="bar"></span><span class="ic">🚰</span>2 水龍頭</button>
+  <button class="cell corner" data-i="3"><span class="ic">❓</span>機會</button>
+  <button class="cell" data-i="11" data-zone="3"><span class="bar"></span><span class="ic">🤝</span>8 出手</button>
+  <div class="center"><div class="logo">🥖</div><div class="t">鎮 → 街 → 店</div><div class="legend"><span style="background:var(--z1)">總經</span><span style="background:var(--z2)">產業</span><span style="background:var(--z3)">個股</span></div></div>
+  <button class="cell" data-i="4" data-zone="1"><span class="bar"></span><span class="ic">🎡</span>3 季節</button>
+  <button class="cell" data-i="10" data-zone="3"><span class="bar"></span><span class="ic">🏷️</span>7 標價</button>
+  <button class="cell" data-i="5" data-zone="2"><span class="bar"></span><span class="ic">🍦</span>4 順風</button>
+  <button class="cell corner" data-i="9"><span class="ic">🔁</span>命運</button>
+  <button class="cell" data-i="8" data-zone="3"><span class="bar"></span><span class="ic">🏆</span>6 冠軍</button>
+  <button class="cell" data-i="7" data-zone="2"><span class="bar"></span><span class="ic">🧩</span>5 拼街</button>
+  <button class="cell corner" data-i="6"><span class="ic">🛣️</span>轉角</button>
+  <div class="token" id="token">🚶</div>
+</div>
+
+<div class="ctrl">
+  <button id="roll">擲骰子</button>
+  <div class="die" id="die">🎲</div>
+  <div id="where" style="color:var(--muted);font-size:.85rem;flex:1;min-width:0">在起點</div>
+</div>
+</div>
+
+<div class="cpanel" id="cpanel" hidden></div>
+<div id="cardph"></div>
+<div class="fwrap" id="fwrap" hidden><div class="frow"><div class="fcard" id="fcard"></div><div class="fsheet" id="fsheet"></div></div></div>
+<div class="card" id="card"></div>
+<button class="bigbtn" id="bigbtn">🗺️ 我在哪一層？</button>
+<div class="sheet" id="sheet" hidden><div class="pane"><h3><span>🗺️ 整個投資系統 · 點名詞看解釋</span><span class="h3r"><button class="allb" id="allb">⊞ 全部展開</button><button class="close" id="closeSheet" aria-label="關閉">✕</button></span></h3><div class="crumb" id="crumb"></div><div class="tree" id="tree"></div><div class="story" id="bigstory"></div></div></div>
+<div class="bag" id="bag" hidden><div class="album" id="album"></div></div>
+
+<script>
+(function(){
+// 名詞徽章：點一下只給一句話
+var T={
+ "非農就業":"美國每月新增幾份工作","初領失業金":"每週新來領救濟的人數","零售銷售":"大家這個月花了多少錢","消費者信心":"大家覺得明年會不會更好","PMI 新訂單":"工廠新接的單多不多",
+ "聯準會利率":"銀行借錢的利息","核心通膨":"扣掉油和食物，東西漲多快","通膨預期":"大家覺得以後還會漲多少","實質利率":"利息扣掉通膨，存錢真正賺多少","資產負債表":"銀行自己印錢買債券","美元指數":"鎮上的錢對外地強不強",
+ "復甦":"春：工作變多，物價還沒漲","擴張":"夏：又賺又漲","趨緩":"秋：還在賺但變慢，物價還在漲","衰退":"冬：工作變少，沒人花錢","CPI":"物價漲多快的溫度計","薩姆規則":"失業突然大增＝冬天警報","長短利差":"長期借錢比短期便宜＝不正常",
+ "循環型":"看季節的店：冰店、車行、建材","防禦型":"不看季節的店：藥局、超市、瓦斯","EPS 差值":"這季冰店和藥局誰賺得多",
+ "上游":"賣原料和機器的","中游":"把原料做成產品的","下游":"賣到你手上的","TAM":"餅有多大：全鎮一年吃多少麵包","進入門檻":"新店進得來嗎","競爭態勢":"餅被幾家分",
+ "市佔率":"誰排隊最長","營收成長":"今年比去年多賣幾成","毛利率":"每 100 元扣掉麵粉奶油剩多少","負債比率":"家當有多少是借錢買的","自由現金流":"扣掉買新烤箱後手上剩的錢",
+ "EPS":"一股一年賺多少","本益比":"幾年回本","本益比標準差":"跟它自己平常比貴還便宜","目標價":"合理倍數 × EPS",
+ "潛在報酬率":"目標價比現在高幾 %","預期報酬率":"你的及格線","停損":"跌到就先賣不要凹"
+};
+var IC={"非農就業":"👷","初領失業金":"📉","零售銷售":"🛍️","消費者信心":"😄","PMI 新訂單":"🏭","聯準會利率":"🚰","核心通膨":"🔥","通膨預期":"🔮","實質利率":"🧮","資產負債表":"🖨️","美元指數":"💵","復甦":"🌱","擴張":"☀️","趨緩":"🍂","衰退":"❄️","CPI":"🌡️","薩姆規則":"🚨","長短利差":"🔀","循環型":"🍦","防禦型":"💊","EPS 差值":"⚖️","上游":"🌾","中游":"🥖","下游":"🏪","TAM":"🥧","進入門檻":"🚧","競爭態勢":"👥","市佔率":"🧍","營收成長":"📈","毛利率":"🥐","負債比率":"🏦","自由現金流":"💰","EPS":"🪙","本益比":"⏳","本益比標準差":"📏","目標價":"🎯","潛在報酬率":"🚀","預期報酬率":"🎓","停損":"🛑"};
+var TS={"非農就業":1,"初領失業金":1,"零售銷售":1,"消費者信心":1,"PMI 新訂單":1,"聯準會利率":2,"核心通膨":2,"通膨預期":2,"實質利率":2,"資產負債表":2,"美元指數":2,"復甦":4,"擴張":4,"趨緩":4,"衰退":4,"CPI":4,"薩姆規則":4,"長短利差":4,"循環型":5,"防禦型":5,"EPS 差值":5,"上游":7,"中游":7,"下游":7,"TAM":7,"進入門檻":7,"競爭態勢":7,"市佔率":8,"營收成長":8,"毛利率":8,"負債比率":8,"自由現金流":8,"EPS":10,"本益比":10,"本益比標準差":10,"目標價":10,"潛在報酬率":11,"預期報酬率":11,"停損":11};
+var ZONES=[["鎮・總經","var(--z1)",["非農就業","初領失業金","零售銷售","消費者信心","PMI 新訂單","聯準會利率","核心通膨","通膨預期","實質利率","資產負債表","美元指數","復甦","擴張","趨緩","衰退","CPI","薩姆規則","長短利差"]],["街・產業","var(--z2)",["循環型","防禦型","EPS 差值","上游","中游","下游","TAM","進入門檻","競爭態勢"]],["店・個股","var(--z3)",["市佔率","營收成長","毛利率","負債比率","自由現金流","EPS","本益比","本益比標準差","目標價","潛在報酬率","預期報酬率","停損"]]];
+var NK={"非農就業":"新工作","初領失業金":"排隊領救濟","零售銷售":"購物袋","消費者信心":"鎮民心情","PMI 新訂單":"工廠訂單","聯準會利率":"水龍頭","核心通膨":"麵包漲價","通膨預期":"大家猜會漲","實質利率":"存錢真賺","資產負債表":"銀行印錢","美元指數":"鎮幣強弱","復甦":"春天","擴張":"夏天","趨緩":"秋天","衰退":"冬天","CPI":"物價溫度計","薩姆規則":"冬天警報","長短利差":"借錢顛倒","循環型":"冰店","防禦型":"藥局","EPS 差值":"誰賺得多","上游":"麵粉廠","中游":"麵包店","下游":"便利商店","TAM":"餅有多大","進入門檻":"開店多難","競爭態勢":"幾家分","市佔率":"排隊最長","營收成長":"越賣越多","毛利率":"每個麵包賺多少","負債比率":"烤箱是借的嗎","自由現金流":"口袋剩的錢","EPS":"一股賺多少","本益比":"幾年回本","本益比標準差":"比平常貴嗎","目標價":"該值多少","潛在報酬率":"還能漲多少","預期報酬率":"我的及格線","停損":"跌了先賣"};
+var got={};try{got=JSON.parse(localStorage.getItem('bakery.badges.v1')||'{}')}catch(e){}
+var done={};try{done=JSON.parse(localStorage.getItem('bakery.done.v1')||'{}')}catch(e){}
+function save(){try{localStorage.setItem('bakery.badges.v1',JSON.stringify(got));localStorage.setItem('bakery.done.v1',JSON.stringify(done))}catch(e){}}
+function score(){var n=0;for(var k in got)n++;document.getElementById('score').textContent=n;}
+var badgeBox,tipBox;
+function album(){var a=document.getElementById('album');a.innerHTML='<h3><span>📒 貼紙簿 <small style="font-weight:600;color:var(--muted)">點格子看它演</small></span><button class="x" id="bagx">✕</button></h3>'+ZONES.map(function(z){return '<div class="row"><b style="background:'+z[1]+'">'+z[0]+'</b><div class="slots">'+z[2].map(function(n){return '<button class="slot'+(got[n]?' got':'')+'" title="'+n+'" data-n="'+n+'">'+(got[n]?IC[n]:'?')+'</button>';}).join('')+'</div></div>';}).join('');
+  document.getElementById('bagx').onclick=function(){document.getElementById('bag').hidden=true;};
+  [].forEach.call(a.querySelectorAll('.slot'),function(sl){sl.onclick=function(){document.getElementById('bag').hidden=true;var n=sl.getAttribute('data-n');go(TS[n],false);if(window.innerWidth<960)card.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(function(){if(got[n]){badge(n);demo(n);}else{var vv=document.getElementById('v');if(vv){vv.textContent='這張貼紙要在這一站玩一下才會掉出來 👆';vv.className='verdict';}}},500);};});}
+function confetti(x,y){for(var i=0;i<14;i++){var c=document.createElement('div');c.className='confetti';c.style.left=x+'px';c.style.top=y+'px';c.style.background=['var(--gold)','var(--z1)','var(--z2)','var(--z3)','var(--ok)'][i%5];c.style.setProperty('--dx',(Math.random()*160-80)+'px');c.style.setProperty('--dy',(Math.random()*-120-20)+'px');document.body.appendChild(c);setTimeout(function(){c.remove();},900);}}
+function fly(from){var sb=document.getElementById('scoreBox').getBoundingClientRect(),f=document.createElement('div');f.className='fly';f.textContent=from.em;f.style.left=from.x+'px';f.style.top=from.y+'px';document.body.appendChild(f);
+  requestAnimationFrame(function(){f.style.transform='translate('+(sb.left+sb.width/2-from.x)+'px,'+(sb.top+sb.height/2-from.y)+'px) scale(.4)';f.style.opacity='.2';});
+  setTimeout(function(){f.remove();var sc=document.getElementById('scoreBox');sc.classList.add('score');sc.classList.remove('bump');void sc.offsetWidth;sc.classList.add('bump');score();album();},700);}
+var DEMO={};
+var newChips={},openSt={},allOpen=false;
+function logLine(name){var lg=document.getElementById('log');if(!lg)return;var d=document.createElement('div');d.innerHTML='🏅 拿到貼紙 <b>'+NK[name]+'</b>（'+name+'）：'+(ST[name]||T[name]);lg.prepend(d);while(lg.children.length>2)lg.lastChild.remove();}
+var TREE=[{z:1,name:'鎮 ＝ 總體經濟',why:'先決定「現在該不該進場」',sts:[[1,'鎮民過得好嗎',['非農就業','初領失業金','零售銷售','消費者信心','PMI 新訂單']],[2,'銀行借錢貴嗎',['聯準會利率','核心通膨','通膨預期','實質利率','資產負債表','美元指數']],[4,'現在幾月',['復甦','擴張','趨緩','衰退','CPI','薩姆規則','長短利差']]]},
+{z:2,name:'街 ＝ 產業',why:'再決定「進哪一排店」',sts:[[5,'哪排店順風',['循環型','防禦型','EPS 差值']],[7,'這條街怎麼運作',['上游','中游','下游','TAM','進入門檻','競爭態勢']]]},
+{z:3,name:'店 ＝ 個股',why:'最後決定「買哪一家、多少錢、買不買」',sts:[[8,'哪家是冠軍（看帳本）',['市佔率','營收成長','毛利率','負債比率','自由現金流']],[10,'一股值多少',['EPS','本益比','本益比標準差','目標價']],[11,'現在出手嗎',['潛在報酬率','預期報酬率','停損']]]}];
+var ZSTORY={1:'你還在鎮上逛，看的是整個鎮過得好不好。這一層決定「要不要進場」。',2:'你已經走到麵包街上，看的是這條街好不好做。這一層決定「進哪一排店」。',3:'你站在某一家店門口，看的是這家店本身。這一層決定「買哪家、多少錢、買不買」。'};
+var curTerm=null;
+var AX={1:{x:['物價低','物價高'],y:['成長快','成長慢'],xl:'🌡️ 物價',yl:'📈 成長'},2:{x:['餅小','餅大'],y:['順風','逆風'],xl:'🥧 餅',yl:'🌬️ 風向'},3:{x:['便宜','貴'],y:['是冠軍','不是冠軍'],xl:'🏷️ 價格',yl:'🏆 店'}};
+var SCEN={1:[
+ {q:[0,0],em:'🌱',t:'春天：水先來，人後到',tag:['go','進場，買循環型'],chain:['聯準會利率','實質利率','非農就業','零售銷售','復甦'],why:'銀行先把水龍頭開大→存錢不划算→老闆敢借錢開店、工作慢慢回來→鎮民又開始花→春天。最好的進場時間，買冰店這種循環型。'},
+ {q:[0,1],em:'☀️',t:'夏天：越來越熱',tag:['go','可以進，但要小心'],chain:['非農就業','零售銷售','核心通膨','聯準會利率','擴張'],why:'鎮民工作多→花錢多→麵包漲價→銀行把水龍頭關小→夏天。還能進場，但要開始挑不怕關水的店（藥局）。'},
+ {q:[1,0],em:'❄️',t:'冬天：警報響了',tag:['no','先別進場'],chain:['初領失業金','薩姆規則','消費者信心','聯準會利率','衰退'],why:'領救濟的人暴增→冬天警報→鎮民不敢花→銀行只好開大水龍頭救市→冬天。先別買，抱著現金等春天。'},
+ {q:[1,1],em:'🍂',t:'秋天：還在賺但變慢',tag:['wait','減碼，換防禦'],chain:['PMI 新訂單','營收成長','核心通膨','長短利差','趨緩'],why:'工廠訂單變少→店越賣越慢→但物價還在漲→長短利差倒掛→秋天。別加碼，把冰店換成藥局。'}],
+ 2:[
+ {q:[0,0],em:'🍧',t:'順風但餅小',tag:['no','換一排'],chain:['循環型','TAM','競爭態勢'],why:'季節對了，但餅很小，三十家在搶。再順風也賺不到什麼。'},
+ {q:[0,1],em:'🍦',t:'順風＋大餅',tag:['go','進這一排'],chain:['循環型','擴張','TAM','進入門檻','競爭態勢'],why:'夏天→冰店順風→全鎮都要吃→新店不好開→只有五家分。這條街值得進。'},
+ {q:[1,0],em:'🚫',t:'逆風又餅小',tag:['no','別碰'],chain:['衰退','循環型','TAM'],why:'冬天，冰店沒人，餅又小。這排店現在什麼都不是，別碰。'},
+ {q:[1,1],em:'💊',t:'逆風但餅大',tag:['wait','只碰防禦型'],chain:['衰退','防禦型','EPS 差值','客戶組合'],why:'冬天→循環型沒人→看冰店和藥局誰賺得多→藥局勝。餅大的防禦型可以抱，而且要看它的大客戶穩不穩。'}],
+ 3:[
+ {q:[0,0],em:'🏆',t:'冠軍＋便宜',tag:['go','買進，設停損'],chain:['市佔率','毛利率','自由現金流','本益比','目標價','潛在報酬率','預期報酬率'],why:'排隊最長、每個麵包賺最多、口袋有現金→幾年回本比平常少→算出目標價→還能漲的空間超過及格線→買，然後設停損。'},
+ {q:[0,1],em:'💎',t:'冠軍但太貴',tag:['wait','放進觀察名單'],chain:['市佔率','毛利率','本益比標準差','潛在報酬率','預期報酬率'],why:'店很好，但現在比它自己平常貴太多→算出來的空間不到及格線→不追，等它跌回合理價。'},
+ {q:[1,0],em:'🪤',t:'便宜但不是冠軍',tag:['no','便宜有原因'],chain:['負債比率','存貨週轉天數','本益比','停損'],why:'烤箱是借的、麵包放很久賣不掉→本益比低是因為大家不敢買→便宜的爛店不是機會。已經有的照停損賣。'},
+ {q:[1,1],em:'🏃',t:'又貴又不是冠軍',tag:['no','快跑'],chain:['市佔率','毛利率','本益比','停損'],why:'排隊短、賺得少，股價卻很貴。沒有任何理由留著，有的話立刻停損。'}]};
+var openScen={1:false,2:false,3:false},activeScen=null,centerZ=1,centerAll=false;
+var ORD={1:[0,1,3,2],2:[1,3,0,2],3:[0,1,2,3]};
+function wallMode(){return window.innerWidth>=960;}
+function stNo(k){return [,1,2,,3,4,,5,6,,7,8][k];}
+function renderTree(){renderCenterSafe();var crumb=document.getElementById('crumb'),tree=document.getElementById('tree'),st=document.getElementById('bigstory');
+  var hitZ=null,hitS=null;TREE.forEach(function(L){L.sts.forEach(function(S){if(curTerm&&S[2].indexOf(curTerm)>=0){hitZ=L;hitS=S;}});});
+  if(!hitZ){TREE.forEach(function(L){L.sts.forEach(function(S){if(S[0]===pos){hitZ=L;hitS=S;}});});}
+  tree.innerHTML=TREE.map(function(L){var ax=AX[L.z],qd=quadHTML(L.z),qhtml=qd[0],detail=qd[1];
+    var scen='<div class="scen'+(openScen[L.z]?'':' fold')+'" data-z="'+L.z+'"><button class="sh"><span>🔗 四象限：'+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'</span><small>4 種可能 '+(openScen[L.z]?'▾':'▸')+'</small></button>'+qhtml+detail+'</div>';
+    return '<div class="lv'+(L===hitZ?' lit':'')+'" data-z="'+L.z+'"><div class="lt"><span>'+L.name+'</span><small>'+L.why+'</small></div><div class="sts">'+L.sts.map(function(S){
+    var chips=S[2].map(function(t){return '<button class="tc'+(got[t]?' got':'')+(t===curTerm?' hot':'')+'" data-t="'+t+'">'+(IC[t]||'')+' '+(NK[t]||t)+'</button>';}).join('');
+    var tx=(curTerm&&S[2].indexOf(curTerm)>=0)?'<div class="tx">'+IC[curTerm]+' <b>'+NK[curTerm]+'</b> ＝ '+curTerm+'<br>'+(ST[curTerm]||T[curTerm]||'')+'</div>':'';
+    var open=allOpen||(S===hitS)||openSt[S[0]];var gotN=S[2].filter(function(t){return got[t]}).length;
+    return '<div class="stn'+(S===hitS?' lit':'')+(open?'':' fold')+'" data-s="'+S[0]+'"><button class="hd"><span>'+(S===hitS?'📍 ':'')+'第 '+stNo(S[0])+' 站 '+S[1]+'</span><small>'+gotN+'/'+S[2].length+(open?' ▾':' ▸')+'</small></button><div class="chips">'+chips+'</div>'+tx+'</div>';}).join('')+'</div>'+scen+'</div>';}).join('');
+  [].forEach.call(tree.querySelectorAll('.scen .sh'),function(h){h.onclick=function(){var z=Number(h.parentNode.getAttribute('data-z'));openScen[z]=!openScen[z];renderTree();};});
+  [].forEach.call(tree.querySelectorAll('.qc'),function(c){c.onclick=function(){var k=c.getAttribute('data-k');if(activeScen===k){activeScen=null;if(scenTimer)clearInterval(scenTimer);renderTree();}else playScen(k);};});
+  var ab=document.getElementById('allb');if(ab){ab.textContent=allOpen?'⊟ 全部收合':'⊞ 全部展開';ab.onclick=function(){allOpen=!allOpen;renderTree();};}
+  [].forEach.call(tree.querySelectorAll('.stn .hd'),function(h){h.onclick=function(){var k=Number(h.parentNode.getAttribute('data-s'));openSt[k]=!openSt[k];renderTree();};});
+  for(var nk in newChips){var c=tree.querySelector('.tc[data-t="'+nk+'"]');if(c)c.classList.add('new');}newChips={};
+  [].forEach.call(tree.querySelectorAll('.tc'),function(c){c.onclick=function(){var t=c.getAttribute('data-t');curTerm=t;if(TS[t]!==pos){go(TS[t],false);curTerm=t;}renderTree();demo(t);layerLine(t);
+      var hot=tree.querySelector('.tc.hot');if(hot&&!card.classList.contains('float'))hot.scrollIntoView({block:'center',behavior:'smooth'});
+      var bx=document.getElementById('bb');if(bx){[].forEach.call(bx.children,function(x){x.classList.remove('play')});var bd=bx.querySelector('.badge[data-b="'+t+'"]');
+        if(!bd){var lg=document.getElementById('log');if(lg){var d=document.createElement('div');d.innerHTML='🔒 <b>'+NK[t]+'</b> 這張貼紙還沒拿到，玩上面的動作就會掉出來';lg.prepend(d);while(lg.children.length>2)lg.lastChild.remove();}}}};});
+  if(curTerm&&hitZ){crumb.innerHTML='你在：'+hitZ.name.split(' ')[0]+'<span class="sep">›</span>第 '+stNo(hitS[0])+' 站 '+hitS[1]+'<span class="sep">›</span><span style="color:var(--z3)">'+IC[curTerm]+' '+NK[curTerm]+'</span>';st.textContent=ZSTORY[hitZ.z];}
+  else if(hitZ){crumb.innerHTML='你在：'+hitZ.name.split(' ')[0]+'<span class="sep">›</span>第 '+stNo(hitS[0])+' 站 '+hitS[1];st.textContent=ZSTORY[hitZ.z];}
+  else{crumb.textContent='你在：起點，還沒出發';st.textContent='整條路只有三層：鎮（該不該進場）→ 街（進哪一排）→ 店（買哪家）。每張貼紙都屬於其中一站。';}}
+function renderCenterSafe(){try{renderCenter();}catch(e){}}
+function quadHTML(z){var ax=AX[z],cells=[[null,null],[null,null]];SCEN[z].forEach(function(sc,si){cells[sc.q[0]][sc.q[1]]={sc:sc,si:si};});
+  var act=null;SCEN[z].forEach(function(sc,si){if(activeScen===(z+'-'+si))act={sc:sc,si:si};});
+  var qhtml='<div class="qwrap"><div class="qx"><span>'+ax.yl+' ╲ '+ax.xl+'</span><span>'+ax.x[0]+'</span><span>'+ax.x[1]+'</span></div><div class="quad">'+[0,1].map(function(r){return '<div class="qy">'+ax.y[r]+'</div>'+[0,1].map(function(c){var it=cells[r][c];if(!it)return '<div></div>';var on=act&&act.si===it.si;return '<button class="qc'+(on?' on':'')+'" data-k="'+z+'-'+it.si+'"><span class="em">'+it.sc.em+'</span><span class="tt">'+it.sc.t+'</span><span class="tg '+it.sc.tag[0]+'">'+it.sc.tag[1]+'</span></button>';}).join('');}).join('')+'</div></div>';
+  var detail=act?'<div class="sc on" data-k="'+z+'-'+act.si+'"><div class="st"><span>'+act.sc.em+' '+act.sc.t+'</span><small class="'+act.sc.tag[0]+'">'+act.sc.tag[1]+'</small></div><div class="chain">'+act.sc.chain.map(function(t,ti){return (ti?'<span class="ar">→</span>':'')+'<span class="tc'+(got[t]?' got':'')+'" data-ct="'+t+'">'+(IC[t]||'')+' '+(NK[t]||t)+'</span>';}).join('')+'</div><div class="why">'+act.sc.why+'</div></div>':'';
+  return [qhtml,detail];}
+function renderCenter(){var cp=document.getElementById('cpanel');if(!cp)return;
+  if(wallMode()){cp.classList.add('wall');cp.classList.remove('all');
+    cp.innerHTML=TREE.map(function(L){var ax=AX[L.z],qd=quadHTML(L.z);
+      var list=ORD[L.z].map(function(si){var sc=SCEN[L.z][si],k=L.z+'-'+si,on=activeScen===k;return '<div class="sc'+(on?' on':'')+'" data-k="'+k+'"><div class="st"><span>'+sc.em+' '+sc.t+'</span><small class="'+sc.tag[0]+'">'+sc.tag[1]+'</small></div><div class="chain">'+sc.chain.map(function(t,ti){return (ti?'<span class="ar">→</span>':'')+'<span class="tc'+(got[t]?' got':'')+'" data-ct="'+t+'">'+(IC[t]||'')+' '+(NK[t]||t)+'</span>';}).join('')+'</div><div class="why">'+sc.why+'</div></div>';}).join('');
+      return '<div class="wcol"><div class="whd" data-z="'+L.z+'">'+L.name.split(' ')[0]+'<small>'+L.why+'</small></div><div style="font-weight:900;font-size:.85rem;margin-bottom:2px">🔗 '+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'</div>'+qd[0]+'<div class="wlist">'+list+'</div></div>';}).join('');
+    [].forEach.call(cp.querySelectorAll('.qc,.sc'),function(c){c.onclick=function(){var k=c.getAttribute('data-k');if(activeScen===k){activeScen=null;if(scenTimer)clearInterval(scenTimer);renderCenter();renderTree();}else playScen(k);};});
+    return;}
+  cp.classList.remove('wall');
+  var tabs='<div class="ctabs">'+TREE.map(function(L){return '<button class="ctab'+(!centerAll&&L.z===centerZ?' on':'')+'" data-z="'+L.z+'">'+L.name.split(' ')[0]+'<small>'+L.why+'</small></button>';}).join('')+'<button class="ctab allb'+(centerAll?' on':'')+'" data-z="0">⊞ 全部展開</button></div>';
+  var body;
+  if(centerAll){cp.classList.add('all');body=TREE.map(function(L){var ax=AX[L.z],qd=quadHTML(L.z);return '<div class="lh" data-z="'+L.z+'">'+L.name.split(' ')[0]+' <small>'+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'・'+L.why+'</small></div>'+qd[0]+qd[1];}).join('')+(activeScen?'':'<div class="chint">三層一起看：鎮決定進不進，街決定哪一排，店決定買哪家。點任何一格看因果鏈</div>');}
+  else{cp.classList.remove('all');var ax=AX[centerZ],qd=quadHTML(centerZ);body='<div style="font-weight:900;font-size:.95rem;margin-bottom:4px">🔗 '+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'：四種可能</div>'+qd[0]+qd[1]+(qd[1]?'':'<div class="chint">點一格，看它的因果鏈怎麼走</div>');}
+  cp.innerHTML=tabs+body;
+  [].forEach.call(cp.querySelectorAll('.ctab'),function(b){b.onclick=function(){var z=Number(b.getAttribute('data-z'));if(z===0){centerAll=!centerAll;}else{centerAll=false;centerZ=z;}activeScen=null;if(scenTimer)clearInterval(scenTimer);renderCenter();renderTree();};});
+  [].forEach.call(cp.querySelectorAll('.qc'),function(c){c.onclick=function(){var k=c.getAttribute('data-k');if(activeScen===k){activeScen=null;if(scenTimer)clearInterval(scenTimer);renderCenter();renderTree();}else playScen(k);};});}
+var scenTimer=null;
+function playScen(k){activeScen=k;var z=Number(k.split('-')[0]),si=Number(k.split('-')[1]),sc=SCEN[z][si];if(!centerAll)centerZ=z;renderCenter();renderTree();var cards=[].slice.call(document.querySelectorAll('.sc[data-k="'+k+'"]')),card=cards.filter(function(c){return c.offsetParent!==null})[0]||cards[0];if(!card)return;
+  var chips=[].slice.call(card.querySelectorAll('.tc'));if(scenTimer)clearInterval(scenTimer);var i=0;
+  document.getElementById('bigstory').textContent='▶ 播放中：'+sc.t;
+  scenTimer=setInterval(function(){chips.forEach(function(c,j){c.classList.toggle('step',j===i)});var t=sc.chain[i];if(t&&TS[t]===pos)demo(t);
+    i++;if(i>=chips.length){clearInterval(scenTimer);setTimeout(function(){chips.forEach(function(c){c.classList.remove('step')});document.getElementById('bigstory').textContent='結論：'+sc.tag[1]+'。'+sc.why;var v=document.getElementById('v');if(v){v.textContent='📖 '+sc.t+' → '+sc.tag[1];v.className='verdict '+(sc.tag[0]==='go'?'ok':sc.tag[0]==='no'?'bad':'');}},700);}},650);
+  if(!card.classList.contains('float'))card.scrollIntoView({block:'nearest',behavior:'smooth'});}
+function openSheet(){renderTree();document.getElementById('sheet').hidden=false;document.body.classList.add('docked');document.getElementById('bigbtn').textContent='🗺️ 收起地圖';}
+function closeSheet(){if(window.innerWidth>=960)return;document.getElementById('sheet').hidden=true;document.body.classList.remove('docked');document.getElementById('bigbtn').textContent='🗺️ 我在哪一層？';}
+document.getElementById('bigbtn').onclick=function(){document.getElementById('sheet').hidden?openSheet():closeSheet();};
+document.getElementById('closeSheet').onclick=closeSheet;
+function layerLine(name){var z=ZQ[TS[name]];document.getElementById('nowTxt').innerHTML='<b>'+IC[name]+' '+NK[name]+'</b> 在「'+z+'」這層 › 第 '+[,1,2,,3,4,,5,6,,7,8][TS[name]]+' 站';document.getElementById('nextTxt').innerHTML='<a href="#" id="openL" style="color:var(--fg);font-weight:900">🗺️ 看大地圖</a>';document.getElementById('openL').onclick=function(e){e.preventDefault();openSheet();};}
+function openSheet(){renderTree();document.getElementById('sheet').hidden=false;}
+document.getElementById('bigbtn').onclick=openSheet;
+document.getElementById('closeSheet').onclick=function(){document.getElementById('sheet').hidden=true;};
+
+var ST={"非農就業":"鎮上又多了三個人去上班 👷","初領失業金":"排隊領救濟的人變長了，主人停下腳步","零售銷售":"鎮民手上的購物袋變多了","消費者信心":"鎮民笑了，明年會更好","PMI 新訂單":"工廠接到新訂單，倉庫快空了","聯準會利率":"銀行把水龍頭轉開一點","核心通膨":"麵包從 30 元漲到 40 元了！","通膨預期":"鎮民都在猜明年麵包會更貴，先囤起來","實質利率":"存錢的利息，扣掉麵包漲價，還剩多少","資產負債表":"銀行自己印鈔票撒進鎮上","美元指數":"鎮上的錢在外地變值錢了","復甦":"春天：冰雪融了，店門慢慢開","擴張":"夏天：街上滿滿的人","趨緩":"秋天：還有人，但開始穿外套","衰退":"冬天：街上沒人，抱緊藥局","CPI":"物價溫度計又往上一格","薩姆規則":"失業的人突然暴增，冬天警報響了","長短利差":"借 10 年比借 1 年便宜，這不對勁","循環型":"冰店夏天爆滿，冬天關門","防禦型":"藥局不管冬夏都有人","EPS 差值":"這一季冰店和藥局誰賺得多？","上游":"麵粉廠把麵粉送到街上","中游":"麵包店把麵粉烤成麵包","下游":"便利商店把麵包賣到你手上","TAM":"全鎮每天都要吃麵包，餅很大","進入門檻":"開新店不難，但好師傅難找","競爭態勢":"街上只有五家分這塊餅","市佔率":"這家門口排隊最長","營收成長":"今年賣的比去年多三成","毛利率":"每個麵包扣掉麵粉奶油，賺最多","負債比率":"烤箱是自己買的，不是借的","自由現金流":"收完錢、買完烤箱，口袋還有剩","EPS":"這家店一股一年賺 10 元","本益比":"賣 150 元，15 年回本","本益比標準差":"它平常 15 年回本，現在呢？","目標價":"15 倍 × 10 元＝這一股該值 150","潛在報酬率":"目標價比現在高，還有空間","預期報酬率":"你自己說至少要賺 15% 才出手","停損":"跌到設定的價錢，先賣，不要凹"};
+function bubble(target,txt){var svg=card.querySelector('svg');if(!svg)return;var bb=target.getBBox();var t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',bb.x+bb.width/2);t.setAttribute('y',bb.y-6);t.setAttribute('text-anchor','middle');t.setAttribute('font-size','20');t.setAttribute('class','bub sp');t.textContent=txt;svg.appendChild(t);setTimeout(function(){t.remove();},1700);}
+function demo(name){var d=DEMO[name];var svg=card.querySelector('svg');if(!d||!svg)return;
+  if(d.pre)d.pre();var vv=document.getElementById('v');if(vv&&ST[name]){vv.textContent=IC[name]+' '+ST[name];vv.className='verdict';}
+  var els=[].slice.call(svg.querySelectorAll(d.sel||'#none'));
+  [].forEach.call(svg.querySelectorAll('.dim'),function(e){e.classList.remove('dim')});
+  [].forEach.call(svg.children,function(e){if(e.tagName!=='rect'||e.getAttribute('width')!=='360'){if(els.indexOf(e)<0&&!e.classList.contains('bub'))e.classList.add('dim');}});
+  els.forEach(function(e){e.classList.add('sp');e.classList.remove('bounce','grow','shake');void e.getBBox();if(d.act!=='none')e.classList.add(d.act||'bounce');});
+  if(els[0]&&d.say)bubble(els[0],d.say);
+  setTimeout(function(){[].forEach.call(svg.querySelectorAll('.dim'),function(e){e.classList.remove('dim')});els.forEach(function(e){e.classList.remove('bounce','grow','shake')});},1800);}
+function badge(name){if(!T[name])return;var fresh=!got[name];got[name]=1;save();
+  if(badgeBox&&!badgeBox.querySelector('[data-b="'+name+'"]')){var b=document.createElement('button');b.className='badge';b.setAttribute('data-b',name);
+    b.innerHTML='<div class="inner"><div class="face front"><span class="em">'+IC[name]+'</span>'+NK[name]+'<small style="font-weight:500;font-size:.6rem;opacity:.8">'+name+'</small></div></div>';
+    b.onclick=function(){[].forEach.call(badgeBox.children,function(x){x.classList.remove('play')});b.classList.add('play');curTerm=name;demo(name);layerLine(name);renderTree();};badgeBox.appendChild(b);
+    if(fresh){var vb=document.getElementById('v')||b,r=vb.getBoundingClientRect();confetti(r.left+r.width/2,r.top);fly({em:IC[name],x:r.left+r.width/2-14,y:r.top-14});logLine(name);newChips[name]=1;renderTree();}else{score();}}
+  else{score();}}
+function finish(i){if(!done[i]){done[i]=1;save();cells[i].classList.add('done');updateMap(pos);}}
+function verdict(el,txt,cls){el.textContent=txt;el.className='verdict '+(cls||'');}
+
+var SKY='<rect width="360" height="150" fill="var(--sky)"/><rect y="112" width="360" height="38" fill="var(--ground)"/>';
+var ZN={1:['鎮・總經','var(--z1)'],2:['街・產業','var(--z2)'],3:['店・個股','var(--z3)']};
+function head(z,title){return '<div class="in">'+(z?'<span class="tag" style="background:'+ZN[z][1]+'">'+ZN[z][0]+'</span>':'')+'<h2>'+title+'</h2>';}
+function tail(){return '<div class="verdict" id="v">動一下上面的東西</div><div class="log" id="log"></div><div class="badges" id="bb"></div><div class="tip" id="tip"></div></div>';}
+function mount(html){card.className='card';card.innerHTML=html;badgeBox=document.getElementById('bb');tipBox=document.getElementById('tip');}
+
+var G={};
+G[0]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<rect x="130" y="65" width="90" height="47" fill="var(--house)"/><polygon points="125,65 175,38 225,65" fill="var(--z2)"/><text x="175" y="95" font-size="22" text-anchor="middle">🥖</text><text x="40" y="138" font-size="28">🚶</text><text x="80" y="135" font-size="13" fill="var(--fg)" font-weight="900">我想買這家店的一股</text></svg><div class="in"><h2>先別急，走一圈再說</h2><div class="verdict">按「擲骰子」出發。每一站是一個小遊戲，玩完拿徽章。</div></div>');};
+
+// 1 鎮民：按上班/裁員，狗跟著主人
+G[1]=function(){mount('<svg viewBox="0 0 360 150" id="sc">'+SKY+'<rect id="fac" x="250" y="70" width="80" height="42" fill="var(--house)"/><text x="290" y="98" font-size="20" text-anchor="middle" id="facx">🏭</text><text id="ppl" x="20" y="100" font-size="20"></text><text id="man" x="40" y="140" font-size="28">🧍</text><text id="dog" x="20" y="140" font-size="24">🐕</text><text id="bags" x="200" y="60" font-size="20"></text><text x="250" y="30" font-size="13" fill="var(--fg)" font-weight="900" id="mood">😐 鎮民心情</text></svg>'+head(1,'讓鎮民去上班，狗會怎樣？')+'<div class="play"><button class="btn big" id="work">👷 上班 +1</button><button class="btn big" id="fire">📉 裁員 −1</button></div>'+tail());
+  var jobs=0,v=document.getElementById('v');
+  DEMO={"非農就業":{sel:'#ppl',act:'bounce',say:'👷+1'},"PMI 新訂單":{sel:'#fac,#facx',act:'shake',say:'📦📦📦'},"初領失業金":{sel:'#man',act:'shake',say:'📉😟'},"零售銷售":{sel:'#bags',act:'grow',say:'🛍️🛍️'},"消費者信心":{sel:'#mood',act:'grow',say:'😄→🛍️'}};
+  function draw(){var j=Math.max(-3,Math.min(6,jobs));document.getElementById('ppl').textContent='👷'.repeat(Math.max(0,j));document.getElementById('bags').textContent='🛍️'.repeat(Math.max(0,Math.floor(j/2)));
+    document.getElementById('man').setAttribute('x',40+j*35);document.getElementById('mood').textContent=(j>=3?'😄':j<0?'😟':'😐')+' 鎮民心情';
+    setTimeout(function(){document.getElementById('dog').setAttribute('x',20+j*35);},350);
+    if(j>=3){verdict(v,'主人往前走，狗（股價）早晚跟上 👍','ok');badge('零售銷售');badge('消費者信心');finish(1);}
+    else if(j<0){verdict(v,'裁員變多，主人停下來，狗也會停 ⚠️','bad');badge('初領失業金');finish(1);}
+    else verdict(v,'再按幾下看看');}
+  document.getElementById('work').onclick=function(){jobs++;badge('非農就業');badge('PMI 新訂單');draw();};
+  document.getElementById('fire').onclick=function(){jobs--;badge('初領失業金');draw();};
+};
+
+// 2 水龍頭：滑桿
+G[2]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<rect x="30" y="50" width="110" height="62" fill="var(--house)"/><rect x="25" y="42" width="120" height="10" fill="var(--z1)"/><text x="85" y="35" font-size="12" text-anchor="middle" fill="var(--fg)" font-weight="900">聯準會銀行</text><text x="150" y="70" font-size="26" id="tapi">🚰</text><text x="40" y="100" font-size="20" id="printer">🖨️</text><text x="300" y="100" font-size="22" id="dollar">💵</text><rect id="water" x="168" y="78" width="8" height="34" rx="4" fill="var(--water)"/><text id="coins" x="195" y="105" font-size="18"></text><text id="price" x="200" y="45" font-size="13" fill="var(--fg)" font-weight="900">🥖 麵包 30 元</text></svg>'+head(1,'水龍頭開多大？')+'<div class="play"><span>關</span><input type="range" id="tap" min="0" max="100" value="50"><span>開</span></div>'+tail());
+  var v=document.getElementById('v'),r=document.getElementById('tap');
+  DEMO={"聯準會利率":{sel:'#tapi,#water',act:'shake',say:'🔧'},"資產負債表":{sel:'#printer',act:'bounce',say:'💵💵💵'},"核心通膨":{sel:'#price',act:'shake',say:'🔥↑'},"通膨預期":{sel:'#price',act:'grow',say:'🔮 明年更貴？'},"實質利率":{sel:'#coins',act:'grow',say:'💰−🔥'},"美元指數":{sel:'#dollar',act:'grow',say:'🌍💪'}};
+  function draw(){var t=Number(r.value);document.getElementById('water').setAttribute('width',2+t/5);document.getElementById('coins').textContent='💰'.repeat(Math.round(t/20));
+    var p=30+Math.round(t/10);document.getElementById('price').textContent='🥖 麵包 '+p+' 元'+(t>80?' 🔥漲太快':'');
+    badge('聯準會利率');badge('資產負債表');
+    if(t>80){verdict(v,'錢太多→物價飆→銀行會關水龍頭（升息）','bad');badge('核心通膨');badge('通膨預期');badge('實質利率');finish(2);}
+    else if(t<20){verdict(v,'錢太少→店借不到錢、鎮民不敢花','bad');badge('實質利率');badge('美元指數');finish(2);}
+    else{verdict(v,'剛剛好：店借得到錢，物價慢慢漲','ok');finish(2);}}
+  r.oninput=draw;
+};
+
+// 3 季節輪
+G[4]=function(){mount('<svg viewBox="0 0 360 160"><rect width="360" height="160" fill="var(--sky)"/><g class="wheel" id="wh"><circle cx="180" cy="80" r="62" fill="var(--cell)" stroke="var(--line)" stroke-width="3"/><line x1="180" y1="18" x2="180" y2="142" stroke="var(--line)"/><line x1="118" y1="80" x2="242" y2="80" stroke="var(--line)"/><text x="150" y="58" font-size="24" text-anchor="middle">🌱</text><text x="212" y="58" font-size="24" text-anchor="middle">☀️</text><text x="212" y="122" font-size="24" text-anchor="middle">🍂</text><text x="150" y="122" font-size="24" text-anchor="middle">❄️</text></g><polygon points="180,8 172,22 188,22" fill="var(--z3)"/><text x="20" y="40" font-size="12" fill="var(--fg)" font-weight="900" id="s1">📈 成長：？</text><text x="20" y="60" font-size="12" fill="var(--fg)" font-weight="900" id="s2">🌡️ 物價：？</text><text x="270" y="40" font-size="12" fill="var(--fg)" font-weight="900" id="s3"></text><text x="300" y="130" font-size="22" id="alarm">🚨</text><text x="20" y="130" font-size="20" id="yc">🔀</text></svg>'+head(1,'轉一下，現在幾月？')+'<div class="play"><button class="btn big" id="spin">🎡 轉季節輪</button></div>'+tail());
+  var v=document.getElementById('v'),rot=0;
+  function toSeason(k){rot+=360+(k*90)+45-(rot%360);document.getElementById('wh').style.transform='rotate('+(-rot)+'deg)';}
+  DEMO={"擴張":{sel:'#wh',act:'none',say:'☀️',pre:function(){toSeason(0)}},"趨緩":{sel:'#wh',act:'none',say:'🍂',pre:function(){toSeason(1)}},"衰退":{sel:'#wh',act:'none',say:'❄️',pre:function(){toSeason(2)}},"復甦":{sel:'#wh',act:'none',say:'🌱',pre:function(){toSeason(3)}},"CPI":{sel:'#s2',act:'grow',say:'🌡️'},"薩姆規則":{sel:'#alarm',act:'shake',say:'📉📉📉'},"長短利差":{sel:'#yc',act:'shake',say:'🔀❗'}};
+  var S=[['擴張','☀️ 夏','又賺又漲，什麼店都好','快','快'],['趨緩','🍂 秋','還在賺但變慢，先抱藥局','慢','快'],['衰退','❄️ 冬','工作變少，抱防禦型等春天','負','慢'],['復甦','🌱 春','開始好轉，買冰店這種循環型','快','慢']];
+  document.getElementById('spin').onclick=function(){var k=Math.floor(Math.random()*4);rot+=360*2+ (k*90)+45- (rot%360);document.getElementById('wh').style.transform='rotate('+(-rot)+'deg)';
+    setTimeout(function(){var s=S[k];document.getElementById('s1').textContent='📈 成長：'+s[3];document.getElementById('s2').textContent='🌡️ 物價：'+s[4];document.getElementById('s3').textContent=s[1];
+      verdict(v,s[1]+' '+s[0]+'：'+s[2],k===2?'bad':'ok');badge(s[0]);badge('CPI');if(k===2){badge('薩姆規則');badge('長短利差');}finish(4);},1500);};
+};
+
+// 4 順風：夏冬切換
+G[5]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<text id="sun" x="30" y="40" font-size="26">☀️</text><g id="shop1"><rect x="40" y="65" width="110" height="47" fill="var(--house)"/><polygon points="35,65 95,40 155,65" fill="var(--z1)"/><text x="95" y="95" font-size="20" text-anchor="middle">🍦</text></g><text id="q1" x="45" y="138" font-size="16"></text><g id="shop2"><rect x="210" y="65" width="110" height="47" fill="var(--house)"/><polygon points="205,65 265,40 325,65" fill="var(--z3)"/><text x="265" y="95" font-size="20" text-anchor="middle">💊</text></g><text id="q2" x="215" y="138" font-size="16"></text></svg>'+head(2,'換季節，哪排店排隊？')+'<div class="play"><button class="btn big" id="su">☀️ 夏天</button><button class="btn big" id="wi">❄️ 冬天</button></div>'+tail());
+  var v=document.getElementById('v');
+  DEMO={"循環型":{sel:'#shop1,#q1',act:'bounce',say:'☀️🍦 ❄️🚫'},"防禦型":{sel:'#shop2,#q2',act:'bounce',say:'☀️❄️ 都一樣'},"EPS 差值":{sel:'#q1,#q2',act:'grow',say:'⚖️ 誰多？'}};
+  function set(w){document.getElementById('sun').textContent=w?'❄️':'☀️';document.getElementById('q1').textContent=w?'🧍':'🧍🧍🧍🧍🧍';document.getElementById('q2').textContent='🧍🧍';
+    document.getElementById('su').classList.toggle('on',!w);document.getElementById('wi').classList.toggle('on',w);
+    verdict(v,w?'冬天：冰店沒人，藥局照常 → 抱防禦型':'夏天：冰店爆滿 → 買循環型',w?'bad':'ok');badge('循環型');badge('防禦型');badge('EPS 差值');finish(5);}
+  document.getElementById('su').onclick=function(){set(false)};document.getElementById('wi').onclick=function(){set(true)};
+};
+
+// 5 拼街：點三塊放進上中下游，再回答三題
+G[7]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<g id="slots">'+[0,1,2].map(function(i){return '<rect x="'+(25+i*115)+'" y="60" width="95" height="52" rx="6" fill="none" stroke="var(--line)" stroke-dasharray="5 4" stroke-width="2"/><text x="'+(72+i*115)+'" y="135" font-size="12" text-anchor="middle" fill="var(--fg)" font-weight="900">'+['上游','中游','下游'][i]+'</text><text id="sl'+i+'" x="'+(72+i*115)+'" y="97" font-size="26" text-anchor="middle"></text>';}).join('')+'</g><text x="125" y="95" font-size="18" fill="var(--fg)">→</text><text x="240" y="95" font-size="18" fill="var(--fg)">→</text><text x="60" y="40" font-size="22" id="pie">🥧</text><text x="170" y="40" font-size="22" id="gate">🚧</text><text x="280" y="40" font-size="22" id="crowd">👥</text></svg>'+head(2,'把三塊拼成一條街')+'<div class="play" id="pieces"><button class="btn big" data-p="🏪">🏪 便利商店</button><button class="btn big" data-p="🌾">🌾 麵粉廠</button><button class="btn big" data-p="🥖">🥖 麵包店</button></div><div class="opts" id="q3" hidden><button class="opt" data-k="TAM"><span class="big">🥧</span>餅大嗎</button><button class="opt" data-k="進入門檻"><span class="big">🚧</span>門檻高嗎</button><button class="opt" data-k="競爭態勢"><span class="big">👥</span>幾家分</button></div>'+tail());
+  var v=document.getElementById('v'),order=['🌾','🥖','🏪'],n=0;
+  DEMO={"上游":{sel:'#sl0',act:'bounce',say:'🌾→'},"中游":{sel:'#sl1',act:'bounce',say:'→🥖→'},"下游":{sel:'#sl2',act:'bounce',say:'→🏪🙋'},"TAM":{sel:'#pie',act:'grow',say:'🥧🥧🥧'},"進入門檻":{sel:'#gate',act:'shake',say:'🚧🙅'},"競爭態勢":{sel:'#crowd',act:'shake',say:'👥✂️🥧'}};
+  [].forEach.call(document.querySelectorAll('#pieces button'),function(b){b.onclick=function(){var p=b.getAttribute('data-p');
+    if(p===order[n]){document.getElementById('sl'+n).textContent=p;badge(['上游','中游','下游'][n]);b.disabled=true;b.style.opacity=.4;n++;
+      if(n===3){verdict(v,'街拼好了！再點三個問題','ok');document.getElementById('q3').hidden=false;}else verdict(v,'對！下一塊放哪？','ok');}
+    else verdict(v,'先放最前面的那一塊（誰賣原料？）','bad');};});
+  var A={'TAM':'餅大：全鎮每天都要吃麵包 ✓','進入門檻':'門檻中：開店不難，但好師傅難找','競爭態勢':'分的人少：街上只有五家 ✓'},k=0;
+  [].forEach.call(document.querySelectorAll('#q3 .opt'),function(o){o.onclick=function(){var key=o.getAttribute('data-k');o.classList.add('win');badge(key);verdict(v,A[key],'ok');if(++k>=3)finish(7);};});
+};
+
+// 6 冠軍：三家店挑一家
+G[8]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+[0,1,2].map(function(i){return '<g id="bk'+i+'"><rect x="'+(30+i*115)+'" y="68" width="90" height="44" fill="var(--house)"/><polygon points="'+(25+i*115)+',68 '+(75+i*115)+',45 '+(125+i*115)+',68" fill="var(--line)"/><text x="'+(75+i*115)+'" y="97" font-size="18" text-anchor="middle">'+['🥐','🥖','🍞'][i]+'</text></g><text id="qu'+i+'" x="'+(32+i*115)+'" y="138" font-size="15">'+['🧍🧍','🧍🧍🧍🧍🧍','🧍'][i]+'</text>';}).join('')+'</svg>'+head(3,'你會買哪一家？')+'<div class="opts"><button class="opt" data-i="0"><span class="big">🥐</span>排隊 2 人<br>毛利 20%<br>借錢 70%</button><button class="opt" data-i="1"><span class="big">🥖</span>排隊 5 人<br>毛利 45%<br>借錢 10%</button><button class="opt" data-i="2"><span class="big">🍞</span>排隊 1 人<br>毛利 30%<br>借錢 40%</button></div>'+tail());
+  var v=document.getElementById('v'),os=document.querySelectorAll('.opt');
+  DEMO={"市佔率":{sel:'#qu1',act:'bounce',say:'🧍🧍🧍🧍🧍'},"營收成長":{sel:'#qu1',act:'grow',say:'📈 越來越多'},"毛利率":{sel:'#bk1',act:'bounce',say:'🥖→💰💰'},"負債比率":{sel:'#bk1',act:'shake',say:'🏦❌ 不借'},"自由現金流":{sel:'#bk1',act:'grow',say:'💰 口袋剩'}};
+  [].forEach.call(os,function(o){o.onclick=function(){var i=Number(o.getAttribute('data-i'));[].forEach.call(os,function(x,j){x.classList.add(j===1?'win':'lose');});
+    verdict(v,i===1?'答對！排隊最長（市佔）、每個麵包賺最多（毛利）、不靠借錢 🏆':'🥖 才是冠軍：排隊最長、毛利最高、負債最低',i===1?'ok':'bad');
+    badge('市佔率');badge('毛利率');badge('負債比率');badge('營收成長');badge('自由現金流');finish(8);};});
+};
+
+// 7 標價：滑桿看幾年回本
+G[10]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<rect x="40" y="65" width="90" height="47" fill="var(--house)"/><polygon points="35,65 85,40 135,65" fill="var(--z3)"/><text x="85" y="95" font-size="18" text-anchor="middle">🥖</text><g id="tagg" transform="rotate(-6 230 75)"><rect x="165" y="45" width="140" height="60" rx="8" fill="var(--gold)"/><circle cx="180" cy="75" r="5" fill="var(--bg)"/><text x="245" y="68" font-size="12" text-anchor="middle" fill="#2b2419" font-weight="900">一股一年賺 10 元</text><text id="pt" x="245" y="90" font-size="14" text-anchor="middle" fill="#2b2419" font-weight="900">賣 150 元</text></g></svg>'+head(3,'標多少錢你才買？')+'<div class="play"><span>便宜</span><input type="range" id="pr" min="50" max="400" step="10" value="150"><span>貴</span></div>'+tail());
+  var v=document.getElementById('v'),r=document.getElementById('pr');
+  DEMO={"EPS":{sel:'#tagg',act:'bounce',say:'🪙10/年'},"本益比":{sel:'#tagg',act:'shake',say:'⏳ 幾年回本'},"本益比標準差":{sel:'#tagg',act:'grow',say:'📏 比平常？'},"目標價":{sel:'#tagg',act:'bounce',say:'🎯 15×10=150'}};
+  function draw(){var p=Number(r.value),pe=p/10;document.getElementById('pt').textContent='賣 '+p+' 元＝'+pe+' 年回本';badge('EPS');badge('本益比');
+    if(pe>25){verdict(v,pe+' 年回本，比它平常的 15 年貴很多 → 太貴','bad');badge('本益比標準差');}
+    else if(pe<10){verdict(v,pe+' 年回本，比平常便宜 → 撿到','ok');badge('本益比標準差');badge('目標價');}
+    else{verdict(v,pe+' 年回本，跟平常差不多 → 合理價 150 元','ok');badge('目標價');}finish(10);}
+  r.oninput=draw;draw();
+};
+
+// 8 出手：潛在 vs 及格線
+G[11]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<rect x="60" y="20" width="40" height="92" fill="var(--line)"/><rect id="bar" x="60" y="60" width="40" height="52" fill="var(--z1)"/><text id="bt" x="80" y="15" font-size="12" text-anchor="middle" fill="var(--fg)" font-weight="900">+20%</text><line id="pass" x1="40" y1="80" x2="140" y2="80" stroke="var(--z3)" stroke-width="3" stroke-dasharray="5 3"/><text id="pt" x="145" y="84" font-size="12" fill="var(--fg)" font-weight="900">及格線 15%</text><text id="hand" x="230" y="95" font-size="40">🤔</text></svg>'+head(3,'目標價比現在高幾 %？')+'<div class="play"><span>0%</span><input type="range" id="gap" min="0" max="50" step="5" value="20"><span>50%</span></div>'+tail());
+  var v=document.getElementById('v'),r=document.getElementById('gap');
+  DEMO={"潛在報酬率":{sel:'#bar',act:'grow',say:'🚀 還能漲'},"預期報酬率":{sel:'#pass,#pt',act:'shake',say:'🎓 及格線'},"停損":{sel:'#hand',act:'shake',say:'🛑 跌了先賣'}};
+  function draw(){var g=Number(r.value),h=g*1.8;document.getElementById('bar').setAttribute('y',112-h);document.getElementById('bar').setAttribute('height',h);document.getElementById('bt').textContent='+'+g+'%';badge('潛在報酬率');badge('預期報酬率');
+    if(g>=20){verdict(v,'超過及格線 → 買進，然後設好停損','ok');document.getElementById('hand').textContent='🤝';badge('停損');}
+    else if(g>=10){verdict(v,'差不多 → 中立，再等等','');document.getElementById('hand').textContent='🤔';}
+    else{verdict(v,'不到及格線 → 不買，看好也不買','bad');document.getElementById('hand').textContent='🙅';}finish(11);}
+  r.oninput=draw;draw();
+};
+
+G[6]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<path d="M0 130 L180 130 L180 60" stroke="var(--line)" stroke-width="14" fill="none" stroke-linecap="round"/><rect x="210" y="40" width="40" height="72" fill="var(--house)"/><rect x="260" y="55" width="40" height="57" fill="var(--house)"/><rect x="310" y="45" width="40" height="67" fill="var(--house)"/><text x="150" y="128" font-size="28">🚶</text></svg><div class="in"><h2>鎮看完了，進到街上</h2><div class="verdict">總經決定要不要進場，產業決定進哪一排。</div></div>');};
+
+var CH=[["聯準會降息一碼","水龍頭開大了",2],["麵包街搬進連鎖大店","餅要分給更多人了",7],["冠軍店毛利率跳升","每個麵包賺更多了",8],["股價大漲到歷史最貴","好店變貴了",10]];
+var FA=[["初領失業金連三週大增","冬天警報",4],["長短利差倒掛","不正常，小心",4],["你的店跌破停損價","照規則先賣",11],["消費者信心創新低","主人走慢了",1]];
+function ev(i){var pool=i===3?CH:FA,e=pool[Math.floor(Math.random()*pool.length)];rollBtn.disabled=true;card.className='card event';card.innerHTML='<div class="in"><span class="tag" style="background:var(--gold);color:#2b2419">'+(i===3?'❓ 機會卡':'🔁 命運卡')+'</span><h2>'+e[0]+'</h2><div class="verdict">'+e[1]+'。小人走去第 '+[,1,2,,3,4,,5,6,,7,8][e[2]]+' 站</div></div>';setTimeout(function(){rollBtn.disabled=false;go(e[2],true);},1300);}
+
+var pos=0,board=document.getElementById('board'),token=document.getElementById('token'),card=document.getElementById('card'),where=document.getElementById('where'),die=document.getElementById('die'),rollBtn=document.getElementById('roll');
+var cells={};[].forEach.call(document.querySelectorAll('.cell'),function(c){var i=c.getAttribute('data-i');cells[i]=c;if(done[i])c.classList.add('done');});
+var Z={1:1,2:1,4:1,5:2,7:2,8:3,10:3,11:3};
+function place(i){var c=cells[i],b=board.getBoundingClientRect(),r=c.getBoundingClientRect();token.style.left=(r.left-b.left+r.width/2-15)+'px';token.style.top=(r.top-b.top+r.height/2-15)+'px';
+  for(var k in cells)cells[k].classList.toggle('here',k===String(i));token.textContent=Z[i]===3?'🧑‍🍳':'🚶';}
+var NAMES={0:'起點',1:'1 鎮民：鎮上過得好嗎',2:'2 水龍頭：借錢貴嗎',3:'機會卡',4:'3 季節：春夏秋冬',5:'4 順風：哪排店生意好',6:'轉角：從鎮走進街',7:'5 拼街：上中下游',8:'6 冠軍：哪家最強',9:'命運卡',10:'7 標價：一股值多少',11:'8 出手：買不買'};
+var ZQ={1:'鎮',2:'鎮',4:'鎮',5:'街',7:'街',8:'店',10:'店',11:'店'};
+var STATIONS=[1,2,4,5,7,8,10,11];
+function updateMap(i){syncFmap();[].forEach.call(document.querySelectorAll('.map .st'),function(st){var k=Number(st.getAttribute('data-s'));st.classList.toggle('now',k===i);st.classList.toggle('done',!!done[k]&&k!==i);});
+  var nxt=STATIONS.filter(function(k){return k>i;})[0];var nxtName=nxt?NAMES[nxt].split('：')[0]:'回起點結算';
+  var stage=ZQ[i]?('現在在「'+ZQ[i]+'」'):'';var n=0;for(var k in done)n++;
+  document.getElementById('nowTxt').innerHTML='<b>現在：'+NAMES[i]+'</b>'+(stage?' · '+stage:'')+(i===0?' 已完成 '+n+'/8 站':'');
+  document.getElementById('nextTxt').textContent='下一站：'+nxtName;}
+function go(i,scroll){pos=i;curTerm=null;openSt={};activeScen=null;if(ZQ[i]){openScen={1:ZQ[i]==='鎮',2:ZQ[i]==='街',3:ZQ[i]==='店'};centerZ=ZQ[i]==='鎮'?1:ZQ[i]==='街'?2:3;}place(i);updateMap(i);renderTree();where.textContent=NAMES[i].split('：')[0];if(i===3||i===9)ev(i);else G[i]();if(scroll&&window.innerWidth<960)card.scrollIntoView({behavior:'smooth',block:'nearest'});}
+rollBtn.onclick=function(){var n=1+Math.floor(Math.random()*3);die.textContent=n;die.classList.remove('roll');void die.offsetWidth;die.classList.add('roll');rollBtn.disabled=true;var s=0;
+  (function step(){pos=(pos+1)%12;place(pos);if(++s<n)setTimeout(step,400);else setTimeout(function(){go(pos,true);rollBtn.disabled=false;},400);})();};
+for(var k in cells)(function(i){cells[i].onclick=function(){go(Number(i),true);};})(k);
+window.addEventListener('resize',function(){place(pos);});
+var cardph=document.getElementById('cardph'),cardMini=false,fwrap=document.getElementById('fwrap'),fcard=document.getElementById('fcard'),fsheet=document.getElementById('fsheet'),pane=document.querySelector('#sheet .pane'),mapEl=document.getElementById('map');
+function ensureMini(){if(window.innerWidth<960)return;if(!card.querySelector('.minib')){var b=document.createElement('button');b.className='minib';b.type='button';b.textContent=cardMini?'▴ 展開':'▾ 收成一條';b.onclick=function(){cardMini=!cardMini;card.classList.toggle('mini',cardMini);b.textContent=cardMini?'▴ 展開':'▾ 收成一條';};card.appendChild(b);}}
+new MutationObserver(function(){ensureMini();}).observe(card,{childList:true});
+function cloneInto(dst,src){var sv=dst.scrollTop;dst.innerHTML=src.innerHTML;[].forEach.call(dst.querySelectorAll('[id]'),function(e){e.removeAttribute('id');});dst.scrollTop=sv;}
+var fsyncT=null;
+function padBottom(){document.body.style.paddingBottom=fwrap.hidden?'':(fwrap.offsetHeight+28)+'px';}
+if(window.ResizeObserver)new ResizeObserver(padBottom).observe(fwrap);
+function syncF(){if(fwrap.hidden)return;cloneInto(fsheet,pane);padBottom();}
+function syncFmap(){syncFSoon();}
+function syncFSoon(){if(fsyncT)return;fsyncT=setTimeout(function(){fsyncT=null;syncF();},60);}
+if(window.MutationObserver){new MutationObserver(syncFSoon).observe(pane,{childList:true,subtree:true,characterData:true,attributes:true});}
+function idxPath(el,root){var p=[];while(el&&el!==root){p.unshift([].indexOf.call(el.parentNode.children,el));el=el.parentNode;}return p;}
+function byPath(root,p){var el=root;for(var i=0;i<p.length&&el;i++)el=el.children[p[i]];return el;}
+function delegate(dst,src){dst.addEventListener('click',function(e){var t=e.target.closest('button,.tc,.hd,.qc,.sc,.st,a');if(!t||!dst.contains(t))return;var o=byPath(src,idxPath(t,dst));if(o&&o!==src){var y=window.scrollY;o.click();e.preventDefault();window.scrollTo(0,y);requestAnimationFrame(function(){window.scrollTo(0,y);});setTimeout(function(){window.scrollTo(0,y);},120);setTimeout(function(){window.scrollTo(0,y);},400);}});}
+delegate(fsheet,pane);
+function floatCard(){if(window.innerWidth<960){if(card.classList.contains('float')){cardph.after(card);card.classList.remove('float','mini');cardph.classList.remove('on');fwrap.hidden=true;}return;}
+  var isF=card.classList.contains('float');
+  if(!isF){var r=card.getBoundingClientRect();if(r.bottom<0){cardph.style.height=card.offsetHeight+'px';cardph.classList.add('on');fcard.appendChild(card);card.classList.add('float');card.classList.toggle('mini',cardMini);fwrap.hidden=false;ensureMini();syncF();padBottom();}}
+  else{if(cardph.getBoundingClientRect().top>=0){cardph.after(card);card.classList.remove('float','mini');cardph.classList.remove('on');fwrap.hidden=true;padBottom();}}}
+window.addEventListener('scroll',floatCard,{passive:true});window.addEventListener('resize',floatCard);
+document.fonts&&document.fonts.ready.then(function(){place(pos);});
+score();album();go(0,false);renderTree();
+document.getElementById('scoreBox').onclick=function(){album();document.getElementById('bag').hidden=false;};document.getElementById('bag').onclick=function(e){if(e.target.id==='bag')e.target.hidden=true;};
+function wide(){if(window.innerWidth>=960){document.getElementById('sheet').hidden=false;document.getElementById('cpanel').hidden=false;renderCenter();}else{document.getElementById('cpanel').hidden=true;}}
+wide();window.addEventListener('resize',wide);
+})();
+</script>

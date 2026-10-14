@@ -381,6 +381,9 @@ export default function MarketPage() {
           <Link href="/lottery" className="rounded-full bg-amber-50 px-3 py-1.5 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
             🎟️ 抽籤
           </Link>
+          <Link href="/game" className="rounded-full bg-rose-50 px-3 py-1.5 text-sm text-rose-800 dark:bg-rose-950 dark:text-rose-200">
+            🎲 玩一圈
+          </Link>
         </div>
       </div>
       <Suspense fallback={<AskBox auto={ASK_AUTO} facts={{ chains: CHAIN_TITLES }} />}>
