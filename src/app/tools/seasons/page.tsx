@@ -33,7 +33,7 @@ export default function SeasonsPage() {
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="text-left text-xs text-zinc-500">
                 <th className="py-1 pr-2 font-medium">放法</th>
@@ -46,8 +46,11 @@ export default function SeasonsPage() {
             <tbody>
               {SIX.map((w) => (
                 <tr key={w.toolId} className="border-t border-zinc-200 align-top dark:border-zinc-800">
-                  <td className="whitespace-nowrap py-1.5 pr-2 font-semibold">
-                    {w.icon} {w.name}
+                  <td className="whitespace-nowrap py-1.5 pr-2">
+                    <span className="font-semibold">
+                      {w.icon} {w.name}
+                    </span>
+                    <span className="block pl-7 text-xs text-zinc-500">{w.tool}</span>
                   </td>
                   <td className="py-1.5 pr-2">{LISTENS[w.toolId].role}</td>
                   <td className="py-1.5 pr-2">{LISTENS[w.toolId].from}</td>
