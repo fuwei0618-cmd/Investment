@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { GROUPS, RISK_WORD, TOOLS, type Tool, type ToolGroup } from "@/lib/tools";
 import { SIX } from "@/lib/six";
+import { ZONES } from "@/lib/street";
+import RiskStreet from "./RiskStreet";
 
 const IN_SIX = new Set(SIX.map((w) => w.toolId));
 
@@ -83,8 +85,10 @@ function Card({ t, open, toggle }: { t: Tool; open: boolean; toggle: () => void 
 export default function ToolCards() {
   const [group, setGroup] = useState<ToolGroup | "all">("all");
   const [open, setOpen] = useState<string | null>(null);
+  const [zone, setZone] = useState<number | null>(null);
   const pick = (id: string) => {
     setGroup("all");
+    setZone(null);
     setOpen(id);
     requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   };
@@ -98,41 +102,39 @@ export default function ToolCards() {
     });
     return () => cancelAnimationFrame(raf);
   }, []);
-  const shown = group === "all" ? TOOLS : TOOLS.filter((t) => t.group === group);
+  const pickZone = (r: number) => {
+    setGroup("all");
+    setZone(r);
+    requestAnimationFrame(() => document.getElementById("tool-cards")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+  const shown = TOOLS.filter((t) => (group === "all" || t.group === group) && (zone === null || t.risk === zone));
 
   return (
     <div className="space-y-4">
-      <section className="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="font-semibold">風險由低到高，一眼看完</h2>
-        <div className="space-y-1.5">
-          {[1, 2, 3, 4, 5].map((r) => (
-            <div key={r} className="flex items-start gap-2">
-              <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${RISK_TONE[r]}`} />
-              <span className="w-16 shrink-0 text-sm text-zinc-500">{RISK_WORD[r]}</span>
-              <span className="flex flex-wrap gap-1.5">
-                {TOOLS.filter((t) => t.risk === r).map((t) => (
-                  <button key={t.id} onClick={() => pick(t.id)} className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-sm hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700">
-                    {t.icon} {t.name}
-                  </button>
-                ))}
-              </span>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-zinc-500">點一個名字直接看那張卡。</p>
-      </section>
+      <RiskStreet six={IN_SIX} onPick={pick} onZone={pickZone} />
 
-      <div className="flex flex-wrap gap-1.5">
+      <div id="tool-cards" className="flex scroll-mt-20 flex-wrap gap-1.5">
         {[{ id: "all" as const, label: "全部", hint: "" }, ...GROUPS].map((g) => (
           <button
             key={g.id}
-            onClick={() => setGroup(g.id)}
+            onClick={() => {
+              setGroup(g.id);
+              setZone(null);
+            }}
             className={`rounded-full px-3 py-1 text-sm ${group === g.id ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : "bg-zinc-100 dark:bg-zinc-800"}`}
           >
             {g.label}
           </button>
         ))}
       </div>
+      {zone !== null && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          只看「{ZONES[zone - 1]}」（{RISK_WORD[zone]}）的卡。
+          <button onClick={() => setZone(null)} className="ml-2 text-blue-600">
+            看全部
+          </button>
+        </p>
+      )}
       {group !== "all" && <p className="text-sm text-zinc-600 dark:text-zinc-400">{GROUPS.find((g) => g.id === group)?.hint}</p>}
 
       <ul className="grid gap-2 sm:grid-cols-2">

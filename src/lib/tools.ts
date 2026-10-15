@@ -40,7 +40,7 @@ export const RISK_WORD = ["", "很穩", "小波動", "會上下跳", "大起大�
 export const TOOLS: Tool[] = [
   {
     id: "tw-stock",
-    icon: "🇹🇼",
+    icon: "🥐",
     name: "台股個股",
     group: "stock",
     risk: 4,
@@ -55,7 +55,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "us-stock",
-    icon: "🇺🇸",
+    icon: "🗽",
     name: "美股",
     group: "stock",
     risk: 3,
@@ -70,7 +70,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "jp-stock",
-    icon: "🇯🇵",
+    icon: "🍡",
     name: "日股",
     group: "stock",
     risk: 3,
@@ -128,7 +128,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "high-yield",
-    icon: "🔥",
+    icon: "🩹",
     name: "高收益債",
     group: "income",
     risk: 3,
@@ -172,7 +172,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "commodity",
-    icon: "🛢️",
+    icon: "🌾",
     name: "原物料",
     group: "real",
     risk: 4,
@@ -187,7 +187,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "bitcoin",
-    icon: "🪙",
+    icon: "💻",
     name: "比特幣",
     group: "real",
     risk: 5,
@@ -230,7 +230,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "savings-insurance",
-    icon: "🛡️",
+    icon: "🐷",
     name: "儲蓄險",
     group: "cash",
     risk: 1,
@@ -244,7 +244,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "investment-linked",
-    icon: "📦",
+    icon: "🎁",
     name: "投資型保單",
     group: "cash",
     risk: 3,
@@ -258,7 +258,7 @@ export const TOOLS: Tool[] = [
   },
   {
     id: "futures",
-    icon: "⏳",
+    icon: "📝",
     name: "期貨",
     group: "lever",
     risk: 5,

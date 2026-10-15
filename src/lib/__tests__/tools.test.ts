@@ -39,3 +39,11 @@ describe("六種放法的一年", () => {
     }
   });
 });
+
+describe("風險大街", () => {
+  it("每種工具都有一間房子", async () => {
+    const { HOUSE } = await import("../street");
+    for (const t of TOOLS) expect(HOUSE[t.id]).toBeTruthy();
+    expect(Object.keys(HOUSE)).toHaveLength(TOOLS.length);
+  });
+});
