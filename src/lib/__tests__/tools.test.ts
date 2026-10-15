@@ -53,4 +53,9 @@ describe("賺錢撇步", () => {
     const { PLAYS } = await import("../plays");
     for (const t of TOOLS) expect(PLAYS[t.id]?.map((p) => p.level)).toEqual([1, 2, 3]);
   });
+  it("每種工具都有長期、中期、短線三種放法", async () => {
+    const { BY_TERM, TERMS } = await import("../plays");
+    expect(Object.keys(BY_TERM)).toHaveLength(TOOLS.length);
+    for (const t of TOOLS) for (const term of TERMS) expect(BY_TERM[t.id]?.[term.id]?.how.length).toBeGreaterThan(0);
+  });
 });

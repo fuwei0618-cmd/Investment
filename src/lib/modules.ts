@@ -93,7 +93,7 @@ export const MODULES: AppModule[] = [
     title: "台股籌碼",
     question: "主力在做什麼？",
     summary: "融資融券、分點、三大法人、期貨選擇權未平倉與 Put/Call Ratio。",
-    status: "planned",
+    status: "ready", // 先做了三大法人和融資（/chips），分點與期貨未平倉之後補
   },
   {
     slug: "mindset",
@@ -148,6 +148,7 @@ const PLACES: Record<string, Place> = {
   macro: { area: "market", label: "看市場・第 1–3 關", href: "/market#level-1" },
   industry: { area: "market", label: "看市場・第 4–5 關", href: "/market#level-4" },
   stock: { area: "market", label: "看市場・第 6–8 關", href: "/market#level-6" },
+  chips: { area: "market", label: "看市場・延伸：大戶在買什麼", href: "/chips" },
 };
 
 export function placeOf(slug: string): Place {

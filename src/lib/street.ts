@@ -5,12 +5,13 @@ export const ZONES = ["銀行區", "借據巷", "商店街", "市集", "賭場�
 
 export type Role = "interest" | "rent" | "owner" | "thing" | "deal";
 
-export const ROLES: { id: Role; name: string; line: string }[] = [
-  { id: "interest", name: "🏦 收利息", line: "借錢或存錢，約好給你利息" },
-  { id: "rent", name: "🏢 收租金", line: "當房東，每月收租" },
-  { id: "owner", name: "🥐 當老闆", line: "買公司的一小塊，分紅加漲價" },
-  { id: "thing", name: "🥇 抓實物", line: "不生錢，只等漲價" },
-  { id: "deal", name: "📝 押約定", line: "小錢押大，會到期" },
+// term：專有名詞，客戶或理專講的是這個
+export const ROLES: { id: Role; name: string; term: string; line: string }[] = [
+  { id: "interest", name: "🏦 收利息", term: "固定收益", line: "借錢或存錢，約好給你利息" },
+  { id: "rent", name: "🏢 收租金", term: "不動產", line: "當房東，每月收租" },
+  { id: "owner", name: "🥐 當老闆", term: "股權", line: "買公司的一小塊，分紅加漲價" },
+  { id: "thing", name: "🥇 抓實物", term: "商品與另類資產", line: "不生錢，只等漲價" },
+  { id: "deal", name: "📝 押約定", term: "衍生性商品", line: "小錢押大，會到期" },
 ];
 
 /** 每間房子：錢從哪裡來、在麵包鎮叫什麼 */
