@@ -21,12 +21,22 @@ const y = (p: number) => 70 - (p - 100) * 0.9;
 const toneFill = (t: Tone) => (t === "up" ? "#dc2626" : "#059669");
 const fmt = (v: number) => Math.round(v * 10) / 10;
 
+// 浮動視窗的位置：換看另一種時留在原地
+let lastPos: { x: number; y: number } | null = null;
+const W = () => Math.min(800, window.innerWidth - 16);
+const clamp = (p: { x: number; y: number }) => ({
+  x: Math.min(Math.max(p.x, 80 - W()), window.innerWidth - 80),
+  y: Math.min(Math.max(p.y, 0), window.innerHeight - 56),
+});
+
 export default function YearModal({ way, year, onClose }: { way: Way; year: Year; onClose: () => void }) {
   const [k, setK] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [anim, setAnim] = useState(false);
   const line = useRef<SVGPolylineElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState(() => lastPos ?? { x: (window.innerWidth - W()) / 2, y: 72 });
+  const drag = useRef<{ dx: number; dy: number } | null>(null);
 
   const s = year.seasons[SEASONS[k].id];
   const pts: [number, number][] = [[X[0], y(100)], ...SEASONS.slice(0, k + 1).map((se, i) => [X[i + 1], y(year.seasons[se.id].price)] as [number, number])];
@@ -69,15 +79,10 @@ export default function YearModal({ way, year, onClose }: { way: Way; year: Year
   });
 
   useEffect(() => {
-    closeBtn.current?.focus();
+    closeBtn.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   const go = (n: number) => {
@@ -92,31 +97,53 @@ export default function YearModal({ way, year, onClose }: { way: Way; year: Year
     setPlaying(true);
   };
 
+  // 抓上方標題列拖著走；底下的頁面照常可以捲、可以點
+  const onDown = (e: React.PointerEvent) => {
+    if ((e.target as HTMLElement).closest("button,a")) return;
+    drag.current = { dx: e.clientX - pos.x, dy: e.clientY - pos.y };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onMove = (e: React.PointerEvent) => {
+    if (!drag.current) return;
+    const p = clamp({ x: e.clientX - drag.current.dx, y: e.clientY - drag.current.dy });
+    lastPos = p;
+    setPos(p);
+  };
+  const onUp = () => {
+    drag.current = null;
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/45 px-3 py-6"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      className="fixed z-50 flex max-h-[80vh] flex-col overflow-hidden rounded-2xl border border-zinc-300 bg-stone-50 shadow-2xl dark:border-zinc-700 dark:bg-zinc-900"
+      style={{ left: pos.x, top: pos.y, width: W() }}
       role="dialog"
-      aria-modal="true"
       aria-label={`${way.name}的一年`}
     >
-      <div className="relative w-full max-w-4xl rounded-2xl bg-stone-50 p-4 shadow-2xl dark:bg-zinc-900">
-        <button ref={closeBtn} onClick={onClose} aria-label="關閉" className="absolute right-3 top-3 h-9 w-9 rounded-full bg-zinc-200 text-lg dark:bg-zinc-700">
+      <div
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onUp}
+        className="flex cursor-move touch-none select-none items-center gap-3 border-b border-zinc-200 bg-amber-100/70 px-4 py-2 dark:border-zinc-700 dark:bg-amber-950/50"
+      >
+        <span className="text-3xl">{way.icon}</span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold">{way.name}的一年</h2>
+          <p className="text-xs text-zinc-500">
+            {way.tool}・
+            <Link href={`/tools#${way.toolId}`} className="text-blue-600">
+              看工具卡 →
+            </Link>
+            <span className="ml-2 hidden sm:inline">⠿ 抓這條可以移動</span>
+          </p>
+        </div>
+        <button ref={closeBtn} onClick={onClose} aria-label="關閉" className="h-9 w-9 flex-none rounded-full bg-white/80 text-lg dark:bg-zinc-700">
           ✕
         </button>
-        <div className="mr-12 flex items-center gap-3">
-          <span className="text-3xl">{way.icon}</span>
-          <div>
-            <h2 className="text-xl font-semibold">{way.name}的一年</h2>
-            <p className="text-xs text-zinc-500">
-              {way.tool}・
-              <Link href={`/tools#${way.toolId}`} className="text-blue-600">
-                看工具卡 →
-              </Link>
-            </p>
-          </div>
-        </div>
-        <p className="my-2 text-sm text-zinc-600 dark:text-zinc-400">{year.lead}</p>
+      </div>
+      <div className="overflow-y-auto p-4">
+        <p className="mb-2 text-sm text-zinc-600 dark:text-zinc-400">{year.lead}</p>
 
         <div className="mb-3 flex flex-wrap gap-2">
           <button onClick={play} className="rounded-full bg-zinc-200 px-3 py-1 text-sm font-semibold dark:bg-zinc-700">

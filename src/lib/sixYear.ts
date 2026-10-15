@@ -145,11 +145,11 @@ export const SWITCHES = [
   { name: "開關二：物價和利息", desc: "物價高＝東西變貴、錢變薄，銀行就升息；物價低＝銀行降息。" },
 ];
 
-export const LISTENS: Record<string, { from: string; knob: string; best: string }> = {
-  "tw-stock": { from: "這家店賺的錢", knob: "生意，而且只押一家", best: "🌱 春" },
-  "index-fund": { from: "整條街賺的錢", knob: "生意，但好店爛店平均掉", best: "🌱 春" },
-  bond: { from: "約好的固定利息", knob: "利息，而且方向相反", best: "❄️ 冬" },
-  reits: { from: "租金", knob: "一半生意、一半物價", best: "🌱 春 ☀️ 夏" },
-  gold: { from: "不生錢，只等漲價", knob: "物價，錢越薄越強", best: "🍂 秋" },
-  deposit: { from: "銀行給的利息", knob: "幾乎不聽，所以不跳", best: "都差不多" },
+export const LISTENS: Record<string, { role: string; from: string; knob: string; best: string }> = {
+  "tw-stock": { role: "當一家店的老闆", from: "這家店賺的錢", knob: "生意，而且只押一家", best: "🌱 春" },
+  "index-fund": { role: "當整條街的老闆", from: "整條街賺的錢", knob: "生意，但好店爛店平均掉", best: "🌱 春" },
+  bond: { role: "當債主", from: "約好的固定利息", knob: "利息，而且方向相反", best: "❄️ 冬" },
+  reits: { role: "當房東", from: "租金", knob: "一半生意、一半物價", best: "🌱 春 ☀️ 夏" },
+  gold: { role: "囤東西", from: "不生錢，只等漲價", knob: "物價，錢越薄越強", best: "🍂 秋" },
+  deposit: { role: "對照組", from: "銀行給的利息", knob: "幾乎不聽，所以不跳", best: "都差不多" },
 };

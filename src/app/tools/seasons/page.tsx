@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Crumb from "@/components/Crumb";
-import { SIX, WHY_SIX } from "@/lib/six";
+import { SIX } from "@/lib/six";
 import { LISTENS, SWITCHES } from "@/lib/sixYear";
 import SeasonTable from "./SeasonTable";
 
@@ -20,7 +20,7 @@ export default function SeasonsPage() {
       <SeasonTable />
 
       <section className="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="font-semibold">為什麼同一季，六種差那麼多</h2>
+        <h2 className="font-semibold">這六種是什麼，為什麼同一季差那麼多</h2>
         <p className="text-sm">
           因為<b>每一種的錢，從不同的地方來</b>。季節換的時候，其實只轉了兩個開關：
         </p>
@@ -33,10 +33,11 @@ export default function SeasonsPage() {
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="text-left text-xs text-zinc-500">
                 <th className="py-1 pr-2 font-medium">放法</th>
+                <th className="py-1 pr-2 font-medium">它是什麼角色</th>
                 <th className="py-1 pr-2 font-medium">錢從哪來</th>
                 <th className="py-1 pr-2 font-medium">聽哪個開關</th>
                 <th className="py-1 font-medium">最好的季節</th>
@@ -48,6 +49,7 @@ export default function SeasonsPage() {
                   <td className="whitespace-nowrap py-1.5 pr-2 font-semibold">
                     {w.icon} {w.name}
                   </td>
+                  <td className="py-1.5 pr-2">{LISTENS[w.toolId].role}</td>
                   <td className="py-1.5 pr-2">{LISTENS[w.toolId].from}</td>
                   <td className="py-1.5 pr-2">{LISTENS[w.toolId].knob}</td>
                   <td className="whitespace-nowrap py-1.5">{LISTENS[w.toolId].best}</td>
@@ -56,16 +58,7 @@ export default function SeasonsPage() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h2 className="font-semibold">為什麼是這六種</h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">錢能放的地方，大致就這六個方向。期貨、選擇權這些，多半是它們的變形或加上槓桿，放在工具頁查。</p>
-        <ul className="space-y-1 text-sm">
-          {WHY_SIX.map((l) => (
-            <li key={l}>{l}</li>
-          ))}
-        </ul>
+        <p className="text-xs text-zinc-500">錢能放的地方，大致就這六個方向。期貨、選擇權這些，多半是它們的變形或加上槓桿，放在工具頁查。</p>
       </section>
 
       <section className="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
