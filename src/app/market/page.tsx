@@ -378,6 +378,9 @@ export default function MarketPage() {
           <Link href="/usd" className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
             💵 美元
           </Link>
+          <Link href="/tools" className="rounded-full bg-sky-50 px-3 py-1.5 text-sm text-sky-800 dark:bg-sky-950 dark:text-sky-200">
+            🧰 工具
+          </Link>
           <Link href="/lottery" className="rounded-full bg-amber-50 px-3 py-1.5 text-sm text-amber-800 dark:bg-amber-950 dark:text-amber-200">
             🎟️ 抽籤
           </Link>
