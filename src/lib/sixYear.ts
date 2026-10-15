@@ -146,10 +146,10 @@ export const SWITCHES = [
 ];
 
 export const LISTENS: Record<string, { role: string; from: string; knob: string; best: string }> = {
-  "tw-stock": { role: "當一家店的老闆", from: "這家店賺的錢", knob: "生意，而且只押一家", best: "🌱 春" },
-  "index-fund": { role: "當整條街的老闆", from: "整條街賺的錢", knob: "生意，但好店爛店平均掉", best: "🌱 春" },
-  bond: { role: "當債主", from: "約好的固定利息", knob: "利息，而且方向相反", best: "❄️ 冬" },
-  reits: { role: "當房東", from: "租金", knob: "一半生意、一半物價", best: "🌱 春 ☀️ 夏" },
-  gold: { role: "囤東西", from: "不生錢，只等漲價", knob: "物價，錢越薄越強", best: "🍂 秋" },
-  deposit: { role: "對照組", from: "銀行給的利息", knob: "幾乎不聽，所以不跳", best: "都差不多" },
+  "tw-stock": { role: "當老闆，押一家店", from: "這家店賺的錢", knob: "生意，而且只押一家", best: "🌱 春" },
+  "index-fund": { role: "當老闆，整條街分散買", from: "整條街賺的錢", knob: "生意，但好店爛店平均掉", best: "🌱 春" },
+  bond: { role: "當債主，只收固定利息；景氣差的時候反而最好", from: "約好的固定利息", knob: "利息，而且方向相反", best: "❄️ 冬" },
+  reits: { role: "收租金，介在老闆和債主中間", from: "租金", knob: "一半生意、一半物價", best: "🌱 春 ☀️ 夏" },
+  gold: { role: "不會生錢，只在大家不信任錢的時候特別強", from: "不生錢，只等漲價", knob: "物價，錢越薄越強", best: "🍂 秋" },
+  deposit: { role: "不會少也長不大，用來當對照組", from: "銀行給的利息", knob: "幾乎不聽，所以不跳", best: "都差不多" },
 };
