@@ -252,7 +252,11 @@ body.docked .bigbtn{bottom:calc(46vh + 10px)}
   .card h2{margin-top:2px}
   .card .log{flex-direction:row;flex-wrap:wrap}
   .card .log div{flex:1 1 240px}
-  .cpanel.wall{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start;padding:14px 16px 18px}
+  .cpanel.wall{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 16px;align-items:stretch;padding:0 16px 18px}
+  .cpanel.wall .wbar{grid-column:1/-1;position:sticky;top:0;z-index:6;background:var(--paper);display:flex;justify-content:space-between;align-items:center;padding:12px 0 8px;font-weight:900;font-size:.95rem;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .cpanel.wall .wbar small{font-weight:600;color:var(--muted);font-size:.76rem;margin-left:8px}
+  .cpanel.wall .whead{position:sticky;top:46px;z-index:5;background:var(--paper);padding-bottom:8px;box-shadow:0 8px 8px -8px rgba(60,40,10,.12)}
+  .cpanel.wall .wlist .chint{margin-top:4px}
   .cpanel.wall .wcol{min-width:0}
   .cpanel.wall .whd{display:block;text-align:center;border-radius:999px;padding:8px 10px;font-weight:900;font-size:.95rem;margin:0 auto 10px;max-width:260px;border:2px solid transparent}
   .cpanel.wall .whd small{display:block;font-weight:600;font-size:.7rem;opacity:.85}
@@ -461,7 +465,7 @@ var SCEN={1:[
  {q:[0,1],em:'💎',t:'冠軍但太貴',tag:['wait','放進觀察名單'],chain:['市佔率','毛利率','本益比標準差','潛在報酬率','預期報酬率'],why:'店很好，但現在比它自己平常貴太多→算出來的空間不到及格線→不追，等它跌回合理價。'},
  {q:[1,0],em:'🪤',t:'便宜但不是冠軍',tag:['no','便宜有原因'],chain:['負債比率','存貨週轉天數','本益比','停損'],why:'烤箱是借的、麵包放很久賣不掉→本益比低是因為大家不敢買→便宜的爛店不是機會。已經有的照停損賣。'},
  {q:[1,1],em:'🏃',t:'又貴又不是冠軍',tag:['no','快跑'],chain:['市佔率','毛利率','本益比','停損'],why:'排隊短、賺得少，股價卻很貴。沒有任何理由留著，有的話立刻停損。'}]};
-var openScen={1:false,2:false,3:false},activeScen=null,centerZ=1,centerAll=false;
+var openScen={1:false,2:false,3:false},activeScen=null,centerZ=1,centerAll=false,wallFold=false;
 var ORD={1:[0,1,3,2],2:[1,3,0,2],3:[0,1,2,3]};
 function wallMode(){return window.innerWidth>=960;}
 function stNo(k){return [,1,2,,3,4,,5,6,,7,8][k];}
@@ -498,8 +502,10 @@ function quadHTML(z){var ax=AX[z],cells=[[null,null],[null,null]];SCEN[z].forEac
 function renderCenter(){var cp=document.getElementById('cpanel');if(!cp)return;
   if(wallMode()){cp.classList.add('wall');cp.classList.remove('all');
     cp.innerHTML=TREE.map(function(L){var ax=AX[L.z],qd=quadHTML(L.z);
-      var list=ORD[L.z].map(function(si){var sc=SCEN[L.z][si],k=L.z+'-'+si,on=activeScen===k;return '<div class="sc'+(on?' on':'')+'" data-k="'+k+'"><div class="st"><span>'+sc.em+' '+sc.t+'</span><small class="'+sc.tag[0]+'">'+sc.tag[1]+'</small></div><div class="chain">'+sc.chain.map(function(t,ti){return (ti?'<span class="ar">→</span>':'')+'<span class="tc'+(got[t]?' got':'')+'" data-ct="'+t+'">'+(IC[t]||'')+' '+(NK[t]||t)+'</span>';}).join('')+'</div><div class="why">'+sc.why+'</div></div>';}).join('');
-      return '<div class="wcol"><div class="whd" data-z="'+L.z+'">'+L.name.split(' ')[0]+'<small>'+L.why+'</small></div><div class="qt">🔗 '+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'</div>'+qd[0]+'<div class="wlist">'+list+'</div></div>';}).join('');
+      var list=ORD[L.z].filter(function(si){return !wallFold||activeScen===(L.z+'-'+si);}).map(function(si){var sc=SCEN[L.z][si],k=L.z+'-'+si,on=activeScen===k;return '<div class="sc'+(on?' on':'')+'" data-k="'+k+'"><div class="st"><span>'+sc.em+' '+sc.t+'</span><small class="'+sc.tag[0]+'">'+sc.tag[1]+'</small></div><div class="chain">'+sc.chain.map(function(t,ti){return (ti?'<span class="ar">→</span>':'')+'<span class="tc'+(got[t]?' got':'')+'" data-ct="'+t+'">'+(IC[t]||'')+' '+(NK[t]||t)+'</span>';}).join('')+'</div><div class="why">'+sc.why+'</div></div>';}).join('');
+      return '<div class="wcol"><div class="whead"><div class="whd" data-z="'+L.z+'">'+L.name.split(' ')[0]+'<small>'+L.why+'</small></div><div class="qt">🔗 '+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'</div>'+qd[0]+'</div><div class="wlist">'+(wallFold&&!list?'<div class="chint">點上面一格，看它的解釋</div>':list)+'</div></div>';}).join('');
+    cp.innerHTML='<div class="wbar"><span>🔗 四象限劇本<small>點一格看因果鏈</small></span><button class="allb" id="wfold">'+(wallFold?'⊞ 展開全部解釋':'⊟ 收合解釋')+'</button></div>'+cp.innerHTML;
+    document.getElementById('wfold').onclick=function(){wallFold=!wallFold;renderCenter();};
     [].forEach.call(cp.querySelectorAll('.qc,.sc'),function(c){c.onclick=function(){var k=c.getAttribute('data-k');if(activeScen===k){activeScen=null;if(scenTimer)clearInterval(scenTimer);renderCenter();renderTree();}else playScen(k);};});
     return;}
   cp.classList.remove('wall');
