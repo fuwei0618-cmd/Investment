@@ -26,3 +26,16 @@ describe("六種放法總表", () => {
     }
   });
 });
+
+describe("六種放法的一年", () => {
+  it("六種都有四季劇本和開關說明", async () => {
+    const { SIX, SEASONS } = await import("../six");
+    const { YEARS, LISTENS } = await import("../sixYear");
+    for (const w of SIX) {
+      const y = YEARS.find((x) => x.toolId === w.toolId);
+      expect(y).toBeTruthy();
+      expect(LISTENS[w.toolId]).toBeTruthy();
+      for (const s of SEASONS) expect(y!.seasons[s.id].say).toHaveLength(3);
+    }
+  });
+});

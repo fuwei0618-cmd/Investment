@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Crumb from "@/components/Crumb";
-import { WHY_SIX } from "@/lib/six";
+import { SIX, WHY_SIX } from "@/lib/six";
+import { LISTENS, SWITCHES } from "@/lib/sixYear";
 import SeasonTable from "./SeasonTable";
 
 export const metadata = { title: "六種放法四季總表｜投資羅盤" };
@@ -12,11 +13,50 @@ export default function SeasonsPage() {
         <Crumb href="/tools" area="投資工具" here="六種放法 × 四季" />
         <h1 className="text-2xl font-semibold">🥐 你有 1 萬元，在麵包鎮有六種放法</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          鎮上的四個季節（遊戲裡「成長 × 物價」那四格）× 六種放法，全部結果一張表。點左邊的季節，下面的原因會換成那一季；點上面的名字看那張工具卡。
+          鎮上的四個季節（遊戲裡「成長 × 物價」那四格）× 六種放法，全部結果一張表。點左邊的季節，下面的原因會換成那一季；點上面的名字，看它自己走過春夏秋冬的小動畫。
         </p>
       </header>
 
       <SeasonTable />
+
+      <section className="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+        <h2 className="font-semibold">為什麼同一季，六種差那麼多</h2>
+        <p className="text-sm">
+          因為<b>每一種的錢，從不同的地方來</b>。季節換的時候，其實只轉了兩個開關：
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {SWITCHES.map((k) => (
+            <div key={k.name} className="rounded-lg bg-amber-50 p-3 text-sm dark:bg-zinc-800">
+              <b className="block">{k.name}</b>
+              <span className="text-zinc-600 dark:text-zinc-400">{k.desc}</span>
+            </div>
+          ))}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead>
+              <tr className="text-left text-xs text-zinc-500">
+                <th className="py-1 pr-2 font-medium">放法</th>
+                <th className="py-1 pr-2 font-medium">錢從哪來</th>
+                <th className="py-1 pr-2 font-medium">聽哪個開關</th>
+                <th className="py-1 font-medium">最好的季節</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SIX.map((w) => (
+                <tr key={w.toolId} className="border-t border-zinc-200 align-top dark:border-zinc-800">
+                  <td className="whitespace-nowrap py-1.5 pr-2 font-semibold">
+                    {w.icon} {w.name}
+                  </td>
+                  <td className="py-1.5 pr-2">{LISTENS[w.toolId].from}</td>
+                  <td className="py-1.5 pr-2">{LISTENS[w.toolId].knob}</td>
+                  <td className="whitespace-nowrap py-1.5">{LISTENS[w.toolId].best}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section className="space-y-2 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
         <h2 className="font-semibold">為什麼是這六種</h2>

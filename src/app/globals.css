@@ -97,3 +97,21 @@ select {
   border-radius: 0.5rem;
   animation: tour-pulse 1.4s ease-in-out infinite;
 }
+
+/* 六種放法的一年：一句一句淡入、錢袋數字跳一下 */
+@keyframes year-fade {
+  from {
+    opacity: 0;
+  }
+}
+.year-line {
+  animation: year-fade 0.5s ease both;
+}
+@keyframes year-pop {
+  40% {
+    transform: scale(1.15);
+  }
+}
+.year-pop {
+  animation: year-pop 0.5s;
+}
