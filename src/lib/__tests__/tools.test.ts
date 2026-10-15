@@ -47,3 +47,10 @@ describe("風險大街", () => {
     expect(Object.keys(HOUSE)).toHaveLength(TOOLS.length);
   });
 });
+
+describe("賺錢撇步", () => {
+  it("每種工具都有三級玩法", async () => {
+    const { PLAYS } = await import("../plays");
+    for (const t of TOOLS) expect(PLAYS[t.id]?.map((p) => p.level)).toEqual([1, 2, 3]);
+  });
+});
