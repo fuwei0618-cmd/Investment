@@ -253,9 +253,9 @@ body.docked .bigbtn{bottom:calc(46vh + 10px)}
   .card .log{flex-direction:row;flex-wrap:wrap}
   .card .log div{flex:1 1 240px}
   .cpanel.wall{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 16px;align-items:stretch;padding:0 16px 18px}
-  .cpanel.wall .wbar{grid-column:1/-1;position:sticky;top:0;z-index:6;background:var(--paper);display:flex;justify-content:space-between;align-items:center;padding:12px 0 8px;font-weight:900;font-size:.95rem;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .cpanel.wall .wbar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:12px 0 8px;font-weight:900;font-size:.95rem;border-bottom:1px solid var(--line);margin-bottom:10px}
   .cpanel.wall .wbar small{font-weight:600;color:var(--muted);font-size:.76rem;margin-left:8px}
-  .cpanel.wall .whead{position:sticky;top:46px;z-index:5;background:var(--paper);padding-bottom:8px;box-shadow:0 8px 8px -8px rgba(60,40,10,.12)}
+  .cpanel.wall .whead{position:sticky;top:0;z-index:5;background:var(--paper);padding-bottom:8px;box-shadow:0 8px 8px -8px rgba(60,40,10,.12)}
   .cpanel.wall .wlist .chint{margin-top:4px}
   .cpanel.wall .wcol{min-width:0}
   .cpanel.wall .whd{display:block;text-align:center;border-radius:999px;padding:8px 10px;font-weight:900;font-size:.95rem;margin:0 auto 10px;max-width:260px;border:2px solid transparent}
@@ -503,7 +503,7 @@ function renderCenter(){var cp=document.getElementById('cpanel');if(!cp)return;
   if(wallMode()){cp.classList.add('wall');cp.classList.remove('all');
     cp.innerHTML=TREE.map(function(L){var ax=AX[L.z],qd=quadHTML(L.z);
       var list=ORD[L.z].filter(function(si){return !wallFold||activeScen===(L.z+'-'+si);}).map(function(si){var sc=SCEN[L.z][si],k=L.z+'-'+si,on=activeScen===k;return '<div class="sc'+(on?' on':'')+'" data-k="'+k+'"><div class="st"><span>'+sc.em+' '+sc.t+'</span><small class="'+sc.tag[0]+'">'+sc.tag[1]+'</small></div><div class="chain">'+sc.chain.map(function(t,ti){return (ti?'<span class="ar">→</span>':'')+'<span class="tc'+(got[t]?' got':'')+'" data-ct="'+t+'">'+(IC[t]||'')+' '+(NK[t]||t)+'</span>';}).join('')+'</div><div class="why">'+sc.why+'</div></div>';}).join('');
-      return '<div class="wcol"><div class="whead"><div class="whd" data-z="'+L.z+'">'+L.name.split(' ')[0]+'<small>'+L.why+'</small></div><div class="qt">🔗 '+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'</div>'+qd[0]+'</div><div class="wlist">'+(wallFold&&!list?'<div class="chint">點上面一格，看它的解釋</div>':list)+'</div></div>';}).join('');
+      return '<div class="wcol"><div class="whd" data-z="'+L.z+'">'+L.name.split(' ')[0]+'<small>'+L.why+'</small></div><div class="qt">🔗 '+ax.yl.slice(2)+' × '+ax.xl.slice(2)+'</div><div class="whead">'+qd[0]+'</div><div class="wlist">'+(wallFold&&!list?'<div class="chint">點上面一格，看它的解釋</div>':list)+'</div></div>';}).join('');
     cp.innerHTML='<div class="wbar"><span>🔗 四象限劇本<small>點一格看因果鏈</small></span><button class="allb" id="wfold">'+(wallFold?'⊞ 展開全部解釋':'⊟ 收合解釋')+'</button></div>'+cp.innerHTML;
     document.getElementById('wfold').onclick=function(){wallFold=!wallFold;renderCenter();};
     [].forEach.call(cp.querySelectorAll('.qc,.sc'),function(c){c.onclick=function(){var k=c.getAttribute('data-k');if(activeScen===k){activeScen=null;if(scenTimer)clearInterval(scenTimer);renderCenter();renderTree();}else playScen(k);};});
