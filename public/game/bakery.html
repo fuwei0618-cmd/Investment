@@ -558,6 +558,8 @@ function tail(){return '<div class="verdict" id="v">動一下上面的東西</di
 function mount(html){card.className='card';card.innerHTML=html;badgeBox=document.getElementById('bb');tipBox=document.getElementById('tip');}
 
 var G={};
+// 第 3 站轉到的季節，第 8 站「看六種放法」用它打開總表那一季
+var lastSeason=null;try{lastSeason=localStorage.getItem('bakery.season.v1')}catch(e){}
 G[0]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<rect x="130" y="65" width="90" height="47" fill="var(--house)"/><polygon points="125,65 175,38 225,65" fill="var(--z2)"/><text x="175" y="95" font-size="22" text-anchor="middle">🥖</text><text x="40" y="138" font-size="28">🚶</text><text x="80" y="135" font-size="13" fill="var(--fg)" font-weight="900">我想買這家店的一股</text></svg><div class="in"><h2>先別急，走一圈再說</h2><div class="verdict">按「擲骰子」出發。每一站是一個小遊戲，玩完拿徽章。</div></div>');};
 
 // 1 鎮民：按上班/裁員，狗跟著主人
@@ -595,7 +597,7 @@ G[4]=function(){mount('<svg viewBox="0 0 360 160"><rect width="360" height="160"
   var S=[['擴張','☀️ 夏','又賺又漲，什麼店都好','快','快'],['趨緩','🍂 秋','還在賺但變慢，先抱藥局','慢','快'],['衰退','❄️ 冬','工作變少，抱防禦型等春天','負','慢'],['復甦','🌱 春','開始好轉，買冰店這種循環型','快','慢']];
   document.getElementById('spin').onclick=function(){var k=Math.floor(Math.random()*4);rot+=360*2+ (k*90)+45- (rot%360);document.getElementById('wh').style.transform='rotate('+(-rot)+'deg)';
     setTimeout(function(){var s=S[k];document.getElementById('s1').textContent='📈 成長：'+s[3];document.getElementById('s2').textContent='🌡️ 物價：'+s[4];document.getElementById('s3').textContent=s[1];
-      verdict(v,s[1]+' '+s[0]+'：'+s[2],k===2?'bad':'ok');badge(s[0]);badge('CPI');if(k===2){badge('薩姆規則');badge('長短利差');}finish(4);},1500);};
+      verdict(v,s[1]+' '+s[0]+'：'+s[2],k===2?'bad':'ok');lastSeason=['summer','autumn','winter','spring'][k];try{localStorage.setItem('bakery.season.v1',lastSeason)}catch(e){}badge(s[0]);badge('CPI');if(k===2){badge('薩姆規則');badge('長短利差');}finish(4);},1500);};
 };
 
 // 4 順風：夏冬切換
@@ -649,6 +651,7 @@ G[11]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<rect x="60" y="20" wi
     else if(g>=10){verdict(v,'差不多 → 中立，再等等','');document.getElementById('hand').textContent='🤔';}
     else{verdict(v,'不到及格線 → 不買，看好也不買','bad');document.getElementById('hand').textContent='🙅';}finish(11);}
   r.oninput=draw;draw();
+  var six=document.createElement('a');six.className='btn big';six.style.cssText='display:inline-block;margin-top:10px;text-decoration:none';six.href='/tools/seasons'+(lastSeason?'#'+lastSeason:'');six.textContent='🥐 除了買股票，還有六種放法 →';document.getElementById('v').after(six);
 };
 
 G[6]=function(){mount('<svg viewBox="0 0 360 150">'+SKY+'<path d="M0 130 L180 130 L180 60" stroke="var(--line)" stroke-width="14" fill="none" stroke-linecap="round"/><rect x="210" y="40" width="40" height="72" fill="var(--house)"/><rect x="260" y="55" width="40" height="57" fill="var(--house)"/><rect x="310" y="45" width="40" height="67" fill="var(--house)"/><text x="150" y="128" font-size="28">🚶</text></svg><div class="in"><h2>鎮看完了，進到街上</h2><div class="verdict">總經決定要不要進場，產業決定進哪一排。</div></div>');};

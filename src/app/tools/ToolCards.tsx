@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { GROUPS, RISK_WORD, TOOLS, type Tool, type ToolGroup } from "@/lib/tools";
+import { SIX } from "@/lib/six";
+
+const IN_SIX = new Set(SIX.map((w) => w.toolId));
 
 const RISK_TONE = ["", "bg-emerald-500", "bg-lime-500", "bg-amber-500", "bg-orange-500", "bg-red-500"];
 
@@ -32,6 +36,21 @@ function Card({ t, open, toggle }: { t: Tool; open: boolean; toggle: () => void 
       </button>
       {open && (
         <dl className="animate-rise space-y-2 border-t border-zinc-100 p-3 text-sm dark:border-zinc-800">
+          <div className="rounded-md bg-amber-50 p-2 dark:bg-amber-950">
+            <dt className="font-medium text-amber-800 dark:text-amber-200">🥐 在麵包鎮就是</dt>
+            <dd className="text-amber-900 dark:text-amber-100">
+              {t.town}{" "}
+              {IN_SIX.has(t.id) ? (
+                <Link href="/tools/seasons" className="whitespace-nowrap text-blue-600">
+                  看四季總表 →
+                </Link>
+              ) : (
+                <a href="/game/bakery.html" className="whitespace-nowrap text-blue-600">
+                  去玩一圈 →
+                </a>
+              )}
+            </dd>
+          </div>
           <div>
             <dt className="font-medium text-emerald-700 dark:text-emerald-400">💰 怎麼賺</dt>
             <dd>{t.earn}</dd>
@@ -64,12 +83,22 @@ function Card({ t, open, toggle }: { t: Tool; open: boolean; toggle: () => void 
 export default function ToolCards() {
   const [group, setGroup] = useState<ToolGroup | "all">("all");
   const [open, setOpen] = useState<string | null>(null);
-  const shown = group === "all" ? TOOLS : TOOLS.filter((t) => t.group === group);
   const pick = (id: string) => {
     setGroup("all");
     setOpen(id);
     requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" }));
   };
+  // 從遊戲的機會卡點進來（/tools#bond）時，直接打開那張卡
+  useEffect(() => {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!TOOLS.some((t) => t.id === id)) return;
+    const raf = requestAnimationFrame(() => {
+      setOpen(id);
+      setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const shown = group === "all" ? TOOLS : TOOLS.filter((t) => t.group === group);
 
   return (
     <div className="space-y-4">
