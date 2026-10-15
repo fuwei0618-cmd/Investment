@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { RISK_WORD, TOOLS, type Tool } from "@/lib/tools";
-import { HOUSE, ROLES, ZONES } from "@/lib/street";
+import { HOUSE, ROLES, ZONES, type Role } from "@/lib/street";
 
 // 每一區的底色和字色：越右越危險
 const ZONE_BG = ["bg-emerald-50 dark:bg-emerald-950/40", "bg-lime-50 dark:bg-lime-950/40", "bg-amber-50 dark:bg-amber-950/40", "bg-orange-50 dark:bg-orange-950/40", "bg-red-50 dark:bg-red-950/40"];
@@ -33,6 +33,8 @@ export default function RiskStreet({
   onPick,
   zoneOpen,
   onZone,
+  rowOpen,
+  onRow,
   onAll,
 }: {
   six: Set<string>;
@@ -40,6 +42,8 @@ export default function RiskStreet({
   onPick: (id: string) => void;
   zoneOpen: (risk: number) => boolean;
   onZone: (risk: number) => void;
+  rowOpen: (role: Role) => boolean;
+  onRow: (role: Role) => void;
   onAll: (open: boolean) => void;
 }) {
   const [onlySix, setOnlySix] = useState(false);
@@ -51,7 +55,7 @@ export default function RiskStreet({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="font-semibold">🥐 麵包鎮風險大街</h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">十八種工具都是鎮上的一間房子。先問錢從哪來，再看會跳多大：往右走越危險。點房子打開那張卡，可以一次點好幾間比較。</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">十八種工具都是鎮上的一間房子。先問錢從哪來，再看會跳多大：往右走越危險。點房子打開那張卡，可以一次點好幾間比較；點區名或左邊的錢，一次開一整排。</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           <button onClick={() => onAll(true)} className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-semibold dark:bg-zinc-800">
@@ -72,9 +76,10 @@ export default function RiskStreet({
 
       {/* 電腦：五區 × 五種錢 */}
       <div className="hidden gap-1.5 md:grid md:grid-cols-[112px_repeat(5,minmax(0,1fr))]">
-        <div className="self-end px-1 pb-1">
+        <div className="self-end px-1 pb-1 leading-tight">
           <b className="block text-sm">錢從哪裡來</b>
-          <span className="text-[11px] text-zinc-500">往右看會跳多大 →</span>
+          <span className="block text-[11px] text-zinc-500">專有名詞：資產類別</span>
+          <span className="block text-[11px] text-zinc-500">往右：波動越大 →</span>
         </div>
         {ZONES.map((z, i) => (
           <button key={z} onClick={() => onZone(i + 1)} className={`rounded-lg px-2 py-1.5 text-left ${ZONE_BG[i]}`}>
@@ -84,10 +89,12 @@ export default function RiskStreet({
         ))}
         {ROLES.map((ro) => (
           <div key={ro.id} className="contents">
-            <div className="rounded-lg bg-zinc-100 px-2 py-1.5 dark:bg-zinc-800">
+            <button onClick={() => onRow(ro.id)} className="rounded-lg bg-zinc-100 px-2 py-1.5 text-left dark:bg-zinc-800">
               <b className="block text-sm">{ro.name}</b>
+              <span className="block text-[11px] font-semibold text-amber-700 dark:text-amber-400">{ro.term}</span>
               <span className="block text-[11px] leading-snug text-zinc-500">{ro.line}</span>
-            </div>
+              <span className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">{rowOpen(ro.id) ? "收合這排 ←" : "展開這排 →"}</span>
+            </button>
             {ZONES.map((z, i) => (
               <div key={z} className={`flex flex-wrap content-start gap-1.5 rounded-lg p-1.5 ${ZONE_BG[i]}`}>
                 {at(i + 1, ro.id).map(house)}
@@ -111,7 +118,16 @@ export default function RiskStreet({
             <div className="flex flex-wrap gap-1.5">{at(i + 1).map(house)}</div>
           </div>
         ))}
-        <p className="text-xs text-zinc-500">錢從哪裡來：{ROLES.map((r) => r.name).join("、")}，點房子看是哪一種。</p>
+        <div className="space-y-1 rounded-lg bg-zinc-100 p-2 dark:bg-zinc-800">
+          <p className="text-xs text-zinc-500">錢從哪裡來（資產類別），點一下開一整排：</p>
+          <div className="flex flex-wrap gap-1.5">
+            {ROLES.map((r) => (
+              <button key={r.id} onClick={() => onRow(r.id)} aria-pressed={rowOpen(r.id)} className={`rounded-full px-2.5 py-0.5 text-xs ${rowOpen(r.id) ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : "bg-white dark:bg-zinc-900"}`}>
+                {r.name}・{r.term}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
