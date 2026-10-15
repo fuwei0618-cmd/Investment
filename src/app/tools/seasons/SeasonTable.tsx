@@ -26,7 +26,7 @@ export default function SeasonTable() {
 
   return (
     <>
-      {way && year && <YearModal way={way} year={year} onClose={close} />}
+      {way && year && <YearModal key={way.toolId} way={way} year={year} onClose={close} />}
       <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800">
         <table className="w-full min-w-[760px] table-fixed border-collapse text-sm">
           <colgroup>
