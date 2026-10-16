@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import Nav from "@/components/Nav";
 import { ActNext, ActSign } from "@/components/ActBar";
+import BackToDesk from "@/components/BackToDesk";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto w-full max-w-5xl px-4">
           <ActNext />
         </div>
+        <BackToDesk />
         {/* OneDrive 同步（Origina 共用）：把 *.v1 這類 localStorage 資料存到 OneDrive，右下角雲朵按鈕 */}
         <Script
           src="https://fuwei0618-cmd.github.io/Entry/sync/origina-sync.js"
