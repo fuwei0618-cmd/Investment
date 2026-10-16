@@ -79,7 +79,7 @@ export const ACTS: Act[] = [
       { href: "/lottery", name: "股票抽籤", note: "最近哪些新股可以抽、划不划算" },
       { href: "/portfolio", name: "持股健檢", note: "手上的投資健不健康" },
     ],
-    also: ["/go/tw-trust"],
+    also: ["/go/tw-trust", "/go/daytrade"],
   },
 ];
 

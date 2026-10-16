@@ -142,7 +142,7 @@ export function GoPage({ play }: { play: PlayId }) {
                   href={o.go}
                   className="mr-3 mt-1 inline-block font-bold text-[#b4651e] underline"
                 >
-                  帶我做這一種 →
+                  {o.goLabel ?? "帶我做這一種"} →
                 </Link>
               )}
               {o.href && (
