@@ -12,6 +12,11 @@ export interface PlayGuide {
   lose: string;
 }
 
+export type MainGuide = PlayGuide & {
+  conditions: { name: string; why: string }[];
+  together: string;
+};
+
 export const MAIN_PLAY: PlayGuide & {
   conditions: { name: string; why: string }[];
   together: string;
@@ -47,6 +52,38 @@ export const MAIN_PLAY: PlayGuide & {
   lose: "假突破（衝過前高隔天又跌回來）、大戶只是短進短出、大盤突然轉弱。所以停損一定要設：這招靠的是「賺的時候抱一段、賠的時候少賠」，不是每次都對。",
 };
 
+export const TRUST_PLAY: MainGuide = {
+  name: "跟著投信買",
+  idea: "投信連續好幾天買同一檔，跟著上車，在他們下車或季底前先走。",
+  conditions: [
+    {
+      name: "投信連買三天以上",
+      why: "投信（國內基金）錢比外資少，常集中買幾檔中小型股。連買三天以上，代表他們在慢慢建立部位，後面還會繼續買。",
+    },
+    {
+      name: "近 20 天漲不到 15%",
+      why: "要上車的是投信還在買、股價還沒漲太多的那一段。已經漲一大段才追，等於幫前面的人抬轎。",
+    },
+    {
+      name: "收盤在月線之上",
+      why: "站在月線上，代表最近一個月買的人多半賺錢，賣壓比較輕，股價比較走得上去。",
+    },
+  ],
+  together:
+    "三個一起看：有人持續在買（投信）、你沒有買在太高（漲幅）、走勢是往上的（月線）。只看投信買超，很容易追到已經漲完的股票。",
+  why: "投信基金每季要交績效單，買進後常會繼續買、把股價往上推；季底前也常會再拉一下讓帳面好看（作帳）。中小型股流通的張數少，投信一買價格就容易動。你跟在他們建立部位的過程中上車，搭的是這段推升的力量。",
+  flow: [
+    "看大盤：在月線之上才做。",
+    "挑股票：投信連買三天以上、近 20 天漲不到 15%、收盤在月線之上。",
+    "算好買多少：每一筆最多總資金一成，同時最多拿三檔。",
+    "進場：掛今天收盤價附近，不追高。",
+    "設停損：比買價少 7% 就賣。",
+    "停利：賺 10% 先賣一半。",
+    "出場：投信連續賣兩天，或季底前一週，剩下的全部賣掉。",
+  ],
+  lose: "投信突然改賣（結帳）、季底作帳沒發生，或中小型股成交量小、跌起來很快。所以停損和「投信連賣兩天就走」一定要守。",
+};
+
 export interface OtherPlay extends Omit<PlayGuide, "idea"> {
   name: string;
   /** 同事常怎麼說 */
@@ -57,6 +94,8 @@ export interface OtherPlay extends Omit<PlayGuide, "idea"> {
   /** 網站裡對應的地方 */
   href?: string;
   where?: string;
+  /** 有「帶我做」的話，連過去 */
+  go?: string;
 }
 
 export const OTHER_PLAYS: OtherPlay[] = [
@@ -78,6 +117,7 @@ export const OTHER_PLAYS: OtherPlay[] = [
   },
   {
     name: "跟著投信買（投信認養）",
+    go: "/go/tw-trust",
     why: "投信基金規模比外資小，常集中買中小型股，買的時候股價容易被推上去；季底要交績效單，常會再拉一下。",
     flow: [
       "看投信連買好幾天的中小型股",
