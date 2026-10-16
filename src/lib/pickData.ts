@@ -12,7 +12,7 @@ import {
   type InstRow,
 } from "./pick";
 
-async function fm(dataset: string, id: string, days: number) {
+export async function fm(dataset: string, id: string, days: number) {
   const url = new URL(
     `${process.env.FINMIND_BASE ?? "https://api.finmindtrade.com"}/api/v4/data`,
   );
@@ -59,7 +59,7 @@ export interface News {
   source: string;
 }
 
-const toNews = (rows: Record<string, unknown>[]): News[] =>
+export const toNews = (rows: Record<string, unknown>[]): News[] =>
   rows
     .map((r) => ({
       date: String(r.date ?? "").slice(0, 10),
