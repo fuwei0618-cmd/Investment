@@ -30,7 +30,7 @@ describe("麵包鎮的大戶", () => {
 });
 
 describe("大戶劇場、氣氛燈、逛街地圖", async () => {
-  const { mood, story, parseStreets, hotStreets } = await import("../chips");
+  const { mood, story, parseStreets, parsePrices, parseIndustry, hotStreets } = await import("../chips");
   const day = (date: string, foreign: number, trust = 0) => ({ date, net: { foreign, trust, dealer: 0 } });
   it("外資大賣、鎮民還在借錢買是紅燈", () => {
     const days = [day("1", -200), day("2", -300), day("3", -100)];
@@ -53,19 +53,22 @@ describe("大戶劇場、氣氛燈、逛街地圖", async () => {
         ["9999", "沒價格", "0", "0", "1", "0"],
       ],
     };
-    const st = parseStreets(
-      t86,
-      [
-        { Code: "2330", ClosingPrice: "1000.00" },
-        { Code: "2303", ClosingPrice: "50" },
-        { Code: "0050", ClosingPrice: "60" },
+    const price = parsePrices({
+      fields: ["日期", "證券代號", "證券名稱", "收盤價"],
+      data: [
+        ["1151015", "2330", "台積電", "1,000.00"],
+        ["1151015", "2303", "聯電", "50"],
+        ["1151015", "0050", "元大台灣50", "60"],
       ],
-      [
-        { 公司代號: "2330", 產業別: "24" },
-        { 公司代號: "2303", 產業別: "24" },
-      ],
-    );
-    const semi = st.find((s) => s.id === "24")!;
+    });
+    const industry = parseIndustry([
+      { stock_id: "2330", industry_category: "電子工業", type: "twse" },
+      { stock_id: "2330", industry_category: "半導體業", type: "twse" },
+      { stock_id: "2303", industry_category: "半導體業", type: "twse" },
+      { stock_id: "2303", industry_category: "所有證券", type: "twse" },
+    ]);
+    const st = parseStreets(t86, price, industry);
+    const semi = st.find((s) => s.id === "半導體業")!;
     expect(semi.name).toBe("半導體");
     expect(semi.foreign).toBeCloseTo(-90);
     expect(semi.shops[0].name).toBe("台積電");

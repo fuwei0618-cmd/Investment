@@ -153,43 +153,19 @@ export function story(days: Day[], margin: { change: number } | null, hot?: { bu
 }
 
 // ── 大戶逛街地圖：證交所每檔的外資、投信買賣超（股數）× 收盤價，加總到每條街（產業） ──
-export const STREETS: Record<string, { name: string; icon: string }> = {
-  ETF: { name: "整條街都買（指數基金）", icon: "🧺" },
-  "01": { name: "水泥", icon: "🧱" },
-  "02": { name: "食品", icon: "🍜" },
-  "03": { name: "塑膠", icon: "🧴" },
-  "04": { name: "紡織", icon: "🧵" },
-  "05": { name: "電機機械", icon: "⚙️" },
-  "06": { name: "電器電纜", icon: "🔌" },
-  "08": { name: "玻璃陶瓷", icon: "🏺" },
-  "09": { name: "造紙", icon: "📄" },
-  "10": { name: "鋼鐵", icon: "🔩" },
-  "11": { name: "橡膠", icon: "🛞" },
-  "12": { name: "汽車", icon: "🚗" },
-  "14": { name: "建材營造", icon: "🏗️" },
-  "15": { name: "航運", icon: "🚢" },
-  "16": { name: "觀光餐旅", icon: "🏨" },
-  "17": { name: "金融保險", icon: "🏦" },
-  "18": { name: "貿易百貨", icon: "🛍️" },
-  "20": { name: "其他", icon: "📦" },
-  "21": { name: "化學", icon: "🧪" },
-  "22": { name: "生技醫療", icon: "💊" },
-  "23": { name: "油電燃氣", icon: "⛽" },
-  "24": { name: "半導體", icon: "💾" },
-  "25": { name: "電腦週邊", icon: "🖥️" },
-  "26": { name: "光電", icon: "💡" },
-  "27": { name: "通信網路", icon: "📡" },
-  "28": { name: "電子零組件", icon: "🔋" },
-  "29": { name: "電子通路", icon: "🚚" },
-  "30": { name: "資訊服務", icon: "💻" },
-  "31": { name: "其他電子", icon: "📟" },
-  "32": { name: "文化創意", icon: "🎨" },
-  "33": { name: "農業科技", icon: "🌱" },
-  "35": { name: "綠能環保", icon: "♻️" },
-  "36": { name: "數位雲端", icon: "☁️" },
-  "37": { name: "運動休閒", icon: "⚽" },
-  "38": { name: "居家生活", icon: "🛋️" },
-};
+// 產業名稱用 FinMind 的公司資料（例如「半導體業」），圖示照關鍵字配
+const ICONS: [string, string][] = [
+  ["半導體", "💾"], ["電腦", "🖥️"], ["光電", "💡"], ["通信", "📡"], ["零組件", "🔋"], ["通路", "🚚"], ["資訊服務", "💻"], ["其他電子", "📟"],
+  ["金融", "🏦"], ["航運", "🚢"], ["鋼鐵", "🔩"], ["塑膠", "🧴"], ["紡織", "🧵"], ["食品", "🍜"], ["水泥", "🧱"], ["建材", "🏗️"],
+  ["汽車", "🚗"], ["電機", "⚙️"], ["電器", "🔌"], ["玻璃", "🏺"], ["造紙", "📄"], ["橡膠", "🛞"], ["觀光", "🏨"], ["貿易", "🛍️"],
+  ["化學", "🧪"], ["生技", "💊"], ["油電", "⛽"], ["文化", "🎨"], ["農業", "🌱"], ["綠能", "♻️"], ["數位", "☁️"], ["運動", "⚽"], ["居家", "🛋️"],
+];
+export const ETF_STREET = { name: "整條街都買（指數基金）", icon: "🧺" };
+// 太籠統的分類不用（同一家公司常同時掛在這些和細分類）
+const VAGUE = new Set(["電子工業", "所有證券", "化學生技醫療", "創新板股票", "創新版股票"]);
+
+const streetName = (cat: string) => cat.replace(/(工業|業|類)$/, "") || cat;
+const iconOf = (cat: string) => ICONS.find(([k]) => cat.includes(k))?.[1] ?? "📦";
 
 export interface Shop {
   code: string;
@@ -208,28 +184,48 @@ export interface Street {
 }
 
 const num = (s: unknown) => Number(String(s ?? "").replace(/,/g, "")) || 0;
+const col = (fields: string[] | undefined, word: string) => (fields ?? []).findIndex((f) => f.includes(word));
 
-/** 證交所 T86（三大法人買賣超日報）＋收盤價＋產業別 → 每條街 */
-export function parseStreets(
-  t86: { fields?: string[]; data?: unknown[][] },
-  prices: { Code: string; ClosingPrice: string }[],
-  companies: { 公司代號: string; 產業別: string }[],
-): Street[] {
-  const fields = t86.fields ?? [];
-  const iF = fields.findIndex((f) => f.includes("外陸資買賣超"));
-  const iT = fields.findIndex((f) => f.includes("投信買賣超"));
+/** 證交所每日收盤行情（STOCK_DAY_ALL）→ 代號對收盤價 */
+export function parsePrices(t: { fields?: string[]; data?: unknown[][] }): Map<string, number> {
+  const iC = col(t.fields, "證券代號");
+  const iP = col(t.fields, "收盤價");
+  const m = new Map<string, number>();
+  if (iC < 0 || iP < 0) return m;
+  for (const r of t.data ?? []) {
+    const p = num(r[iP]);
+    if (p > 0) m.set(String(r[iC]).trim(), p);
+  }
+  return m;
+}
+
+/** FinMind 公司資料 → 代號對產業（只取上市、跳過太籠統的分類） */
+export function parseIndustry(rows: { stock_id: string; industry_category: string; type?: string }[]): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const r of rows) {
+    if (r.type && r.type !== "twse") continue;
+    const cat = String(r.industry_category ?? "").trim();
+    if (!cat || VAGUE.has(cat)) continue;
+    m.set(String(r.stock_id).trim(), cat);
+  }
+  return m;
+}
+
+/** 證交所 T86（三大法人買賣超日報）＋收盤價＋產業 → 每條街 */
+export function parseStreets(t86: { fields?: string[]; data?: unknown[][] }, price: Map<string, number>, industry: Map<string, string>): Street[] {
+  const iF = col(t86.fields, "外陸資買賣超");
+  const iT = col(t86.fields, "投信買賣超");
   if (iF < 0 || iT < 0) return [];
-  const price = new Map(prices.map((p) => [p.Code, num(p.ClosingPrice)]));
-  const ind = new Map(companies.map((c) => [String(c.公司代號).trim(), String(c.產業別).trim()]));
   const streets = new Map<string, Street>();
   for (const row of t86.data ?? []) {
     const code = String(row[0]).trim();
     const p = price.get(code);
     if (!p) continue;
-    const id = code.startsWith("00") ? "ETF" : (ind.get(code) ?? "20");
-    const meta = STREETS[id] ?? STREETS["20"];
+    const cat = industry.get(code);
+    const etf = code.startsWith("00") || (cat?.includes("ETF") ?? false);
+    const id = etf ? "ETF" : (cat ?? "其他");
     const shop: Shop = { code, name: String(row[1]).trim(), foreign: (num(row[iF]) * p) / 1e8, trust: (num(row[iT]) * p) / 1e8 };
-    const s = streets.get(id) ?? { id, name: meta.name, icon: meta.icon, foreign: 0, trust: 0, shops: [] };
+    const s = streets.get(id) ?? { id, name: etf ? ETF_STREET.name : streetName(id), icon: etf ? ETF_STREET.icon : iconOf(id), foreign: 0, trust: 0, shops: [] };
     s.foreign += shop.foreign;
     s.trust += shop.trust;
     s.shops.push(shop);
