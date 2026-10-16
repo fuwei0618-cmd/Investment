@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import Crumb from "@/components/Crumb";
 import LightDot from "@/components/Light";
 import { PLAYERS, hotStreets, mood, story, streak, type Day } from "@/lib/chips";
 import { getChips, getStreets } from "@/lib/chipsData";
@@ -174,7 +173,6 @@ export default function ChipsPage() {
   return (
     <div className="space-y-4">
       <header>
-        <Crumb href="/market" area="看市場" here="延伸：大戶在買什麼" />
         <h1 className="text-2xl font-semibold">👥 麵包鎮的大戶：法人與外資</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           店的價錢是買的人和賣的人喊出來的。錢多的人一動，價錢就跟著動。台股每天收盤後會公布這些大戶買了多少、賣了多少，專有名詞叫「籌碼」。

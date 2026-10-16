@@ -1,4 +1,3 @@
-import Crumb from "@/components/Crumb";
 import CourseRefs from "@/components/CourseRefs";
 import { Suspense } from "react";
 import { INDICATORS, MANUAL_CHARTS, applyTransform } from "@/lib/macro";
@@ -52,7 +51,6 @@ export default function MacroPage() {
   return (
     <div className="space-y-6">
       <header>
-        <Crumb href="/market#level-1" area="看市場" here="第 1–3 關的更多數字" />
         <h1 className="text-2xl font-semibold">總經數字總覽</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           看市場第 1–3 關用到的數字，這裡列得更完整，每張圖都附「怎麼看」。

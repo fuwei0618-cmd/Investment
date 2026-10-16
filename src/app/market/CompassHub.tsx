@@ -50,11 +50,13 @@ export default function CompassHub({ steps, panels }: { steps: HubStep[]; panels
 
   const tourGo = useCallback((n: number) => {
     history.replaceState(null, "", `#level-${n}`);
+    window.dispatchEvent(new Event("levelchange")); // 讓上面的「第幾幕」站牌跟著換
     setCur(n);
   }, []);
 
   function go(n: number, scroll = false) {
     history.replaceState(null, "", `#level-${n}`);
+    window.dispatchEvent(new Event("levelchange")); // 讓上面的「第幾幕」站牌跟著換
     setCur(n);
     if (scroll) document.getElementById("hub-panel")?.scrollIntoView({ behavior: "smooth" });
   }
