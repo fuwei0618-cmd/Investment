@@ -227,3 +227,9 @@ export function holdingAlert(h: Holding, now: number): Alert {
 /** 台灣時間的今天（YYYY-MM-DD） */
 export const taipeiToday = (now = new Date()) =>
   new Date(now.getTime() + 8 * 3_600_000).toISOString().slice(0, 10);
+
+/** 收盤和月線兩個數字：四捨五入後看起來一樣時多給兩位小數，才看得出誰在上面 */
+export function closeAndMa(close: number, ma: number): [string, string] {
+  const d = Math.round(close) === Math.round(ma) ? 2 : 0;
+  return [close.toFixed(d), ma.toFixed(d)];
+}

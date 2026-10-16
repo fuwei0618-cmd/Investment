@@ -27,6 +27,7 @@ export async function save(key: string, value: unknown) {
 }
 
 export const HOLDINGS_KEY = "holdings.v1";
+export const US_HOLDINGS_KEY = "us.holdings.v1";
 
 /** 通關密語：沒設 PUSH_PASSCODE 就不讓人寫入或測試，避免別人亂用 */
 export const passOk = (p: unknown) =>

@@ -2,14 +2,22 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import LightDot from "@/components/Light";
-import { verdict } from "@/lib/desk";
+import { closeAndMa } from "@/lib/desk";
 import { getSeries } from "@/lib/fred";
 import { getTodayAnswers } from "@/lib/todayData";
-import { aboveMa20, changeOver, US_INDICES, US_SECTORS } from "@/lib/us";
+import {
+  aboveMa20,
+  changeOver,
+  fearLight,
+  US_INDICES,
+  US_SECTORS,
+  usVerdict,
+} from "@/lib/us";
 import { getUsBars, getUsPicks } from "@/lib/usData";
 import { usdLevel, usdStats } from "@/lib/usd";
 import LiveBoard from "../../go/daytrade/LiveBoard";
 import Holdings from "../Holdings";
+import LineSetup from "../LineSetup";
 import {
   Calendar,
   Macro,
@@ -31,17 +39,6 @@ const tone = (n: number | null) =>
       ? "text-red-700 dark:text-red-400"
       : "text-green-700 dark:text-green-400";
 
-const US_TODO: Record<string, string> = {
-  今天不買股票:
-    "標普 500 在月線下，美股先不買。手上的照停損走，等站回月線再看名單。",
-  可以照策略卡出手:
-    "標普 500 在月線上、市場也不恐慌。到下面名單挑三個條件全過的，照「帶我做」一步一步來。",
-  "可以出手，但只用一半的錢":
-    "標普 500 還在月線上，但市場很恐慌或景氣在衰退期。照名單挑，每筆只放平常一半。",
-  "可以出手，挑最強的一兩檔就好":
-    "標普 500 在月線上，但市場有點緊張。名單裡三個條件全過的才買，不要一次買很多檔。",
-};
-
 // ① 今天能不能出手（美股）：標普 500 在月線上嗎、景氣季節、美元
 async function Go() {
   await connection();
@@ -52,12 +49,10 @@ async function Go() {
   ]);
   const spx = aboveMa20(bars["^GSPC"]);
   const vix = bars["^VIX"].at(-1)?.close ?? null;
-  // 恐慌指數 30 以上當作大戶在逃（美國沒有每天的法人買賣，用恐慌程度代替）
-  const fear =
-    vix == null ? null : vix >= 30 ? "red" : vix >= 20 ? "yellow" : "green";
-  const v = verdict({
+  const fear = fearLight(vix);
+  const v = usVerdict({
     above: spx?.above ?? null,
-    mood: fear,
+    vix,
     season: t.season?.light ?? null,
   });
   const u = usd ? usdStats(usd) : null;
@@ -66,7 +61,7 @@ async function Go() {
       q: "標普 500 在月線上嗎？",
       light: spx ? (spx.above ? "green" : "red") : null,
       a: spx
-        ? `標普 500 收 ${spx.close.toFixed(0)}，月線 ${spx.ma.toFixed(0)}，${spx.above ? "在上面" : "在下面"}。`
+        ? `標普 500 收 ${closeAndMa(spx.close, spx.ma).join("，月線 ")}，${spx.above ? "在上面" : "在下面"}。`
         : "暫時抓不到",
     },
     {
@@ -98,7 +93,7 @@ async function Go() {
         </span>
         <div>
           <p className="text-2xl font-black">{v.title}</p>
-          <p className="text-[15px]">{US_TODO[v.title] ?? v.todo}</p>
+          <p className="text-[15px]">{v.todo}</p>
         </div>
       </div>
       <ul className="space-y-1.5 text-sm">
@@ -273,9 +268,7 @@ export default function DeskUs() {
       </Section>
       <Section id="hold" title="⑦ 我的持股提醒">
         <Holdings market="us" />
-        <p className="text-xs text-stone-500">
-          美股的 LINE 提醒（晚上盤前、早上盤後）下一步再接上。
-        </p>
+        <LineSetup />
       </Section>
     </div>
   );
