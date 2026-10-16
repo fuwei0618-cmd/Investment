@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import LightDot from "@/components/Light";
-import { taipeiToday, upcoming } from "@/lib/desk";
+import { SEASON_TOOLS, taipeiToday, upcoming, type Verdict } from "@/lib/desk";
+import type { PhaseKey } from "@/lib/industry";
 import { getSeries } from "@/lib/fred";
 import { getTodayAnswers } from "@/lib/todayData";
 import { usdLevel, usdStats } from "@/lib/usd";
+import QCard from "./QCard";
+import SellCard from "./SellCard";
 
 // 台股、美股實戰頁共用的外框和兩段（總體經濟、行事曆）
 
@@ -143,5 +146,85 @@ export function MarketSwitch({ now }: { now: "tw" | "us" }) {
         </Link>
       ))}
     </nav>
+  );
+}
+
+/* ── 最上面：每天只回答三個問題，加一行這一季適合的工具 ── */
+
+export function TopThree({
+  v,
+  pick,
+  phase,
+  market,
+}: {
+  v: Verdict;
+  pick: { name: string; code: string; href: string; note: string } | null;
+  phase: PhaseKey | null;
+  market: "tw" | "us";
+}) {
+  const s = phase ? SEASON_TOOLS[phase] : null;
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-3">
+        <QCard q="今天買不買？" tone={v.light}>
+          <p className="text-xl font-black">{v.title}</p>
+          <p className="text-sm">{v.todo}</p>
+        </QCard>
+        <QCard
+          q="買哪一檔？"
+          tone={v.light === "red" || !pick ? null : "green"}
+        >
+          {v.light === "red" ? (
+            <>
+              <p className="text-xl font-black">今天先不買</p>
+              <p className="text-sm">大盤在月線下，名單先不用看。</p>
+            </>
+          ) : pick ? (
+            <>
+              <p className="text-xl font-black">
+                {pick.name} {pick.code}
+              </p>
+              <p className="text-sm">
+                {pick.note}
+                <Link href={pick.href} className={`ml-1 ${more}`}>
+                  帶我做 →
+                </Link>
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xl font-black">沒有全過的</p>
+              <p className="text-sm">今天沒有三個條件全過的股票，不用硬買。</p>
+            </>
+          )}
+        </QCard>
+        <SellCard market={market} />
+      </div>
+      {s && (
+        <p className="rounded-xl bg-[#f3ead8] px-3 py-2 text-sm dark:bg-[#2f281f]">
+          現在是景氣<b>{s.name}期</b>，這一季最適合的工具：
+          <b>{s.tools}</b>。{s.why}
+          <Link href="/tools" className={`ml-1 ${more}`}>
+            看六種放法 →
+          </Link>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** 原本七區的詳細資料：平常收起來，想知道為什麼再打開 */
+export function Why({ children }: { children: React.ReactNode }) {
+  return (
+    <details className="group space-y-4">
+      <summary className="cursor-pointer list-none rounded-xl border-2 border-dashed border-stone-300 px-3 py-2 text-sm font-bold text-stone-600 dark:border-stone-600 dark:text-stone-300">
+        <span className="group-open:hidden">▸ 為什麼？</span>
+        <span className="hidden group-open:inline">▾ 收起來</span>
+        <span className="ml-1 font-normal">
+          大盤、景氣、產業、大事、追蹤清單、名單、持股和 LINE 設定都在這裡
+        </span>
+      </summary>
+      <div className="mt-4 space-y-4">{children}</div>
+    </details>
   );
 }

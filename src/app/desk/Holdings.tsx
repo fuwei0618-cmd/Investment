@@ -13,8 +13,8 @@ const TONE = {
   plain: "bg-[#f3ead8] dark:bg-[#2f281f]",
 };
 
-// 我的持股提醒：讀「帶我做」第六步記下來的單子，拿現價比停損停利
-export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
+/** 讀「帶我做」第六步記下來的單子和現價（持股提醒、最上面「哪檔要賣」共用） */
+export function useHoldingQuotes(market: "tw" | "us") {
   const us = market === "us";
   const [trades, , loaded] = usePersistentState<Holding[]>(
     us ? "us.trades.v1" : "go.trades.v1",
@@ -33,6 +33,13 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
       .then((j) => setQuotes(j.quotes ?? []))
       .catch(() => setErr(true));
   }, [codes, us]);
+  return { trades, loaded, quotes, err };
+}
+
+// 我的持股提醒：讀「帶我做」第六步記下來的單子，拿現價比停損停利
+export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
+  const us = market === "us";
+  const { trades, loaded, quotes, err } = useHoldingQuotes(market);
 
   if (!loaded) return <p className="text-sm text-stone-500">讀取中⋯⋯</p>;
   if (!trades.length)

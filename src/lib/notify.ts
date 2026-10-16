@@ -131,7 +131,7 @@ export function intradayAlerts(
       const key = `${h.code}:${k}`;
       if (sent.includes(key)) continue;
       keys.push(key);
-      lines.push(`・${h.name} ${h.code} 現價 ${q.price}：${text}`);
+      lines.push(`・${h.name} ${h.code} 現價 ${r2(q.price)}：${text}`);
     }
   }
   return { keys, lines };

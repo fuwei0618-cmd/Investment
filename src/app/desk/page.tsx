@@ -18,12 +18,49 @@ import {
   Macro,
   MarketSwitch,
   Section,
+  TopThree,
+  Why,
   more,
   sign,
   wait,
 } from "./parts";
 
 export const metadata = { title: "實戰｜投資羅盤" };
+
+// 最上面：今天買不買、買哪一檔、手上哪檔要賣，加一行這一季適合的工具
+async function Top() {
+  await connection();
+  const plays: PlayId[] = ["breakout", "trust"];
+  const [taiex, chips, t, ...lists] = await Promise.all([
+    getTaiex(),
+    getChips(),
+    getTodayAnswers(),
+    ...plays.map((p) => getPicks(p)),
+  ]);
+  const m = chips ? mood(chips.days, chips.margin?.change ?? null) : null;
+  const v = verdict({
+    above: taiex?.above ?? null,
+    mood: m?.light ?? null,
+    season: t.season?.light ?? null,
+  });
+  let pick = null;
+  for (const [i, id] of plays.entries()) {
+    const d = lists[i];
+    const x = "picks" in d ? d.picks.find((p) => p.pass) : undefined;
+    if (x) {
+      pick = {
+        name: x.name,
+        code: x.code,
+        href: HREF[id],
+        note: `三個條件全過（${GO_PLAYS[id].title}），收 ${Math.round(x.close * 100) / 100}。`,
+      };
+      break;
+    }
+  }
+  return (
+    <TopThree v={v} pick={pick} phase={t.season?.phase ?? null} market="tw" />
+  );
+}
 
 async function Go() {
   await connection();
@@ -231,8 +268,13 @@ export default function Desk() {
         <h1 className="text-2xl font-black">實戰</h1>
         <MarketSwitch now="tw" />
         <p className="text-sm text-stone-600 dark:text-stone-400">
-          每天開盤前看這一頁就好：先看能不能出手，再看天氣、市場和大事，最後看自己追蹤的股票和持股。
+          每天開盤前看最上面三個問題就好。想知道為什麼，再打開下面的「為什麼？」。
         </p>
+      </header>
+      <Suspense fallback={wait}>
+        <Top />
+      </Suspense>
+      <Why>
         <nav className="flex flex-wrap gap-1.5 text-xs">
           {[
             ["go", "能不能出手"],
@@ -252,44 +294,44 @@ export default function Desk() {
             </a>
           ))}
         </nav>
-      </header>
-      <Section id="go" title="① 今天能不能出手">
-        <Suspense fallback={wait}>
-          <Go />
-        </Suspense>
-      </Section>
-      <Section id="macro" title="② 總體經濟">
-        <Suspense fallback={wait}>
-          <Macro />
-        </Suspense>
-      </Section>
-      <Section id="market" title="③ 市場情況">
-        <Suspense fallback={wait}>
-          <Market />
-        </Suspense>
-      </Section>
-      <Section id="news" title="④ 今天必知大事">
-        <Suspense fallback={wait}>
-          <Calendar market="tw" />
-        </Suspense>
-        <h3 className="font-bold">追蹤股票的新聞（最近三天）</h3>
-        <TrackedNews />
-      </Section>
-      <Section id="watch" title="⑤ 我的追蹤清單">
-        <p className="text-sm text-stone-600 dark:text-stone-400">
-          一定要盯的幾檔。跟「認識當沖」頁是同一份清單，在哪邊加都會一起變。
-        </p>
-        <LiveBoard suggest={[]} />
-      </Section>
-      <Section id="picks" title="⑥ 今天的策略卡名單">
-        <Suspense fallback={wait}>
-          <Picks />
-        </Suspense>
-      </Section>
-      <Section id="hold" title="⑦ 我的持股提醒">
-        <Holdings />
-        <LineSetup />
-      </Section>
+        <Section id="go" title="① 今天能不能出手">
+          <Suspense fallback={wait}>
+            <Go />
+          </Suspense>
+        </Section>
+        <Section id="macro" title="② 總體經濟">
+          <Suspense fallback={wait}>
+            <Macro />
+          </Suspense>
+        </Section>
+        <Section id="market" title="③ 市場情況">
+          <Suspense fallback={wait}>
+            <Market />
+          </Suspense>
+        </Section>
+        <Section id="news" title="④ 今天必知大事">
+          <Suspense fallback={wait}>
+            <Calendar market="tw" />
+          </Suspense>
+          <h3 className="font-bold">追蹤股票的新聞（最近三天）</h3>
+          <TrackedNews />
+        </Section>
+        <Section id="watch" title="⑤ 我的追蹤清單">
+          <p className="text-sm text-stone-600 dark:text-stone-400">
+            一定要盯的幾檔。跟「認識當沖」頁是同一份清單，在哪邊加都會一起變。
+          </p>
+          <LiveBoard suggest={[]} />
+        </Section>
+        <Section id="picks" title="⑥ 今天的策略卡名單">
+          <Suspense fallback={wait}>
+            <Picks />
+          </Suspense>
+        </Section>
+        <Section id="hold" title="⑦ 我的持股提醒">
+          <Holdings />
+          <LineSetup />
+        </Section>
+      </Why>
     </div>
   );
 }
