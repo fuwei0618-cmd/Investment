@@ -6,6 +6,7 @@ import { RISK_WORD, TOOLS, type Tool } from "@/lib/tools";
 import { SIX } from "@/lib/six";
 import { HOUSE, ROLES, type Role } from "@/lib/street";
 import { BY_TERM, LEVELS, PLAYS, TERMS } from "@/lib/plays";
+import { FAST, STEPS } from "@/lib/fastPlay";
 import RiskStreet from "./RiskStreet";
 
 const IN_SIX = new Set(SIX.map((w) => w.toolId));
@@ -53,7 +54,39 @@ function Box({ label, ink = "", className = chip, children }: { label: string; i
   );
 }
 
+function FastButton({ on, toggle }: { on: boolean; toggle: () => void }) {
+  return (
+    <button onClick={toggle} aria-expanded={on} className="mt-1.5 block rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-bold shadow-sm dark:bg-black/30">
+      📋 {on ? "收起操作卡" : "詳細操作卡"}
+    </button>
+  );
+}
+
+// 衝一把／短線的操作小卡：六步照順序做
+function FastCard({ id }: { id: string }) {
+  const f = FAST[id];
+  if (typeof f === "string")
+    return <p className="animate-rise rounded-xl border-2 border-dashed border-stone-300 p-3 text-sm text-stone-600 dark:border-stone-700 dark:text-stone-400">📋 不適合衝：{f}</p>;
+  return (
+    <div className="animate-rise rounded-xl border-2 border-red-200 bg-white p-3 text-sm dark:border-red-900 dark:bg-stone-900">
+      <p className="mb-2 font-black">
+        📋 衝一把／短線操作卡：{f.title}
+      </p>
+      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {STEPS.map((s) => (
+          <li key={s.key} className={s.key === "stop" ? "rounded-xl bg-red-50 p-2.5 dark:bg-red-950/50" : chip}>
+            <b className="block text-xs">{s.name}</b>
+            {f[s.key]}
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs text-stone-500">先寫好第 ④ 步再按下單。比例和停損是常見的保守做法，可以照你的風險屬性再調小；一般常識整理，不是投資建議。</p>
+    </div>
+  );
+}
+
 function Card({ t, view, close }: { t: Tool; view: View; close: () => void }) {
+  const [fast, setFast] = useState(false);
   const role = ROLES.find((r) => r.id === HOUSE[t.id].role)!;
   return (
     <li id={t.id} className={`animate-rise relative scroll-mt-20 grid gap-3 rounded-2xl border-l-[6px] p-3 shadow-[0_1px_2px_rgba(60,40,10,.06),0_6px_16px_rgba(60,40,10,.08)] md:grid-cols-[170px_minmax(0,1fr)] ${paper} ${RISK_EDGE[t.risk]}`}>
@@ -95,30 +128,33 @@ function Card({ t, view, close }: { t: Tool; view: View; close: () => void }) {
           </Box>
         </dl>
       )}
-      {view === "risk" && (
-        <ol className="grid gap-2 text-sm md:grid-cols-3 md:pr-6">
-          {PLAYS[t.id].map((p) => (
-            <li key={p.level} className={`rounded-xl p-2.5 ${PLAY_BG[p.level]}`}>
-              <b className="block text-xs">{LEVELS[p.level].name}</b>
-              {p.how}
-              {p.risk !== "—" && <span className="mt-1 block text-xs text-stone-600 dark:text-stone-400">{p.risk}</span>}
-            </li>
-          ))}
-        </ol>
-      )}
-      {view === "term" && (
-        <ol className="grid gap-2 text-sm md:grid-cols-3 md:pr-6">
-          {TERMS.map((term) => {
-            const p = BY_TERM[t.id][term.id];
-            return (
-              <li key={term.id} className={`rounded-xl p-2.5 ${p.risk === "—" ? "bg-stone-100 text-stone-500 dark:bg-stone-800" : TERM_BG[term.id]}`}>
-                <b className="block text-xs">{term.name}</b>
-                {p.how}
-                {p.risk !== "—" && <span className="mt-1 block text-xs text-stone-600 dark:text-stone-400">{p.risk}</span>}
-              </li>
-            );
-          })}
-        </ol>
+      {view !== "info" && (
+        <div className="space-y-2 md:pr-6">
+          <ol className="grid gap-2 text-sm md:grid-cols-3">
+            {view === "risk" &&
+              [...PLAYS[t.id]].reverse().map((p) => (
+                <li key={p.level} className={`rounded-xl p-2.5 ${PLAY_BG[p.level]}`}>
+                  <b className="block text-xs">{LEVELS[p.level].name}</b>
+                  {p.how}
+                  {p.risk !== "—" && <span className="mt-1 block text-xs text-stone-600 dark:text-stone-400">{p.risk}</span>}
+                  {p.level === 3 && <FastButton on={fast} toggle={() => setFast(!fast)} />}
+                </li>
+              ))}
+            {view === "term" &&
+              [...TERMS].reverse().map((term) => {
+                const p = BY_TERM[t.id][term.id];
+                return (
+                  <li key={term.id} className={`rounded-xl p-2.5 ${p.risk === "—" ? "bg-stone-100 text-stone-500 dark:bg-stone-800" : TERM_BG[term.id]}`}>
+                    <b className="block text-xs">{term.name}</b>
+                    {p.how}
+                    {p.risk !== "—" && <span className="mt-1 block text-xs text-stone-600 dark:text-stone-400">{p.risk}</span>}
+                    {term.id === "short" && <FastButton on={fast} toggle={() => setFast(!fast)} />}
+                  </li>
+                );
+              })}
+          </ol>
+          {fast && <FastCard id={t.id} />}
+        </div>
       )}
     </li>
   );
