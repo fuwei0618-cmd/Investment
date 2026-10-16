@@ -276,7 +276,10 @@ export function usCheck(bars: UsBar[]): Check | null {
   };
 }
 
-/** 美股以「股」為單位，每筆最多總資金一成（美元）；手續費依複委託費率另計 */
+/**
+ * 美股以「股」為單位，每筆最多總資金一成（美元）；手續費依複委託費率另計。
+ * 一成買不到一整股（例如貝萊德一股 1,100 多美元）就改買碎股，算到小數兩位。
+ */
 export function usPlan(
   capital: number,
   price: number,
@@ -284,11 +287,16 @@ export function usPlan(
   targetPct: number,
 ) {
   const budget = Math.floor(capital * 0.1);
-  const shares = Math.floor(budget / price);
+  const whole = Math.floor(budget / price);
+  const odd = whole === 0;
+  const shares = odd ? Math.floor((budget / price) * 100) / 100 : whole;
   const stop = r2(stopAt);
   return {
     budget,
+    odd,
     shares,
+    /** 停利先賣的一半 */
+    half: odd ? Math.floor(shares * 50) / 100 : Math.floor(shares / 2),
     cost: r2(shares * price),
     stop,
     stopLoss: r2(shares * (price - stop)),
