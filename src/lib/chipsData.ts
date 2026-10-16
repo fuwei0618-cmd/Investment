@@ -1,5 +1,5 @@
 import { cacheLife } from "next/cache";
-import { parseInstitutional, parseMargin, parseStreets, type Street } from "./chips";
+import { parseIndustry, parseInstitutional, parseMargin, parsePrices, parseStreets, type Street } from "./chips";
 
 // 從 FinMind 抓整個台股的三大法人買賣和融資。FINMIND_BASE 只給本機測試指向假資料用。
 async function finmind(dataset: string, days: number) {
@@ -32,30 +32,37 @@ export async function getChips() {
   }
 }
 
-// 大戶逛街地圖：證交所三大法人日報（不給日期就是最新一天）＋每檔收盤價＋公司產業別。TWSE_BASE / TWSE_OPENAPI 只給本機測試用。
-export async function getStreets(): Promise<{ date: string; streets: Street[] } | null> {
+// 大戶逛街地圖：證交所三大法人日報（不給日期就是最新一天）＋證交所每日收盤價＋FinMind 公司產業別。
+// 每一份都限時八秒；失敗時回傳卡在哪一步，頁面上會寫出來，方便知道是哪個資料源出問題。TWSE_BASE 只給本機測試用。
+export async function getStreets(): Promise<{ date: string; streets: Street[] } | { error: string }> {
   "use cache";
-  try {
-    const base = process.env.TWSE_BASE ?? "https://www.twse.com.tw";
-    const open = process.env.TWSE_OPENAPI ?? "https://openapi.twse.com.tw";
-    const get = async (url: string) => {
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) }); // 證交所慢的時候不要拖垮整頁
+  const base = process.env.TWSE_BASE ?? "https://www.twse.com.tw";
+  const get = async (step: string, url: string, init?: RequestInit) => {
+    try {
+      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(8000) }); // 慢的時候不要拖垮整頁
       if (!res.ok) throw new Error(String(res.status));
-      return res.json();
-    };
-    const [t86, prices, companies] = await Promise.all([
-      get(`${base}/rwd/zh/fund/T86?selectType=ALLBUT0999&response=json`),
-      get(`${open}/v1/exchangeReport/STOCK_DAY_ALL`),
-      get(`${open}/v1/opendata/t187ap03_L`),
+      return await res.json();
+    } catch (e) {
+      throw new Error(`${step}（${e instanceof Error ? e.message : "失敗"}）`);
+    }
+  };
+  try {
+    const fm = new URL(`${process.env.FINMIND_BASE ?? "https://api.finmindtrade.com"}/api/v4/data`);
+    fm.searchParams.set("dataset", "TaiwanStockInfo");
+    const headers: HeadersInit = process.env.FINMIND_TOKEN ? { Authorization: `Bearer ${process.env.FINMIND_TOKEN}` } : {};
+    const [t86, prices, info] = await Promise.all([
+      get("法人日報", `${base}/rwd/zh/fund/T86?selectType=ALLBUT0999&response=json`),
+      get("收盤價", `${base}/rwd/zh/afterTrading/STOCK_DAY_ALL?response=json`),
+      get("產業別", fm.toString(), { headers }),
     ]);
-    if (t86.stat !== "OK") throw new Error(String(t86.stat));
-    const streets = parseStreets(t86, prices, companies);
-    if (streets.length === 0) throw new Error("empty");
+    if (t86.stat !== "OK") throw new Error(`法人日報（${t86.stat}）`);
+    const streets = parseStreets(t86, parsePrices(prices), parseIndustry(info.data ?? []));
+    if (streets.length === 0) throw new Error("對不上價格");
     cacheLife("hours");
     const d = String(t86.date ?? "");
     return { date: d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d, streets };
-  } catch {
+  } catch (e) {
     cacheLife("seconds");
-    return null;
+    return { error: e instanceof Error ? e.message : "失敗" };
   }
 }

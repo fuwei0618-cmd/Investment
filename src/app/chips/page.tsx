@@ -33,7 +33,7 @@ function H({ id, children }: { id: string; children: React.ReactNode }) {
 async function Live() {
   await connection(); // 每次開頁都拿最新的，不在建置時固定
   // 劇場只借用地圖的「最愛的街」，地圖慢就先不等它
-  const [data, map] = await Promise.all([getChips(), Promise.race([getStreets(), new Promise<null>((r) => setTimeout(() => r(null), 3000))])]);
+  const [data, map] = await Promise.all([getChips(), Promise.race([getStreets().then((m) => ("streets" in m ? m : null)), new Promise<null>((r) => setTimeout(() => r(null), 3000))])]);
   if (!data || data.days.length === 0)
     return <p className={`${chip} text-sm text-stone-500`}>今天的大戶資料暫時抓不到，等一下再來看。收盤後大約下午三點半會更新。</p>;
   const { days, margin } = data;
@@ -102,8 +102,14 @@ async function MapSection() {
   const map = await getStreets();
   return (
     <>
-      <H id="map">🗺️ 大戶逛街地圖{map ? `・${md(map.date)}` : ""}</H>
-      {map ? <StreetMap streets={map.streets} /> : <p className={`${chip} text-sm text-stone-500`}>證交所的逛街資料暫時抓不到，等一下再來看。</p>}
+      <H id="map">🗺️ 大戶逛街地圖{"streets" in map ? `・${md(map.date)}` : ""}</H>
+      {"streets" in map ? (
+        <StreetMap streets={map.streets} />
+      ) : (
+        <p className={`${chip} text-sm text-stone-500`}>
+          證交所的逛街資料暫時抓不到，等一下再來看。<span className="block text-xs">卡在：{map.error}</span>
+        </p>
+      )}
     </>
   );
 }
