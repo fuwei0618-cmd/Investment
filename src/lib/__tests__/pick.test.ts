@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { buyStreak, check, plan } from "../pick";
+import { brief, buyStreak, check, plan } from "../pick";
 
 const bars = (n: number, f: (i: number) => [number, number, number]) =>
   Array.from({ length: n }, (_, i) => {
     const [close, max, volume] = f(i);
-    return { date: `2026-09-${String(i + 1).padStart(2, "0")}`, close, max, volume };
+    return {
+      date: `2026-09-${String(i + 1).padStart(2, "0")}`,
+      close,
+      max,
+      volume,
+    };
   });
 
 describe("帶我做：台股短線", () => {
@@ -20,15 +25,32 @@ describe("帶我做：台股短線", () => {
   });
   it("三個條件都過才算符合", () => {
     const b = bars(21, (i) => (i < 20 ? [100, 105, 1000] : [110, 111, 2500]));
-    const inst = ["13", "14", "15"].map((d) => ({ date: `2026-10-${d}`, name: "Investment_Trust", buy: 2, sell: 1 }));
+    const inst = ["13", "14", "15"].map((d) => ({
+      date: `2026-10-${d}`,
+      name: "Investment_Trust",
+      buy: 2,
+      sell: 1,
+    }));
     const c = check(b, inst)!;
-    expect(c).toMatchObject({ high20: 105, breakout: true, streak: 3, pass: true });
+    expect(c).toMatchObject({
+      high20: 105,
+      breakout: true,
+      streak: 3,
+      pass: true,
+    });
     expect(c.volRatio).toBeCloseTo(2.5);
     expect(check(b.slice(1), inst)).toBeNull();
   });
   it("一成資金、整張加零股、停損取較高的", () => {
     const p = plan(300000, 52, 50);
-    expect(p).toMatchObject({ budget: 30000, shares: 576, lots: 0, odd: 576, stop: 50, target: 59.8 });
+    expect(p).toMatchObject({
+      budget: 30000,
+      shares: 576,
+      lots: 0,
+      odd: 576,
+      stop: 50,
+      target: 59.8,
+    });
     expect(plan(3000000, 100, 80)).toMatchObject({ lots: 3, odd: 0, stop: 93 });
   });
 });
@@ -38,5 +60,25 @@ describe("plan 放空", () => {
     const r = plan(500_000, 20, 0, true);
     expect(r.stop).toBe(19);
     expect(r.target).toBe(21.6);
+  });
+});
+
+describe("brief 資訊模板", () => {
+  it("只過量的條件時，列出還要等的兩件事", () => {
+    const b = brief({
+      close: 66.9,
+      high20: 67.9,
+      volRatio: 3,
+      streak: 1,
+      breakout: false,
+      pass: false,
+      score: 1,
+    });
+    expect(b.buy).toBe(false);
+    expect(b.rows.map((r) => r.ok)).toEqual([false, true, false]);
+    expect(b.wait).toEqual([
+      "外資或投信再連買 2 天（連到第 3 天）",
+      "收盤站上 67.9",
+    ]);
   });
 });

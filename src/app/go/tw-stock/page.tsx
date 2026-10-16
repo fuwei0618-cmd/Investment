@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { OTHER_PLAYS } from "@/lib/otherPlays";
 import { getPicks } from "@/lib/pickData";
 import GoWizard from "./GoWizard";
 
@@ -47,6 +49,41 @@ export default function GoTwStock() {
       >
         <Live />
       </Suspense>
+      <details className="rounded-2xl bg-[#f3ead8] p-4 dark:bg-[#2f281f]">
+        <summary className="cursor-pointer font-bold">
+          同事常聊的其他買法，跟這張卡差在哪？（{OTHER_PLAYS.length} 種）
+        </summary>
+        <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
+          聽到別人怎麼買，先在這裡找是哪一種，再回來看跟上面這張卡差在哪。一次只練一種，練熟再換。
+        </p>
+        <ul className="mt-3 space-y-3">
+          {OTHER_PLAYS.map((o) => (
+            <li
+              key={o.name}
+              className="rounded-xl bg-white p-3 text-sm dark:bg-stone-900"
+            >
+              <b className="text-base">{o.name}</b>
+              <span className="block text-stone-500">同事會說：{o.heard}</span>
+              <span className="block">
+                <b>怎麼買：</b>
+                {o.how}
+              </span>
+              <span className="block">
+                <b>跟這張卡：</b>
+                {o.vs}
+              </span>
+              {o.href && (
+                <Link
+                  href={o.href}
+                  className="mt-1 inline-block text-blue-700 underline dark:text-blue-400"
+                >
+                  網站裡看：{o.where} →
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }

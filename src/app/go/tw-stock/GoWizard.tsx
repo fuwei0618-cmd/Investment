@@ -6,6 +6,7 @@ import { INVERSE, plan } from "@/lib/pick";
 import type { Pick } from "@/lib/pickData";
 import type { RiskResult } from "@/lib/risk";
 import { fmt, usePersistentState } from "@/lib/storage";
+import Brief from "./Brief";
 
 interface Trade {
   saved: string;
@@ -79,7 +80,10 @@ export default function GoWizard({
   const [trades, setTrades] = usePersistentState<Trade[]>("go.trades.v1", []);
   const [code, setCode] = useState<string | null>(null);
   // 大盤在月線下可以改走放空：買反向 ETF
-  const [short, setShort] = useState(false);
+  // 大盤在月線下，一開始就直接走放空；要買股票可以切回去
+  const [short, setShort] = useState(
+    !!market && !market.above && inverse != null,
+  );
   const inv: Pick | null =
     inverse == null
       ? null
@@ -96,6 +100,7 @@ export default function GoWizard({
           breakout: false,
           pass: true,
           score: 3,
+          news: [],
         };
   const pick = short ? inv : (picks.find((p) => p.code === code) ?? null);
   const p = pick ? plan(capital, pick.close, pick.high20, short) : null;
@@ -138,7 +143,7 @@ export default function GoWizard({
                 ? "大盤資料暫時抓不到，先自己看一下加權指數在不在月線之上。"
                 : market.above
                   ? `大盤 ${fmt(market.close)} 在月線 ${fmt(market.ma)} 之上，操作卡說可以出手。`
-                  : `大盤 ${fmt(market.close)} 在月線 ${fmt(market.ma)} 之下。操作卡說這時候不衝，建議今天停在這裡；要繼續就當練習。`}
+                  : `大盤 ${fmt(market.close)} 在月線 ${fmt(market.ma)} 之下。操作卡說這時候買股票先不衝，所以這次直接帶你走放空，下面已經幫你選好。`}
             </p>
             {market && !market.above && (
               <div className="space-y-2 rounded-xl border-2 border-dashed border-green-300 p-3 dark:border-green-900">
@@ -217,6 +222,11 @@ export default function GoWizard({
         {step === 1 && short && inv && (
           <>
             <h2 className="text-xl font-black">② 放空用哪一檔</h2>
+            <p className="text-sm text-stone-600 dark:text-stone-400">
+              {market && !market.above
+                ? "今天大盤在月線下，所以直接帶你走放空。想改買股票，回第一步按「回到買股票」。"
+                : "這次你選了走放空。"}
+            </p>
             <div className="rounded-xl border-2 border-green-400 bg-green-50 p-3 dark:bg-green-950/40">
               <b className="text-lg">
                 {inv.name}{" "}
@@ -249,6 +259,11 @@ export default function GoWizard({
               的股票，再看操作卡的三個條件：大戶連買三天以上、成交量是平常兩倍以上、收盤突破前
               20 天最高價。三個都過才算符合。
             </p>
+            {market && !market.above && (
+              <p className="rounded-xl bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
+                提醒：今天大盤在月線下，操作卡說買股票先不衝。下面的名單只當練習；想跟著大盤往下賺，回第一步選「走放空」。
+              </p>
+            )}
             {passed.length === 0 && (
               <p className="rounded-xl bg-stone-100 p-3 text-sm dark:bg-stone-800">
                 今天<b>沒有</b>
@@ -297,9 +312,11 @@ export default function GoWizard({
                 </li>
               ))}
             </ul>
-            {pick && !pick.pass && (
-              <p className="text-sm text-red-700 dark:text-red-400">
-                這檔沒有三個條件都過，照操作卡不該買。繼續走只當練習。
+            {pick ? (
+              <Brief x={pick} />
+            ) : (
+              <p className="text-sm text-stone-500">
+                點一檔，看它的功課：今天要不要買、要等什麼、為什麼有人搶。
               </p>
             )}
           </>

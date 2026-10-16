@@ -128,3 +128,52 @@ export function plan(
     target,
   };
 }
+
+/** 每個條件的白話「為什麼」 */
+export const WHY = {
+  streak:
+    "大戶連續好幾天都在買，才像是有計畫地慢慢搬貨；只買一天可能只是一筆大單。",
+  vol: "成交量變大代表很多人同時在搶，價格比較有力氣往上推。",
+  breakout:
+    "前 20 天最高價附近，有一群之前買在高點、等著解套賣出的人。收盤衝過去，代表這些賣壓被吃掉了。",
+};
+
+/** 資訊模板：今天要不要買、每個條件的狀況和為什麼、想盯的話要等什麼 */
+export function brief(x: Check) {
+  const r = (n: number) => Math.round(n * 100) / 100;
+  const rows = [
+    {
+      ok: x.streak >= 3,
+      text: `大戶連買 ${x.streak} 天（要 3 天以上）`,
+      why: WHY.streak,
+    },
+    {
+      ok: x.volRatio >= 2,
+      text: `成交量是平常 ${x.volRatio.toFixed(1)} 倍（要 2 倍）`,
+      why: WHY.vol,
+    },
+    {
+      ok: x.breakout,
+      text: `收盤 ${r(x.close)} ${x.breakout ? "已突破" : "還沒突破"}前高 ${r(x.high20)}`,
+      why: WHY.breakout,
+    },
+  ];
+  const wait: string[] = [];
+  if (x.streak < 3)
+    wait.push(`外資或投信再連買 ${3 - x.streak} 天（連到第 3 天）`);
+  if (x.volRatio < 2) wait.push("成交量放大到平常 2 倍以上");
+  if (!x.breakout) wait.push(`收盤站上 ${r(x.high20)}`);
+  return {
+    buy: x.pass,
+    rows,
+    wait,
+    stop: `跌破 ${r(x.high20)}，或比買價少 7%，取比較高的那個`,
+    target: "賺 15% 先賣一半，剩下的跌破 10 日均線再賣完",
+  };
+}
+
+/** 看 K 線、看新聞的外部連結（Yahoo 股市） */
+export const links = (code: string) => ({
+  chart: `https://tw.stock.yahoo.com/quote/${code}.TW/technical-analysis`,
+  news: `https://tw.stock.yahoo.com/quote/${code}.TW/news`,
+});
