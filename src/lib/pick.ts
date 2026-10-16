@@ -109,8 +109,12 @@ export function plan(
   const fee = (n: number) => Math.max(20, Math.round(n * price * 0.001425));
   const stop =
     Math.round(
-      (short ? price * (1 - INVERSE.stopPct) : Math.max(high20, price * 0.93)) *
-        100,
+      (short
+        ? price * (1 - INVERSE.stopPct)
+        : // 還沒突破（前高在買價之上）就沒有突破點可守，只用少 7%
+          high20 < price
+          ? Math.max(high20, price * 0.93)
+          : price * 0.93) * 100,
     ) / 100;
   const target =
     Math.round(price * (short ? 1 + INVERSE.targetPct : 1.15) * 100) / 100;
