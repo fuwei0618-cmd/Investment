@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import Crumb from "@/components/Crumb";
 import LineChart from "@/components/LineChart";
 import { getSeries } from "@/lib/fred";
 import { applyTransform } from "@/lib/macro";
@@ -118,7 +117,6 @@ export default function UsdPage() {
   return (
     <div className="space-y-6">
       <header>
-        <Crumb href="/market#level-2" area="看市場" here="第 2 關延伸：美元" />
         <h1 className="text-2xl font-semibold">💵 美元專區</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">現在美元貴不貴、美國利息高多少，以及美元的漲跌在告訴你什麼。</p>
       </header>

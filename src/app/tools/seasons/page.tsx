@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Crumb from "@/components/Crumb";
 import { SIX } from "@/lib/six";
 import { LISTENS, SWITCHES } from "@/lib/sixYear";
 import SeasonTable from "./SeasonTable";
@@ -10,7 +9,6 @@ export default function SeasonsPage() {
   return (
     <div className="space-y-4">
       <header>
-        <Crumb href="/tools" area="投資工具" here="六種放法 × 四季" />
         <h1 className="text-2xl font-semibold">🥐 你有 1 萬元，在麵包鎮有六種放法</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           鎮上的四個季節（遊戲裡「成長 × 物價」那四格）× 六種放法，全部結果一張表。點左邊的季節，下面的原因會換成那一季；點上面的名字，看它自己走過春夏秋冬的小動畫。

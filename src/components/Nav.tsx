@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// 整個網站只有三區。子頁面歸屬到所在的區，讓目前位置一直亮著。
+// 全站是麵包鎮六幕（站牌在每頁上面），選單只留回戲單和課程對照。
 const AREAS = [
-  { href: "/money", label: "我的錢", match: ["/money", "/goals", "/risk", "/portfolio"] },
-  { href: "/market", label: "看市場", match: ["/market", "/macro", "/industry", "/usd", "/lottery", "/tools", "/tools/seasons"] },
+  { href: "/", label: "戲單", match: ["/"] },
   { href: "/courses", label: "課程", match: ["/courses"] },
 ];
 

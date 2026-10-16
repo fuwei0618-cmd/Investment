@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import Crumb from "@/components/Crumb";
 import { FEE, Phase, WIN_FEE, isNewListing, judge, priceLabel } from "@/lib/lottery";
 import { getActive, todayTw } from "@/lib/lotteryData";
 
@@ -94,7 +93,6 @@ export default function LotteryPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <Crumb href="/market" area="看市場" here="短期小確幸" />
         <h1 className="text-2xl font-semibold">🎟️ 股票抽籤</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           新股上市或增資前會開放大家抽籤，承銷價常比市價便宜。這裡每天自動整理證交所的公告，幫你算抽中一張大約賺多少、值不值得抽。

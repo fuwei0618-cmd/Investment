@@ -4,6 +4,7 @@ import LightDot from "@/components/Light";
 import { getTodayAnswers } from "@/lib/todayData";
 import { mood } from "@/lib/chips";
 import { getChips } from "@/lib/chipsData";
+import { ACTS } from "@/lib/acts";
 
 async function Today() {
   const [t, chips] = await Promise.all([getTodayAnswers(), getChips()]);
@@ -33,15 +34,77 @@ async function Today() {
   );
 }
 
-const AREAS = [
-  { href: "/money", title: "我的錢", text: "先弄清楚自己：要存多少、能承受多少風險、手上有什麼。", steps: "1 設目標 → 2 測風險 → 3 看持股" },
-  { href: "/market", title: "看市場", text: "8 關由大到小：世界 → 產業 → 公司，每關先給答案。", steps: "看世界 → 看產業 → 看公司" },
-  { href: "/courses", title: "課程", text: "複習任何一門課時，查這個單元在網站的哪裡。", steps: "M平方・CodeGym・王伯達" },
-];
+// 首頁就是戲單：六幕照順序，一幕一步
+function Programme() {
+  return (
+    <section className="space-y-3 rounded-2xl bg-[#f4eee2] p-3 dark:bg-[#18150f]">
+      <div className="px-1">
+        <h2 className="text-xl font-black">麵包鎮小劇場：新鎮民小麥的一天</h2>
+        <p className="text-sm text-stone-600 dark:text-stone-400">投資分六步，一步一幕，從早上演到晚上。第一次照順序走；季節換了，再從第二幕走一次。</p>
+      </div>
+      <ol className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        {ACTS.map((a) => (
+          <li key={a.n} className="flex flex-col gap-2 rounded-2xl bg-[#fffdf8] p-3 shadow-[0_1px_2px_rgba(60,40,10,.06),0_6px_16px_rgba(60,40,10,.08)] dark:bg-[#221d16]">
+            <div>
+              <p className="text-xs font-bold text-[#8a6a3f]">
+                第{a.n}幕・投資第 {a.n} 步
+              </p>
+              <h3 className="text-lg font-black leading-tight">{a.title}</h3>
+              <p className="text-sm font-bold">{a.q}</p>
+            </div>
+            <ul className="space-y-1">
+              {a.pages.map((p) => {
+                const inner = (
+                  <>
+                    <b className="block text-sm">{p.name} →</b>
+                    <span className="text-xs text-stone-600 dark:text-stone-400">{p.note}</span>
+                  </>
+                );
+                const cls = "block rounded-xl bg-[#f3ead8] px-2.5 py-1.5 hover:bg-[#ecdfc4] dark:bg-[#2f281f]";
+                return (
+                  <li key={p.href}>
+                    {p.href.endsWith(".html") ? (
+                      <a href={p.href} className={cls}>
+                        {inner}
+                      </a>
+                    ) : (
+                      <Link href={p.href} className={cls}>
+                        {inner}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-auto border-t-2 border-dashed border-[#d9c7a3] pt-1.5 text-xs">
+              <b>帶走：</b>
+              {a.take}
+            </p>
+          </li>
+        ))}
+      </ol>
+      <p className="px-1 text-xs text-stone-500">
+        後台隨時可以進去：
+        <Link href="/courses" className="text-blue-600">
+          課程對照
+        </Link>
+        、
+        <Link href="/market" className="text-blue-600">
+          問 AI（看市場最上面）
+        </Link>
+        、
+        <a href="/game/bakery.html" className="text-blue-600">
+          麵包鎮大富翁
+        </a>
+      </p>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
     <div className="space-y-6">
+      <Programme />
       <section className="rounded-lg border-2 border-amber-400 bg-amber-50 p-4 dark:bg-amber-950">
         <h1 className="text-lg font-semibold">今天的市場，一句話</h1>
         <Suspense fallback={<p className="py-3 text-sm text-zinc-500">讀取今天的數字…</p>}>
@@ -50,19 +113,6 @@ export default function Home() {
         <Link href="/market" className="text-sm text-blue-600">
           繼續看產業和公司 →
         </Link>
-      </section>
-      <section className="grid gap-3 sm:grid-cols-3">
-        {AREAS.map((a) => (
-          <Link
-            key={a.href}
-            href={a.href}
-            className="block rounded-lg border border-zinc-200 bg-white p-4 hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900"
-          >
-            <h2 className="text-lg font-medium">{a.title}</h2>
-            <p className="mt-1 text-sm">{a.text}</p>
-            <p className="mt-2 text-xs text-zinc-500">{a.steps}</p>
-          </Link>
-        ))}
       </section>
     </div>
   );

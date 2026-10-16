@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Crumb from "@/components/Crumb";
 import ToolCards from "./ToolCards";
 
 export const metadata = { title: "投資工具比較｜投資羅盤" };
@@ -8,7 +7,6 @@ export default function ToolsPage() {
   return (
     <div className="space-y-4">
       <header>
-        <Crumb href="/market" area="看市場" here="延伸：投資工具" />
         <h1 className="text-2xl font-semibold">🧰 投資工具比較</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           客戶講到的每一種工具，都用同一張卡回答：是什麼、怎麼賺、怎麼賠、課程怎麼說、客戶問到時怎麼回。
