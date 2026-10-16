@@ -43,7 +43,7 @@ export default function Brief({ x }: { x: Pick }) {
             </li>
             <li>
               <b>停損：</b>
-              {b.stop}。
+              {b.stop}
             </li>
             <li>
               <b>停利：</b>
@@ -59,7 +59,8 @@ export default function Brief({ x }: { x: Pick }) {
         </h4>
         <p>
           大戶動向：今天外資買超 {fmt(x.foreign, 1)} 億、投信 {fmt(x.trust, 1)}{" "}
-          億，已經連買 {x.streak} 天；成交量是平常 {fmt(x.volRatio, 1)} 倍。
+          億；{x.conds[0]?.text.split("（")[0]}；成交量是平常{" "}
+          {fmt(x.volRatio, 1)} 倍。
         </p>
         {x.news.length > 0 ? (
           <>

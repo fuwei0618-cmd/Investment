@@ -1,8 +1,7 @@
-import { MAIN_PLAY } from "@/lib/otherPlays";
+import type { MainGuide } from "@/lib/otherPlays";
 
 // 主策略說明卡：放在帶我做最上面，點開看三個條件為什麼、為什麼會賺、整個流程
-export default function PlayCard() {
-  const m = MAIN_PLAY;
+export default function PlayCard({ guide: m }: { guide: MainGuide }) {
   return (
     <details className="group rounded-2xl border-2 border-[#b4651e] bg-white p-4 dark:bg-stone-900">
       <summary className="cursor-pointer list-none">

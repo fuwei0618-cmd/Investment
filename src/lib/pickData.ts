@@ -5,6 +5,8 @@ import {
   aboveMonthLine,
   candidates,
   check,
+  checkTrust,
+  trustCandidates,
   type Bar,
   type Check,
   type InstRow,
@@ -71,8 +73,11 @@ const toNews = (rows: Record<string, unknown>[]): News[] =>
     .filter((n, i, a) => a.findIndex((m) => m.title === n.title) === i)
     .slice(0, 5);
 
-// 今天的候選：大戶逛街地圖裡外資投信同買的前 8 檔，每檔抓 45 天股價和法人買賣細查
-export async function getPicks(): Promise<
+export type PlayId = "breakout" | "trust";
+
+// 今天的候選：從大戶逛街地圖挑前 8 檔（大戶波段＝外資投信同買；跟投信＝投信有買），每檔抓 45 天股價和法人買賣細查
+
+export async function getPicks(play: PlayId = "breakout"): Promise<
   | {
       date: string;
       market: ReturnType<typeof aboveMonthLine>;
@@ -85,7 +90,8 @@ export async function getPicks(): Promise<
   try {
     const map = await getStreets();
     if (!("streets" in map)) throw new Error(map.error);
-    const list = candidates(map.streets);
+    const list = (play === "trust" ? trustCandidates : candidates)(map.streets);
+    const judge = play === "trust" ? checkTrust : check;
     const [taiex, inv, ...rows] = await Promise.all([
       fm("TaiwanStockPrice", "TAIEX", 45).catch(() => []),
       fm("TaiwanStockPrice", INVERSE.code, 15).catch(() => []),
@@ -96,14 +102,17 @@ export async function getPicks(): Promise<
             fm("TaiwanStockInstitutionalInvestorsBuySell", c.code, 15),
             fm("TaiwanStockNews", c.code, 4).catch(() => []), // 新聞抓不到不影響篩選
           ]);
-          const k = check(toBars(p), i as unknown as InstRow[]);
+          const k = judge(toBars(p), i as unknown as InstRow[]);
           return k ? { ...c, ...k, news: toNews(n) } : null;
         })().catch(() => null),
       ), // 一檔抓不到就跳過，不拖垮整份名單
     ]);
     const picks = (rows.filter(Boolean) as Pick[]).sort(
       (a, b) =>
-        b.score - a.score || b.foreign + b.trust - (a.foreign + a.trust),
+        b.score - a.score ||
+        (play === "trust"
+          ? b.trust - a.trust
+          : b.foreign + b.trust - (a.foreign + a.trust)),
     );
     cacheLife("hours");
     const invBars = toBars(inv).sort((a, b) => a.date.localeCompare(b.date));

@@ -67,12 +67,15 @@ export default function GoWizard({
   market,
   picks,
   inverse,
+  listIntro,
 }: {
   date: string;
   market: { close: number; ma: number; above: boolean } | null;
   picks: Pick[];
   /** 反向 ETF 收盤價 */
   inverse: number | null;
+  /** 第二步名單上方的說明：這張策略卡怎麼挑 */
+  listIntro: string;
 }) {
   const [step, setStep] = useState(0);
   const [capital, setCapital] = usePersistentState<number>("go.capital.v1", 0);
@@ -101,9 +104,20 @@ export default function GoWizard({
           pass: true,
           score: 3,
           news: [],
+          conds: [],
+          stopAt: inverse * (1 - INVERSE.stopPct),
+          targetPct: INVERSE.targetPct,
+          stopText:
+            "用「買價少 5%」。放空的規則是一般常識整理：漲 8% 先賣一半，大盤站回月線或放滿兩週就全部賣。",
+          exitText: "賺 8% 先賣一半，剩下大盤站回月線或放滿兩週就賣完",
+          entryNote: "大盤當天如果已經大漲站回月線，就不要買。",
+          mustSell:
+            "另外兩個一定要賣的時候：大盤收盤站回月線，或放滿兩週（手機設一個兩週後的提醒）。",
         };
   const pick = short ? inv : (picks.find((p) => p.code === code) ?? null);
-  const p = pick ? plan(capital, pick.close, pick.high20, short) : null;
+  const p = pick
+    ? plan(capital, pick.close, pick.stopAt, pick.targetPct)
+    : null;
   const passed = picks.filter((x) => x.pass);
   const canNext =
     step === 0
@@ -255,9 +269,7 @@ export default function GoWizard({
           <>
             <h2 className="text-xl font-black">② 挑一檔（{date} 的資料）</h2>
             <p className="text-sm text-stone-600 dark:text-stone-400">
-              先找今天外資和投信<b>都有買</b>
-              的股票，再看操作卡的三個條件：大戶連買三天以上、成交量是平常兩倍以上、收盤突破前
-              20 天最高價。三個都過才算符合。
+              {listIntro}
             </p>
             {market && !market.above && (
               <p className="rounded-xl bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
@@ -294,19 +306,11 @@ export default function GoWizard({
                       {fmt(x.foreign, 1)} 億、投信 {fmt(x.trust, 1)} 億
                     </span>
                     <span className="mt-1 grid gap-0.5 text-sm">
-                      <span className={yes(x.streak >= 3)}>
-                        {x.streak >= 3 ? "✓" : "✗"} 大戶連買 {x.streak} 天（要 3
-                        天以上）
-                      </span>
-                      <span className={yes(x.volRatio >= 2)}>
-                        {x.volRatio >= 2 ? "✓" : "✗"} 成交量是平常{" "}
-                        {fmt(x.volRatio, 1)} 倍（要 2 倍）
-                      </span>
-                      <span className={yes(x.breakout)}>
-                        {x.breakout ? "✓" : "✗"} 收盤 {fmt(x.close, 2)}{" "}
-                        {x.breakout ? "突破" : "還沒突破"}前高{" "}
-                        {fmt(x.high20, 2)}
-                      </span>
+                      {x.conds.map((c) => (
+                        <span key={c.text} className={yes(c.ok)}>
+                          {c.ok ? "✓" : "✗"} {c.text}
+                        </span>
+                      ))}
                     </span>
                   </button>
                 </li>
@@ -364,20 +368,12 @@ export default function GoWizard({
                   <dd className="text-2xl font-black text-red-700 dark:text-red-400">
                     {fmt(p.target, 2)}
                   </dd>
-                  <dd className="text-xs text-stone-500">
-                    {short
-                      ? "賺 8% 先賣一半，剩下大盤站回月線或放滿兩週就賣完"
-                      : "賺 15% 先賣一半，剩下跌破 10 日均線再賣完"}
-                  </dd>
+                  <dd className="text-xs text-stone-500">{pick.exitText}</dd>
                 </div>
               </dl>
             )}
             <p className="text-xs text-stone-500">
-              {short
-                ? `價格用今天收盤價估。放空的規則是一般常識整理：跌 5% 停損、漲 8% 先賣一半，大盤站回月線或放滿兩週就全部賣。`
-                : pick.high20 < pick.close
-                  ? `價格用今天收盤價估。停損取「跌破突破點 ${fmt(pick.high20, 2)}」和「買價少 7%」兩個裡面比較高、會先碰到的那個。`
-                  : `價格用今天收盤價估。這檔還沒突破前高 ${fmt(pick.high20, 2)}，沒有突破點可以守，停損先用「買價少 7%」。`}
+              價格用今天收盤價估。停損{pick.stopText}
             </p>
           </>
         )}
@@ -412,9 +408,7 @@ export default function GoWizard({
                   : []),
                 <>
                   價格選<b>「限價」</b>，填 <b>{fmt(pick.close, 2)}</b> 左右。
-                  {short
-                    ? "大盤當天如果已經大漲站回月線，就不要買。"
-                    : `隔天買的話，開盤後股價沒跌破 ${fmt(pick.high20, 2)} 才買。`}
+                  {pick.entryNote}
                 </>,
                 "時間：收盤前（13:00 到 13:25）下單，或隔天拉回時。",
                 "按確認前再看一次：代號、張數或股數、價格、是「買進」。",
@@ -442,14 +436,7 @@ export default function GoWizard({
                   <b>賣出一半</b>（{fmt(Math.floor(p.shares / 2))} 股）。
                 </>,
                 "券商沒有條件單的話：手機設每天 13:20 的鬧鐘，看一次收盤價對照上面兩個價。",
-                ...(short
-                  ? [
-                      <>
-                        另外兩個一定要賣的時候：<b>大盤收盤站回月線</b>，或
-                        <b>放滿兩週</b>（手機設一個兩週後的提醒）。
-                      </>,
-                    ]
-                  : []),
+                ...(pick.mustSell ? [pick.mustSell] : []),
                 <>
                   跟自己約好：跌破 {fmt(p.stop, 2)} 隔天開盤就賣，
                   <b>不等、不加碼、不改說要長抱</b>。

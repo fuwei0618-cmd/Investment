@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { brief, buyStreak, check, plan } from "../pick";
+import {
+  brief,
+  buyStreak,
+  check,
+  checkTrust,
+  nextQuarterEnd,
+  plan,
+  trustStreak,
+} from "../pick";
 
 const bars = (n: number, f: (i: number) => [number, number, number]) =>
   Array.from({ length: n }, (_, i) => {
@@ -41,8 +49,18 @@ describe("帶我做：台股短線", () => {
     expect(c.volRatio).toBeCloseTo(2.5);
     expect(check(b.slice(1), inst)).toBeNull();
   });
-  it("一成資金、整張加零股、停損取較高的", () => {
-    const p = plan(300000, 52, 50);
+  it("突破後停損取較高的；還沒突破只用少 7%", () => {
+    const b = bars(21, (i) => (i < 20 ? [50, 50, 1000] : [52, 52, 2500]));
+    expect(check(b, [])!.stopAt).toBe(50);
+    const c = bars(21, (i) => (i < 20 ? [60, 67.9, 1000] : [66.9, 67, 3000]));
+    const k = check(c, [])!;
+    expect(k.stopAt).toBe(62.22);
+    expect(plan(50_000, 66.9, k.stopAt, k.targetPct).stopLoss).toBeGreaterThan(
+      0,
+    );
+  });
+  it("一成資金、整張加零股", () => {
+    const p = plan(300000, 52, 50, 0.15);
     expect(p).toMatchObject({
       budget: 30000,
       shares: 576,
@@ -51,29 +69,21 @@ describe("帶我做：台股短線", () => {
       stop: 50,
       target: 59.8,
     });
-    expect(plan(3000000, 100, 80)).toMatchObject({ lots: 3, odd: 0, stop: 93 });
-  });
-});
-
-describe("plan 放空", () => {
-  it("反向 ETF 跌 5% 停損、漲 8% 停利", () => {
-    const r = plan(500_000, 20, 0, true);
-    expect(r.stop).toBe(19);
-    expect(r.target).toBe(21.6);
+    expect(plan(3000000, 100, 93, 0.15)).toMatchObject({
+      lots: 3,
+      odd: 0,
+      stop: 93,
+    });
   });
 });
 
 describe("brief 資訊模板", () => {
   it("只過量的條件時，列出還要等的兩件事", () => {
-    const b = brief({
-      close: 66.9,
-      high20: 67.9,
-      volRatio: 3,
-      streak: 1,
-      breakout: false,
-      pass: false,
-      score: 1,
-    });
+    const c = bars(21, (i) => (i < 20 ? [60, 67.9, 1000] : [66.9, 67, 3000]));
+    const inst = [
+      { date: "2026-10-16", name: "Foreign_Investor", buy: 2, sell: 1 },
+    ];
+    const b = brief(check(c, inst)!);
     expect(b.buy).toBe(false);
     expect(b.rows.map((r) => r.ok)).toEqual([false, true, false]);
     expect(b.wait).toEqual([
@@ -83,10 +93,37 @@ describe("brief 資訊模板", () => {
   });
 });
 
-describe("plan 還沒突破", () => {
-  it("前高在買價之上時，停損只用少 7%，不會算出負的賠錢", () => {
-    const r = plan(50_000, 66.9, 67.9);
-    expect(r.stop).toBe(62.22);
-    expect(r.stopLoss).toBeGreaterThan(0);
+describe("跟著投信買", () => {
+  const inst = (days: string[], buy = 2, sell = 1) =>
+    days.map((d) => ({
+      date: `2026-10-${d}`,
+      name: "Investment_Trust",
+      buy,
+      sell,
+    }));
+  it("只算投信自己的連買，外資買不算", () => {
+    expect(
+      trustStreak([
+        ...inst(["14", "15", "16"]),
+        { date: "2026-10-13", name: "Foreign_Investor", buy: 9, sell: 0 },
+      ]),
+    ).toBe(3);
+  });
+  it("投信連買三天、漲不到 15%、在月線上才符合；停損少 7%、停利 10%", () => {
+    const b = bars(21, (i) => [100 + i * 0.5, 101 + i * 0.5, 1000]);
+    const k = checkTrust(b, inst(["14", "15", "16"]))!;
+    expect(k.conds.map((c) => c.ok)).toEqual([true, true, true]);
+    expect(k.pass).toBe(true);
+    expect(k.stopAt).toBe(102.3);
+    expect(k.targetPct).toBe(0.1);
+    expect(k.mustSell).toContain("2026-09-30");
+  });
+  it("漲太多就不符合", () => {
+    const b = bars(21, (i) => [100 + i * 2, 101 + i * 2, 1000]);
+    expect(checkTrust(b, inst(["14", "15", "16"]))!.conds[1].ok).toBe(false);
+  });
+  it("下一個季底", () => {
+    expect(nextQuarterEnd("2026-10-16")).toBe("2026-12-31");
+    expect(nextQuarterEnd("2026-02-03")).toBe("2026-03-31");
   });
 });
