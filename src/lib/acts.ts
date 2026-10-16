@@ -96,3 +96,119 @@ export function isHere(p: ActPage, pathname: string, level = 1) {
   if (!hash) return true;
   return marketAct(Number(hash.replace("level-", ""))) === marketAct(level);
 }
+
+// ── 劇場：每一幕的舞台、角色、台詞（首頁舞台和每頁站牌都用） ──
+export interface Cast {
+  name: string;
+  /** 頭像上的一個字 */
+  face: string;
+  tone: string;
+}
+export interface Scene {
+  time: string;
+  sky: string;
+  ground: string;
+  /** 背景房子：左邊位置%、寬%、高 px、顏色 */
+  houses: { x: number; w: number; h: number; c: string }[];
+  cast: Cast[];
+  /** [誰說, 台詞]；誰說 用 cast 的索引 */
+  lines: [number, string][];
+}
+
+const ME: Cast = { name: "小麥（你）", face: "麥", tone: "#c27a2c" };
+
+export const SCENES: Record<number, Scene> = {
+  1: {
+    time: "早上",
+    sky: "#dcebd3",
+    ground: "#b9cf9f",
+    houses: [
+      { x: 4, w: 18, h: 150, c: "#e8d2a8" },
+      { x: 48, w: 13, h: 110, c: "#d9c09a" },
+    ],
+    cast: [{ name: "鎮長", face: "鎮", tone: "#4f7f3a" }, ME],
+    lines: [
+      [0, "歡迎搬來麵包鎮！先填兩張表：你想存多少錢，還有錢掉一成你睡不睡得著。"],
+      [1, "睡不睡得著也要填？"],
+      [0, "那就是你的風險屬性。填完發你一張鎮民證，後面每一幕都用得到。"],
+    ],
+  },
+  2: {
+    time: "上午",
+    sky: "#d3e4ef",
+    ground: "#c9d6b0",
+    houses: [
+      { x: 3, w: 14, h: 100, c: "#e3cfa9" },
+      { x: 19, w: 10, h: 170, c: "#cdb48c" },
+    ],
+    cast: [{ name: "氣象婆婆", face: "婆", tone: "#2f6f8f" }, ME],
+    lines: [
+      [1, "婆婆，今天適合出門買東西嗎？"],
+      [0, "先看三件事：世界景氣好不好、錢變多還是變少、現在是春夏秋冬哪一季。"],
+      [0, "美元是外地吹來的風，出門前也看一下風向。"],
+    ],
+  },
+  3: {
+    time: "中午",
+    sky: "#f3e3c3",
+    ground: "#d8c49a",
+    houses: [
+      { x: 2, w: 10, h: 100, c: "#9fc48a" },
+      { x: 13, w: 10, h: 125, c: "#c9c56f" },
+      { x: 24, w: 10, h: 150, c: "#e0a95a" },
+      { x: 35, w: 10, h: 175, c: "#d9734f" },
+    ],
+    cast: [{ name: "大街導遊", face: "導", tone: "#8a5a1e" }, ME],
+    lines: [
+      [0, "這條街越往右越刺激。照你的鎮民證和季節牌，先看亮燈的那幾間。"],
+      [1, "每間房子要怎麼住？"],
+      [0, "打開卡片有撇步，照風險分也照放多久分。還不確定就去遊樂場玩一圈大富翁。"],
+    ],
+  },
+  4: {
+    time: "下午",
+    sky: "#eadcf0",
+    ground: "#d2c3a0",
+    houses: [
+      { x: 3, w: 12, h: 130, c: "#d8b8e0" },
+      { x: 16, w: 12, h: 105, c: "#e8cfa0" },
+      { x: 46, w: 11, h: 125, c: "#c9b0d6" },
+    ],
+    cast: [{ name: "商店街老闆", face: "老", tone: "#7a4b8c" }, ME],
+    lines: [
+      [0, "這一季大家最需要什麼？順著需求找到那條街。"],
+      [1, "街上那麼多家，要怎麼挑？"],
+      [0, "看它在產業鏈的上游還是下游，再看每家店的打分卡。"],
+    ],
+  },
+  5: {
+    time: "傍晚",
+    sky: "#f6d6c8",
+    ground: "#d9b996",
+    houses: [
+      { x: 2, w: 13, h: 160, c: "#e7b49a" },
+      { x: 16, w: 10, h: 115, c: "#d9a07f" },
+    ],
+    cast: [{ name: "外資大戶", face: "外", tone: "#b23a2e" }, { name: "投信", face: "投", tone: "#3a6f6a" }, ME],
+    lines: [
+      [0, "這條街我今天整車搬走！"],
+      [1, "我比較慢，一間一間挑。"],
+      [2, "他們跟我看上的是同一條街嗎？先看氣氛燈和逛街地圖。"],
+    ],
+  },
+  6: {
+    time: "晚上",
+    sky: "#d9d3ea",
+    ground: "#c8b48e",
+    houses: [
+      { x: 3, w: 19, h: 160, c: "#e9c78f" },
+      { x: 50, w: 10, h: 110, c: "#d6b680" },
+    ],
+    cast: [{ name: "麵包師傅", face: "師", tone: "#a0601a" }, ME],
+    lines: [
+      [0, "買幾個、多少錢算貴、烤壞了什麼時候收手，先寫好再下單。"],
+      [1, "如果我想衝一把呢？"],
+      [0, "照六步操作卡，第四步停損先寫好。新股抽籤、回家看持股健不健康，也在這裡。"],
+    ],
+  },
+};

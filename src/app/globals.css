@@ -55,7 +55,22 @@ select {
   animation: rise 400ms ease-out both;
 }
 
+/* 劇場角色輕輕上下晃 */
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+.animate-bob {
+  animation: bob 2.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-bob,
   .animate-draw,
   .animate-rise,
   .animate-grow,
