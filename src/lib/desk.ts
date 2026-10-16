@@ -57,6 +57,7 @@ export interface Happening {
   name: string;
   why: string;
   rough?: boolean; // 只知道大約時間
+  only?: "tw" | "us"; // 只跟台股或美股有關
 }
 
 const iso = (y: number, m: number, d: number) =>
@@ -97,11 +98,13 @@ function monthEvents(y: number, m: number): Happening[] {
     {
       date: iso(y, m, 10),
       name: "台灣上市公司公布上個月營收",
+      only: "tw",
       why: "營收大增的公司常會被法人追著買，看你追蹤的股票有沒有成長。",
     },
     {
       date: iso(y, m, nthWeekday(y, m, 3, 3)),
       name: "台指期結算",
+      only: "tw",
       why: "期貨到期那天，大盤常會被拉上拉下，短線進出要小心。",
     },
   ];
@@ -111,6 +114,7 @@ function monthEvents(y: number, m: number): Happening[] {
     out.push({
       date: iso(y, m, last - 7),
       name: "季底前一週：投信作帳尾聲",
+      only: "tw",
       why: "投信常在季底前拉抬持股，季底後容易賣。照「跟著投信買」的人這週要出場。",
     });
   }
@@ -119,6 +123,7 @@ function monthEvents(y: number, m: number): Happening[] {
     out.push({
       date: iso(y, m, nthWeekday(y, m, 4, 3)),
       name: "台積電法說會（財報季開始）",
+      only: "tw",
       why: "台積電佔大盤三成，它對下一季的說法會影響整個電子股。",
       rough: true,
     });
@@ -127,14 +132,36 @@ function monthEvents(y: number, m: number): Happening[] {
     out.push({
       date: iso(y, m, nthWeekday(y, m, 4, 3)),
       name: "台灣央行理監事會",
+      only: "tw",
       why: "決定台灣利率和房貸規定，影響金融股和營建股。",
+      rough: true,
+    });
+  // 美股：每月第三個週五選擇權到期（3、6、9、12 月是四巫日），台灣時間隔天清晨收盤
+  const opx = nthWeekday(y, m, 5, 3);
+  out.push({
+    date: iso(y, m, opx),
+    name: m % 3 === 0 ? "美股四巫日（期貨選擇權一起到期）" : "美股選擇權到期",
+    why: "大量合約同一天到期，收盤前股價常被拉來拉去，成交量特別大。",
+    only: "us",
+  });
+  // 1、4、7、10 月中：美股財報季開始（大銀行先公布）
+  if (m % 3 === 1)
+    out.push({
+      date: iso(y, m, nthWeekday(y, m, 5, 2)),
+      name: "美股財報季開始（大銀行先公布）",
+      why: "接下來一個月每家公司都公布成績單，財報前後股價常一天漲跌一成，持股要先知道日子。",
+      only: "us",
       rough: true,
     });
   return out;
 }
 
-/** 從今天起 days 天內的大事，依日期排 */
-export function upcoming(today: string, days = 30): Happening[] {
+/** 從今天起 days 天內的大事，依日期排；給 market 就只留跟那邊有關的 */
+export function upcoming(
+  today: string,
+  days = 30,
+  market?: "tw" | "us",
+): Happening[] {
   const [y, m] = today.split("-").map(Number);
   const next = m === 12 ? [y + 1, 1] : [y, m + 1];
   const end = new Date(Date.parse(today) + days * 86_400_000)
@@ -147,6 +174,7 @@ export function upcoming(today: string, days = 30): Happening[] {
   }));
   return [...monthEvents(y, m), ...monthEvents(next[0], next[1]), ...fomc]
     .filter((e) => e.date >= today && e.date <= end)
+    .filter((e) => !market || !e.only || e.only === market)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 

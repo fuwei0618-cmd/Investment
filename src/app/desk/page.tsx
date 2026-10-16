@@ -4,44 +4,27 @@ import { Suspense } from "react";
 import LightDot from "@/components/Light";
 import { hotStreets, mood, PLAYERS } from "@/lib/chips";
 import { getChips, getStreets } from "@/lib/chipsData";
-import { taipeiToday, upcoming, verdict } from "@/lib/desk";
+import { verdict } from "@/lib/desk";
 import { getTaiex } from "@/lib/deskData";
-import { getSeries } from "@/lib/fred";
 import { getPicks, type PlayId } from "@/lib/pickData";
 import { getTodayAnswers } from "@/lib/todayData";
-import { usdLevel, usdStats } from "@/lib/usd";
 import LiveBoard from "../go/daytrade/LiveBoard";
 import { GO_PLAYS, HREF } from "../go/GoPage";
 import Holdings from "./Holdings";
 import LineSetup from "./LineSetup";
 import TrackedNews from "./TrackedNews";
+import {
+  Calendar,
+  Macro,
+  MarketSwitch,
+  Section,
+  more,
+  sign,
+  wait,
+} from "./parts";
 
 export const metadata = { title: "實戰｜投資羅盤" };
 
-const box =
-  "space-y-3 rounded-2xl bg-[#fffdf8] p-4 shadow-[0_1px_2px_rgba(60,40,10,.06),0_6px_16px_rgba(60,40,10,.08)] dark:bg-[#221d16]";
-const more = "text-sm text-blue-700 underline dark:text-blue-400";
-const wait = <p className="text-sm text-stone-500">讀取中⋯⋯</p>;
-const sign = (n: number, d = 0) => `${n > 0 ? "+" : ""}${n.toFixed(d)}`;
-
-function Section({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className={box}>
-      <h2 className="text-xl font-black">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-// ① 今天能不能出手
 async function Go() {
   await connection();
   const [taiex, chips, t] = await Promise.all([
@@ -105,65 +88,6 @@ async function Go() {
 }
 
 // ② 總體經濟
-async function Macro() {
-  await connection();
-  const [t, usd] = await Promise.all([getTodayAnswers(), getSeries("DEXTAUS")]);
-  const u = usd ? usdStats(usd) : null;
-  const rows = [
-    { q: "世界景氣好嗎？", a: t.economy, href: "/market#level-1" },
-    { q: "錢變多還是變少？", a: t.money, href: "/market#level-2" },
-    { q: "現在是哪一季？", a: t.season, href: "/market#level-3" },
-  ];
-  return (
-    <>
-      <ul className="space-y-2 text-sm">
-        {rows.map((r) => (
-          <li key={r.q} className="flex items-start gap-2">
-            <span className="mt-1">
-              <LightDot light={r.a?.light ?? null} />
-            </span>
-            <span>
-              <b>{r.q}</b> {r.a?.answer ?? "今天的數字暫時抓不到"}
-              {r.a && (
-                <span className="block text-xs text-stone-500">
-                  {r.a.reasons.join("；")}
-                </span>
-              )}
-              <Link
-                href={r.href}
-                className="ml-1 text-xs text-blue-700 underline dark:text-blue-400"
-              >
-                看為什麼
-              </Link>
-            </span>
-          </li>
-        ))}
-        <li className="flex items-start gap-2">
-          <span className="mt-1">
-            <LightDot light={null} />
-          </span>
-          <span>
-            <b>美元貴不貴？</b>{" "}
-            {u
-              ? `1 美元換 ${u.now.toFixed(2)} 台幣（${u.date}），在過去 10 年算「${usdLevel(u.pct).word}」。台幣變強時，外資比較會買台股。`
-              : "今天的匯率暫時抓不到"}
-            <Link
-              href="/usd"
-              className="ml-1 text-xs text-blue-700 underline dark:text-blue-400"
-            >
-              看美元專區
-            </Link>
-          </span>
-        </li>
-      </ul>
-      <p className="text-xs text-stone-500">
-        這幾個數字一個月才變一次，不用每天看，知道現在是什麼天氣就好。
-      </p>
-    </>
-  );
-}
-
-// ③ 市場情況
 async function Market() {
   await connection();
   const [taiex, chips, map] = await Promise.all([
@@ -233,37 +157,6 @@ async function Market() {
 }
 
 // ④ 今天必知大事
-async function Calendar() {
-  await connection();
-  const today = taipeiToday();
-  const list = upcoming(today, 30);
-  return (
-    <>
-      <h3 className="font-bold">接下來 30 天的行事曆</h3>
-      <ul className="space-y-1.5 text-sm">
-        {list.map((e) => (
-          <li
-            key={e.date + e.name}
-            className={`rounded-xl px-3 py-2 ${e.date === today ? "bg-amber-100 dark:bg-amber-950" : "bg-[#f3ead8] dark:bg-[#2f281f]"}`}
-          >
-            <b>
-              {e.date === today ? "今天" : e.date.slice(5).replace("-", "/")}
-              {e.rough && "前後"}　{e.name}
-            </b>
-            <span className="block text-stone-600 dark:text-stone-400">
-              {e.why}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-stone-500">
-        標「前後」的是每月大約的時間，確切日子以官方公布為準。
-      </p>
-    </>
-  );
-}
-
-// ⑥ 今天的策略卡名單
 async function Picks() {
   await connection();
   const plays: PlayId[] = ["breakout", "trust"];
@@ -336,6 +229,7 @@ export default function Desk() {
     <div className="space-y-4">
       <header className="space-y-1">
         <h1 className="text-2xl font-black">實戰</h1>
+        <MarketSwitch now="tw" />
         <p className="text-sm text-stone-600 dark:text-stone-400">
           每天開盤前看這一頁就好：先看能不能出手，再看天氣、市場和大事，最後看自己追蹤的股票和持股。
         </p>
@@ -376,7 +270,7 @@ export default function Desk() {
       </Section>
       <Section id="news" title="④ 今天必知大事">
         <Suspense fallback={wait}>
-          <Calendar />
+          <Calendar market="tw" />
         </Suspense>
         <h3 className="font-bold">追蹤股票的新聞（最近三天）</h3>
         <TrackedNews />
