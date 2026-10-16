@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Holding } from "@/lib/desk";
-import { usPlan } from "@/lib/us";
+import { ODD_MIN, usPlan } from "@/lib/us";
 import type { UsPick } from "@/lib/usData";
 import { fmt, usePersistentState } from "@/lib/storage";
 import CheatSheet from "../CheatSheet";
@@ -178,16 +178,23 @@ export default function UsWizard({
             </h2>
             {p.shares === 0 ? (
               <p className="text-sm">
-                這次最多用 {fmt(p.budget)} 美元，買不到一股（每股約{" "}
-                {fmt(pick.close, 2)} 美元）。換一檔，或把總資金調高。
+                這次最多用 {fmt(p.budget)} 美元，買不到一整股（每股約{" "}
+                {fmt(pick.close, 2)} 美元），碎股又最少要買 {ODD_MIN}{" "}
+                美元。換一檔，或把總資金調高。
               </p>
             ) : (
               <dl className="grid gap-2 sm:grid-cols-2">
                 <div className="rounded-xl bg-[#f3ead8] p-3 dark:bg-[#2f281f]">
-                  <dt className="text-xs font-bold">買多少</dt>
-                  <dd className="text-2xl font-black">{fmt(p.shares)} 股</dd>
+                  <dt className="text-xs font-bold">
+                    買多少{p.odd ? "（碎股）" : ""}
+                  </dt>
+                  <dd className="text-2xl font-black">
+                    {fmt(p.shares, p.odd ? 2 : 0)} 股
+                  </dd>
                   <dd className="text-xs text-stone-500">
                     約 {fmt(p.cost, 2)} 美元，手續費另計
+                    {p.odd &&
+                      `。一成 ${fmt(p.budget)} 美元買不到一整股，改用碎股買 ${fmt(p.budget)} 美元`}
                   </dd>
                 </div>
                 <div className="rounded-xl bg-[#f3ead8] p-3 dark:bg-[#2f281f]">
@@ -214,8 +221,9 @@ export default function UsWizard({
               </dl>
             )}
             <p className="text-xs text-stone-500">
-              停損{pick.stopText}{" "}
-              複委託通常有最低手續費，金額太小很划不來，下單前先看你的費率。
+              停損{pick.stopText} 國泰複委託碎股的手續費是
+              0.08%、沒有最低收費（ETF 一筆 3 美元），下單前還是看一下 App
+              顯示的費率。
             </p>
           </>
         )}
@@ -234,14 +242,24 @@ export default function UsWizard({
                   value: `${pick.code} ${pick.name}`,
                   copy: pick.code,
                 },
-                { label: "買或賣", value: "買進" },
                 {
-                  label: "股數",
-                  value: `${fmt(p.shares)} 股`,
-                  copy: String(p.shares),
+                  label: "整股或碎股",
+                  value: p.odd ? "碎股（上面分頁切到碎股）" : "整股",
                 },
+                { label: "買或賣", value: "買進" },
+                p.odd
+                  ? {
+                      label: "買進金額",
+                      value: `${fmt(p.budget)} 美元（約 ${fmt(p.shares, 2)} 股）`,
+                      copy: String(p.budget),
+                    }
+                  : {
+                      label: "股數",
+                      value: `${fmt(p.shares)} 股`,
+                      copy: String(p.shares),
+                    },
                 {
-                  label: "價格（限價）",
+                  label: "價格（限價＝最多付多少）",
                   value: fmt(pick.close, 2),
                   copy: String(r2(pick.close)),
                 },
@@ -255,6 +273,9 @@ export default function UsWizard({
               <li>
                 美股開盤是台灣晚上 21:30（11 月到 3 月
                 22:30），可以白天先掛「預約單」。
+              </li>
+              <li>
+                上面的限價是網站打開那一刻的價格。限價＝你「最多」願意付多少，現價比較低時會用比較低的價格成交，不會多付；開盤後漲到比限價高就買不到，可以重新打開這頁拿新價格。
               </li>
               <li>{pick.entryNote}</li>
               <li>
@@ -278,7 +299,7 @@ export default function UsWizard({
                 },
                 {
                   label: "停損賣出",
-                  value: `全部 ${fmt(p.shares)} 股`,
+                  value: `全部 ${fmt(p.shares, p.odd ? 2 : 0)} 股`,
                   copy: String(p.shares),
                 },
                 {
@@ -288,8 +309,8 @@ export default function UsWizard({
                 },
                 {
                   label: "停利賣出",
-                  value: `一半 ${fmt(Math.floor(p.shares / 2))} 股`,
-                  copy: String(Math.floor(p.shares / 2)),
+                  value: `一半 ${fmt(p.half, p.odd ? 2 : 0)} 股`,
+                  copy: String(p.half),
                 },
               ]}
             />
@@ -302,6 +323,12 @@ export default function UsWizard({
                 App 沒有的話：每天早上 7:00
                 起床看收盤價，跌破停損價就在當天晚上開盤賣。
               </li>
+              {p.odd && (
+                <li>
+                  碎股多半不能設觸價單。設不了就看每天清晨的 LINE
+                  收盤提醒，寫「要賣」就在當天晚上開盤賣。
+                </li>
+              )}
               <li>美股一天可以漲跌超過一成，停損一定要先設好，不要等。</li>
             </ul>
           </>
@@ -341,7 +368,9 @@ export default function UsWizard({
                     {t.name} {t.code}
                   </b>
                   <span>
-                    {t.saved} 買 {fmt(t.shares)} 股 @ {fmt(t.price, 2)}
+                    {t.saved} 買{" "}
+                    {fmt(t.shares, Number.isInteger(t.shares) ? 0 : 2)} 股 @{" "}
+                    {fmt(t.price, 2)}
                   </span>
                   <span className="text-green-700 dark:text-green-400">
                     停損 {fmt(t.stop, 2)}

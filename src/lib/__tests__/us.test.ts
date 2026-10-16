@@ -60,6 +60,18 @@ it("usPlan 以股計", () => {
   const p = usPlan(10000, 99, 92, 0.15);
   expect(p.shares).toBe(10);
   expect(p.stopLoss).toBe(70);
+  expect(p.odd).toBe(false);
+  expect(p.half).toBe(5);
+});
+
+it("一成買不到一整股就改買碎股", () => {
+  const p = usPlan(10000, 1136.36, 1056, 0.15);
+  expect(p.odd).toBe(true);
+  expect(p.shares).toBe(0.88);
+  expect(p.half).toBe(0.44);
+  expect(p.cost).toBeLessThanOrEqual(1000);
+  // 碎股最少 100 美元
+  expect(usPlan(900, 1136.36, 1056, 0.15).shares).toBe(0);
 });
 
 it("美股盤中：夏令台灣 22:00 是盤中、白天不是", () => {

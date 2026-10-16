@@ -63,7 +63,8 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
                 {t.name} <span className="text-stone-500">{t.code}</span>
               </b>
               <span>
-                {t.saved} 買 {fmt(t.shares)} 股 @ {fmt(t.price, 2)}
+                {t.saved} 買 {fmt(t.shares, Number.isInteger(t.shares) ? 0 : 2)}{" "}
+                股 @ {fmt(t.price, 2)}
               </span>
               {a && now && (
                 <span
