@@ -59,3 +59,14 @@ describe("賺錢撇步", () => {
     for (const t of TOOLS) for (const term of TERMS) expect(BY_TERM[t.id]?.[term.id]?.how.length).toBeGreaterThan(0);
   });
 });
+
+describe("衝一把操作卡", () => {
+  it("每種工具都有操作卡或不適合的原因", async () => {
+    const { FAST, STEPS } = await import("../fastPlay");
+    for (const t of TOOLS) {
+      const f = FAST[t.id];
+      expect(f).toBeTruthy();
+      if (typeof f !== "string") for (const s of STEPS) expect(f[s.key].length).toBeGreaterThan(0);
+    }
+  });
+});
