@@ -76,3 +76,14 @@ describe("大戶劇場、氣氛燈、逛街地圖", async () => {
     expect(hotStreets(st)).toEqual({ buy: "整條街都買（指數基金）", sell: "半導體" });
   });
 });
+
+describe("收盤價 CSV", () => {
+  it("證交所回傳 CSV 文字也讀得到", async () => {
+    const { parsePrices } = await import("../chips");
+    const csv = '﻿日期,證券代號,證券名稱,成交股數,成交金額,開盤價,最高價,最低價,收盤價,漲跌價差,成交筆數\r\n"1151015","2330","台積電","1,000","2,000","1,400.00","1,410.00","1,390.00","1,405.00","+5.00","3,000"\r\n"1151015","0050","元大台灣50","1","1","60","60","60","","",""\r\n';
+    const m = parsePrices(csv);
+    expect(m.get("2330")).toBe(1405);
+    expect(m.has("0050")).toBe(false);
+    expect(parsePrices('{"fields":["證券代號","收盤價"],"data":[["2303","50"]]}').get("2303")).toBe(50);
+  });
+});
