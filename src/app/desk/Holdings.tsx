@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Live } from "@/lib/dayTrade";
-import { holdingAlert, type Holding } from "@/lib/desk";
+import { holdingAlert, taipeiToday, type Holding } from "@/lib/desk";
+import { close, JOURNAL_KEY, type Closed } from "@/lib/journal";
 import { fmt, usePersistentState } from "@/lib/storage";
 
 const TONE = {
@@ -16,7 +17,7 @@ const TONE = {
 /** 讀「帶我做」第六步記下來的單子和現價（持股提醒、最上面「哪檔要賣」共用） */
 export function useHoldingQuotes(market: "tw" | "us") {
   const us = market === "us";
-  const [trades, , loaded] = usePersistentState<Holding[]>(
+  const [trades, setTrades, loaded] = usePersistentState<Holding[]>(
     us ? "us.trades.v1" : "go.trades.v1",
     [],
   );
@@ -33,13 +34,15 @@ export function useHoldingQuotes(market: "tw" | "us") {
       .then((j) => setQuotes(j.quotes ?? []))
       .catch(() => setErr(true));
   }, [codes, us]);
-  return { trades, loaded, quotes, err };
+  return { trades, setTrades, loaded, quotes, err };
 }
 
 // 我的持股提醒：讀「帶我做」第六步記下來的單子，拿現價比停損停利
 export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
   const us = market === "us";
-  const { trades, loaded, quotes, err } = useHoldingQuotes(market);
+  const { trades, setTrades, loaded, quotes, err } = useHoldingQuotes(market);
+  const [journal, setJournal] = usePersistentState<Closed[]>(JOURNAL_KEY, []);
+  const [selling, setSelling] = useState<string | null>(null);
 
   if (!loaded) return <p className="text-sm text-stone-500">讀取中⋯⋯</p>;
   if (!trades.length)
@@ -93,9 +96,95 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
                 　停損 {t.stop}・停利 {t.target}
               </span>
             </p>
+            {selling === t.code ? (
+              <SellForm
+                buy={t.price}
+                now={now}
+                unit={us ? "美元" : "元"}
+                onCancel={() => setSelling(null)}
+                onSave={(sell, buy, date) => {
+                  setJournal([close(t, market, sell, buy, date), ...journal]);
+                  setTrades(trades.filter((x) => x.code !== t.code));
+                  setSelling(null);
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setSelling(t.code)}
+                className="mt-1 text-xs font-bold text-[#b4651e] underline"
+              >
+                賣掉了，記進成績單
+              </button>
+            )}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+// 賣掉後填實際成交價，買價也可以改成實際成交的（測試單常常跟小抄差一點）
+function SellForm({
+  buy,
+  now,
+  unit,
+  onCancel,
+  onSave,
+}: {
+  buy: number;
+  now: number | null;
+  unit: string;
+  onCancel: () => void;
+  onSave: (sell: number, buy: number, date: string) => void;
+}) {
+  const [sell, setSell] = useState(now ? String(now) : "");
+  const [b, setB] = useState(String(buy));
+  const [date, setDate] = useState(() => taipeiToday());
+  const ok = Number(sell) > 0 && Number(b) > 0;
+  const input =
+    "w-28 rounded-lg border-2 border-stone-200 bg-white px-2 py-1 dark:border-stone-700 dark:bg-stone-900";
+  return (
+    <div className="mt-2 flex flex-wrap items-end gap-2 text-xs">
+      <label className="grid gap-0.5">
+        實際賣出價（{unit}）
+        <input
+          id="sell-price"
+          inputMode="decimal"
+          value={sell}
+          onChange={(e) => setSell(e.target.value)}
+          className={input}
+        />
+      </label>
+      <label className="grid gap-0.5">
+        實際買進價
+        <input
+          id="buy-price"
+          inputMode="decimal"
+          value={b}
+          onChange={(e) => setB(e.target.value)}
+          className={input}
+        />
+      </label>
+      <label className="grid gap-0.5">
+        賣出日
+        <input
+          id="sell-date"
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className={input}
+        />
+      </label>
+      <button
+        disabled={!ok}
+        onClick={() => onSave(Number(sell), Number(b), date)}
+        className="rounded-full bg-[#b4651e] px-3 py-1 font-bold text-white disabled:opacity-40"
+      >
+        記下來
+      </button>
+      <button onClick={onCancel} className="text-stone-500 underline">
+        取消
+      </button>
+    </div>
   );
 }

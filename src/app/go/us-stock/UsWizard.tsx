@@ -349,6 +349,7 @@ export default function UsWizard({
                       shares: p.shares,
                       stop: p.stop,
                       target: p.target,
+                      play: "美股強勢股突破",
                     },
                     ...trades.filter((t) => t.code !== pick.code),
                   ])
@@ -384,7 +385,7 @@ export default function UsWizard({
                     }
                     className="ml-auto text-xs text-stone-500 underline"
                   >
-                    賣掉了，刪除
+                    沒買成，刪除
                   </button>
                 </li>
               ))}

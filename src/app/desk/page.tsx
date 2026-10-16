@@ -11,6 +11,7 @@ import { getTodayAnswers } from "@/lib/todayData";
 import LiveBoard from "../go/daytrade/LiveBoard";
 import { GO_PLAYS, HREF } from "../go/GoPage";
 import Holdings from "./Holdings";
+import Scorecard from "./Scorecard";
 import LineSetup from "./LineSetup";
 import TrackedNews from "./TrackedNews";
 import {
@@ -284,6 +285,7 @@ export default function Desk() {
             ["watch", "追蹤清單"],
             ["picks", "策略卡名單"],
             ["hold", "持股提醒"],
+            ["score", "成績單"],
           ].map(([id, t]) => (
             <a
               key={id}
@@ -330,6 +332,9 @@ export default function Desk() {
         <Section id="hold" title="⑦ 我的持股提醒">
           <Holdings />
           <LineSetup />
+        </Section>
+        <Section id="score" title="⑧ 我的成績單">
+          <Scorecard market="tw" />
         </Section>
       </Why>
     </div>

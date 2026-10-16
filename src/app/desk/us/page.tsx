@@ -17,6 +17,7 @@ import { getUsBars, getUsPicks } from "@/lib/usData";
 import { usdLevel, usdStats } from "@/lib/usd";
 import LiveBoard from "../../go/daytrade/LiveBoard";
 import Holdings from "../Holdings";
+import Scorecard from "../Scorecard";
 import LineSetup from "../LineSetup";
 import {
   Calendar,
@@ -268,6 +269,7 @@ export default function DeskUs() {
             ["watch", "追蹤清單"],
             ["picks", "策略卡名單"],
             ["hold", "持股提醒"],
+            ["score", "成績單"],
           ].map(([id, t]) => (
             <a
               key={id}
@@ -309,6 +311,9 @@ export default function DeskUs() {
         <Section id="hold" title="⑦ 我的持股提醒">
           <Holdings market="us" />
           <LineSetup />
+        </Section>
+        <Section id="score" title="⑧ 我的成績單">
+          <Scorecard market="us" />
         </Section>
       </Why>
     </div>
