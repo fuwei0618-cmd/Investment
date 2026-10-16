@@ -2,13 +2,17 @@ import Link from "next/link";
 import { Suspense } from "react";
 import LightDot from "@/components/Light";
 import { getTodayAnswers } from "@/lib/todayData";
+import { mood } from "@/lib/chips";
+import { getChips } from "@/lib/chipsData";
 
 async function Today() {
-  const t = await getTodayAnswers();
+  const [t, chips] = await Promise.all([getTodayAnswers(), getChips()]);
+  const m = chips ? mood(chips.days, chips.margin?.change ?? null) : null;
   const rows = [
     { q: "世界景氣好嗎？", a: t.economy, href: "/market#level-1" },
     { q: "錢變多還是變少？", a: t.money, href: "/market#level-2" },
     { q: "現在是哪一季？", a: t.season, href: "/market#level-3" },
+    { q: "大戶在進場嗎？", a: m && { light: m.light, answer: `${m.name}：${m.line}` }, href: "/chips#mood" },
   ];
   return (
     <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
