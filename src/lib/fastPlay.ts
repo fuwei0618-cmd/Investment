@@ -137,3 +137,8 @@ export const FAST: Record<string, FastPlay | string> = {
     mistake: "買很便宜、離現價很遠的權證；盤中券商不報價時賣不掉。",
   },
 };
+
+/** 有「帶我做」保姆教學的工具：照條件挑標的、算數量、一步一步下單 */
+export const GO: Record<string, string> = {
+  "tw-stock": "/go/tw-stock",
+};

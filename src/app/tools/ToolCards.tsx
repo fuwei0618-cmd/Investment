@@ -6,7 +6,7 @@ import { RISK_WORD, TOOLS, type Tool } from "@/lib/tools";
 import { SIX } from "@/lib/six";
 import { HOUSE, ROLES, type Role } from "@/lib/street";
 import { BY_TERM, LEVELS, PLAYS, TERMS } from "@/lib/plays";
-import { FAST, STEPS } from "@/lib/fastPlay";
+import { FAST, GO, STEPS } from "@/lib/fastPlay";
 import RiskStreet from "./RiskStreet";
 
 const IN_SIX = new Set(SIX.map((w) => w.toolId));
@@ -80,6 +80,11 @@ function FastCard({ id }: { id: string }) {
           </li>
         ))}
       </ol>
+      {GO[id] && (
+        <Link href={GO[id]} className="mt-2 inline-block rounded-full bg-[#b4651e] px-4 py-2 text-sm font-bold text-white">
+          帶我做一次：照條件挑股票、算張數、一步一步下單 →
+        </Link>
+      )}
       <p className="mt-2 text-xs text-stone-500">先寫好第 ④ 步再按下單。比例和停損是常見的保守做法，可以照你的風險屬性再調小；一般常識整理，不是投資建議。</p>
     </div>
   );

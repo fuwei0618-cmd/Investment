@@ -75,6 +75,7 @@ export const ACTS: Act[] = [
     take: "一張寫好停損的下單卡",
     pages: [
       { href: "/market#level-7", name: "看市場第 7 到 8 關", note: "值多少錢、什麼時候買賣" },
+      { href: "/go/tw-stock", name: "帶我做：台股短線", note: "照條件挑股票、算張數、一步一步下單" },
       { href: "/lottery", name: "股票抽籤", note: "最近哪些新股可以抽、划不划算" },
       { href: "/portfolio", name: "持股健檢", note: "手上的投資健不健康" },
     ],

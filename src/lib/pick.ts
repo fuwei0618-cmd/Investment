@@ -1,0 +1,111 @@
+// 衝一把／台股短線的「帶我做」：照操作卡的條件，從今天大戶有買的股票裡篩出符合的，
+// 再依你的本錢算好買多少、停損停利價。全部是條件篩選，不是推薦。
+import type { Street } from "./chips";
+
+export interface Bar {
+  date: string;
+  close: number;
+  max: number;
+  volume: number;
+}
+export interface InstRow {
+  date: string;
+  name: string;
+  buy: number;
+  sell: number;
+}
+
+/** 今天外資和投信都買超的個股（不含 ETF），照兩者合計排，取前 n 檔去細查 */
+export function candidates(streets: Street[], n = 8) {
+  return streets
+    .flatMap((s) => s.shops.map((sh) => ({ ...sh, street: s.name })))
+    .filter((sh) => !sh.code.startsWith("00") && sh.foreign > 0 && sh.trust > 0)
+    .sort((a, b) => b.foreign + b.trust - (a.foreign + a.trust))
+    .slice(0, n);
+}
+
+/** 從最近一天往回數，外資或投信合計買超連續幾天 */
+export function buyStreak(rows: InstRow[]) {
+  const net = new Map<string, number>();
+  for (const r of rows) {
+    if (!/^(Foreign_Investor|Investment_Trust)$/.test(r.name)) continue;
+    net.set(r.date, (net.get(r.date) ?? 0) + r.buy - r.sell);
+  }
+  const days = [...net.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+  let k = 0;
+  for (const [, v] of days) {
+    if (v > 0) k++;
+    else break;
+  }
+  return k;
+}
+
+export interface Check {
+  close: number;
+  /** 前 20 天最高價＝突破點 */
+  high20: number;
+  /** 今天成交量是前 20 天平均的幾倍 */
+  volRatio: number;
+  streak: number;
+  breakout: boolean;
+  pass: boolean;
+  /** 三個條件過了幾個 */
+  score: number;
+}
+
+/** 操作卡的三個條件：大戶連買三天以上、量是平常兩倍、收盤突破前 20 天最高 */
+export function check(bars: Bar[], inst: InstRow[]): Check | null {
+  const b = [...bars].sort((x, y) => x.date.localeCompare(y.date));
+  if (b.length < 21) return null;
+  const today = b[b.length - 1];
+  const prior = b.slice(-21, -1);
+  const high20 = Math.max(...prior.map((x) => x.max));
+  const avgVol = prior.reduce((s, x) => s + x.volume, 0) / prior.length;
+  const volRatio = avgVol > 0 ? today.volume / avgVol : 0;
+  const streak = buyStreak(inst);
+  const breakout = today.close > high20;
+  const oks = [streak >= 3, volRatio >= 2, breakout];
+  const score = oks.filter(Boolean).length;
+  return {
+    close: today.close,
+    high20,
+    volRatio,
+    streak,
+    breakout,
+    pass: score === 3,
+    score,
+  };
+}
+
+/** 大盤在月線（20 日均線）之上嗎 */
+export function aboveMonthLine(bars: Bar[]) {
+  const b = [...bars].sort((x, y) => x.date.localeCompare(y.date)).slice(-20);
+  if (b.length < 20) return null;
+  const ma = b.reduce((s, x) => s + x.close, 0) / b.length;
+  const close = b[b.length - 1].close;
+  return { close, ma, above: close > ma };
+}
+
+/** 照操作卡：每筆最多總資金一成；停損＝跌破突破點或少 7%（取先碰到的較高價）；賺 15% 先賣一半 */
+export function plan(capital: number, price: number, high20: number) {
+  const budget = Math.floor(capital * 0.1);
+  const shares = Math.floor(budget / price);
+  const lots = Math.floor(shares / 1000);
+  const odd = shares % 1000;
+  const fee = (n: number) => Math.max(20, Math.round(n * price * 0.001425));
+  const stop = Math.round(Math.max(high20, price * 0.93) * 100) / 100;
+  const target = Math.round(price * 1.15 * 100) / 100;
+  return {
+    budget,
+    shares,
+    lots,
+    odd,
+    cost:
+      Math.round(shares * price) +
+      (lots ? fee(lots * 1000) : 0) +
+      (odd ? fee(odd) : 0),
+    stop,
+    stopLoss: Math.round(shares * (price - stop)),
+    target,
+  };
+}
