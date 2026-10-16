@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import LightDot from "@/components/Light";
 import { hotStreets, mood, PLAYERS } from "@/lib/chips";
 import { getChips, getStreets } from "@/lib/chipsData";
-import { verdict } from "@/lib/desk";
+import { closeAndMa, verdict } from "@/lib/desk";
 import { getTaiex } from "@/lib/deskData";
 import { getPicks, type PlayId } from "@/lib/pickData";
 import { getTodayAnswers } from "@/lib/todayData";
@@ -43,7 +43,7 @@ async function Go() {
       q: "大盤在月線上嗎？",
       light: taiex ? (taiex.above ? "green" : "red") : null,
       a: taiex
-        ? `加權指數 ${taiex.close.toFixed(0)}，月線 ${taiex.ma.toFixed(0)}，${taiex.above ? "在上面" : "在下面"}。`
+        ? `加權指數 ${closeAndMa(taiex.close, taiex.ma).join("，月線 ")}，${taiex.above ? "在上面" : "在下面"}。`
         : "暫時抓不到",
     },
     {

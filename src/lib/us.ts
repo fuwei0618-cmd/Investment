@@ -1,5 +1,7 @@
 // 美股實戰：股票池、產業 ETF、強勢股突破三條件、算股數，以及雅虎股價資料的解析。
+import { verdict, type Verdict } from "./desk";
 import type { Check, Cond } from "./pick";
+import type { Light } from "./today";
 
 export interface UsBar {
   date: string;
@@ -294,12 +296,15 @@ export function usPlan(
   };
 }
 
-/** 美國紐約時間現在是不是盤中（週一到週五 9:30–16:00，夏令冬令自動換算） */
-export function isUsTradingTime(now = new Date()) {
+/** 紐約現在是星期幾、幾點（從 0 點算起的分鐘數）、日期 */
+function nyClock(now: Date) {
   const p = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York",
       weekday: "short",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
       hour: "numeric",
       minute: "numeric",
       hour12: false,
@@ -307,8 +312,61 @@ export function isUsTradingTime(now = new Date()) {
       .formatToParts(now)
       .map((x) => [x.type, x.value]),
   );
-  const m = (Number(p.hour) % 24) * 60 + Number(p.minute);
-  return !["Sat", "Sun"].includes(p.weekday) && m >= 570 && m < 960;
+  return {
+    workday: !["Sat", "Sun"].includes(p.weekday),
+    min: (Number(p.hour) % 24) * 60 + Number(p.minute),
+    date: `${p.year}-${p.month}-${p.day}`,
+  };
+}
+
+/** 美國紐約時間現在是不是盤中（週一到週五 9:30–16:00，夏令冬令自動換算） */
+export function isUsTradingTime(now = new Date()) {
+  const c = nyClock(now);
+  return c.workday && c.min >= 570 && c.min < 960;
+}
+
+/**
+ * 美股 LINE 提醒該傳哪一則。排程夏令冬令各排一次，這裡用紐約時間挑對的那次：
+ * 紐約 8:00–9:25 傳開盤前（台灣晚上），16:30–17:59 傳收盤後（台灣清晨）。
+ */
+export function usSlot(now = new Date()): {
+  slot: "pre" | "post" | null;
+  date: string;
+} {
+  const c = nyClock(now);
+  if (!c.workday) return { slot: null, date: c.date };
+  if (c.min >= 480 && c.min < 565) return { slot: "pre", date: c.date };
+  if (c.min >= 990 && c.min < 1080) return { slot: "post", date: c.date };
+  return { slot: null, date: c.date };
+}
+
+const US_TODO: Record<string, string> = {
+  今天不買股票:
+    "標普 500 在月線下，美股先不買。手上的照停損走，等站回月線再看名單。",
+  可以照策略卡出手:
+    "標普 500 在月線上、市場也不恐慌。到名單挑三個條件全過的，照「帶我做」一步一步來。",
+  "可以出手，但只用一半的錢":
+    "標普 500 還在月線上，但市場很恐慌或景氣在衰退期。照名單挑，每筆只放平常一半。",
+  "可以出手，挑最強的一兩檔就好":
+    "標普 500 在月線上，但市場有點緊張。名單裡三個條件全過的才買，不要一次買很多檔。",
+};
+
+/** 恐慌指數換成燈號：30 以上當作大戶在逃（美國沒有每天的法人買賣，用恐慌程度代替） */
+export const fearLight = (vix: number | null): Light | null =>
+  vix == null ? null : vix >= 30 ? "red" : vix >= 20 ? "yellow" : "green";
+
+/** 美股今天能不能出手：跟台股同一套判斷，只是大盤換標普、大戶換恐慌指數 */
+export function usVerdict(o: {
+  above: boolean | null;
+  vix: number | null;
+  season: Light | null;
+}): Verdict {
+  const v = verdict({
+    above: o.above,
+    mood: fearLight(o.vix),
+    season: o.season,
+  });
+  return { ...v, todo: US_TODO[v.title] ?? v.todo };
 }
 
 /** 近 n 天漲跌幅 */

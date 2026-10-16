@@ -1,0 +1,20 @@
+# 美股 LINE 提醒：開盤前一則、收盤後一則。
+# 美國有夏令時間，所以兩個時間各排兩次（差一小時），網站會用紐約時間挑對的那次傳，另一次自動略過。
+# 跟盤中警報共用 SITE_URL 和 CRON_SECRET。
+name: 美股提醒
+on:
+  schedule:
+    - cron: "30 12,13 * * 1-5" # 紐約 8:30 開盤前（台灣晚上 8:30／冬令 9:30）
+    - cron: "0 21,22 * * 1-5" # 紐約 17:00 收盤後（台灣清晨 5:00／冬令 6:00）
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: "手動測試：pre（開盤前）或 post（收盤後）"
+        default: "pre"
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ -z "${{ secrets.SITE_URL }}" ]; then echo "還沒設 SITE_URL"; exit 0; fi
+          curl -sS -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ secrets.SITE_URL }}/api/cron/us?slot=${{ inputs.slot }}"

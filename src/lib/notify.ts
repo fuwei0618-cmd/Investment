@@ -1,10 +1,13 @@
 // 盤後 LINE 提醒：把「今天能不能出手」和每檔持股的停損停利狀況寫成一則訊息。
 import {
+  closeAndMa,
   holdingAlert,
   type Happening,
   type Holding,
   type Verdict,
 } from "./desk";
+
+const r2 = (n: number) => Math.round(n * 100) / 100;
 
 export function composeMessage(o: {
   date: string;
@@ -12,12 +15,18 @@ export function composeMessage(o: {
   taiex: { close: number; ma: number } | null;
   holdings: Holding[];
   prices: Record<string, number>;
+  /** 美股：清晨收盤後傳，講的是「今晚」能不能出手 */
+  market?: "tw" | "us";
 }): string {
-  const lines = [`【投資羅盤 盤後提醒 ${o.date.slice(5).replace("-", "/")}】`];
+  const us = o.market === "us";
+  const when = us ? "今晚" : "明天";
+  const lines = [
+    `【投資羅盤 ${us ? "美股收盤" : "盤後提醒"} ${o.date.slice(5).replace("-", "/")}】`,
+  ];
   lines.push(
-    `明天能不能出手：${o.verdict.title.replace("今天", "明天")}` +
+    `${when}能不能出手：${o.verdict.title.replace("今天", when)}` +
       (o.taiex
-        ? `（大盤 ${Math.round(o.taiex.close)}，月線 ${Math.round(o.taiex.ma)}）`
+        ? `（${us ? "標普 500" : "大盤"} ${closeAndMa(o.taiex.close, o.taiex.ma).join("，月線 ")}）`
         : ""),
   );
   if (!o.holdings.length) {
@@ -27,11 +36,12 @@ export function composeMessage(o: {
   const urgent: string[] = [];
   const fine: string[] = [];
   for (const h of o.holdings) {
-    const now = o.prices[h.code];
-    if (!now) {
+    const raw = o.prices[h.code];
+    if (!raw) {
       fine.push(`・${h.name} ${h.code}：今天價格抓不到`);
       continue;
     }
+    const now = r2(raw);
     const a = holdingAlert(h, now);
     const pct = `${a.pct >= 0 ? "+" : ""}${(a.pct * 100).toFixed(1)}%`;
     if (a.tone === "plain")
@@ -52,9 +62,17 @@ export function composeMorning(o: {
   verdict: Verdict;
   events: Happening[];
   picks: { title: string; names: string[] }[];
+  /** 美股：晚上開盤前傳，多一行標普和恐慌指數 */
+  market?: "tw" | "us";
+  facts?: string[];
 }): string {
-  const lines = [`【投資羅盤 盤前 ${o.date.slice(5).replace("-", "/")}】`];
-  lines.push(`今天能不能出手：${o.verdict.title}`, o.verdict.todo);
+  const us = o.market === "us";
+  const lines = [
+    `【投資羅盤 ${us ? "美股開盤前" : "盤前"} ${o.date.slice(5).replace("-", "/")}】`,
+  ];
+  const title = us ? o.verdict.title.replace("今天", "今晚") : o.verdict.title;
+  lines.push(`${us ? "今晚" : "今天"}能不能出手：${title}`, o.verdict.todo);
+  if (o.facts?.length) lines.push(...o.facts);
   if (o.events.length)
     lines.push(
       "",
@@ -70,7 +88,7 @@ export function composeMorning(o: {
       "",
       any.length
         ? "策略卡三個條件全過："
-        : "策略卡今天沒有三個條件全過的股票，不用硬買。",
+        : `策略卡${us ? "今晚" : "今天"}沒有三個條件全過的股票，不用硬買。`,
       ...any.map((p) => `・${p.title}：${p.names.join("、")}`),
     );
   }
