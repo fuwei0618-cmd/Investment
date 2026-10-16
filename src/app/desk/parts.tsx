@@ -7,6 +7,7 @@ import { getSeries } from "@/lib/fred";
 import { getTodayAnswers } from "@/lib/todayData";
 import { usdLevel, usdStats } from "@/lib/usd";
 import QCard from "./QCard";
+import { ScoreLine } from "./Scorecard";
 import SellCard from "./SellCard";
 
 // 台股、美股實戰頁共用的外框和兩段（總體經濟、行事曆）
@@ -200,6 +201,7 @@ export function TopThree({
         </QCard>
         <SellCard market={market} />
       </div>
+      <ScoreLine market={market} />
       {s && (
         <p className="rounded-xl bg-[#f3ead8] px-3 py-2 text-sm dark:bg-[#2f281f]">
           現在是景氣<b>{s.name}期</b>，這一季最適合的工具：
@@ -221,7 +223,8 @@ export function Why({ children }: { children: React.ReactNode }) {
         <span className="group-open:hidden">▸ 為什麼？</span>
         <span className="hidden group-open:inline">▾ 收起來</span>
         <span className="ml-1 font-normal">
-          大盤、景氣、產業、大事、追蹤清單、名單、持股和 LINE 設定都在這裡
+          大盤、景氣、產業、大事、追蹤清單、名單、持股、成績單和 LINE
+          設定都在這裡
         </span>
       </summary>
       <div className="mt-4 space-y-4">{children}</div>

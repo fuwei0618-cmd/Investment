@@ -189,6 +189,8 @@ export interface Holding {
   shares: number;
   stop: number;
   target: number;
+  /** 哪一張策略卡（成績單分開算） */
+  play?: string;
 }
 
 export interface Alert {

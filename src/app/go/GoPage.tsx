@@ -53,6 +53,7 @@ async function Live({ play }: { play: PlayId }) {
       picks={data.picks}
       inverse={data.inverse}
       listIntro={GO_PLAYS[play].listIntro}
+      playTitle={GO_PLAYS[play].title}
     />
   );
 }

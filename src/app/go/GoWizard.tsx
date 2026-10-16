@@ -17,6 +17,7 @@ interface Trade {
   shares: number;
   stop: number;
   target: number;
+  play?: string;
 }
 
 const STEPS = [
@@ -70,7 +71,10 @@ export default function GoWizard({
   picks,
   inverse,
   listIntro,
+  playTitle,
 }: {
+  /** 策略卡名稱，記進成績單 */
+  playTitle: string;
   date: string;
   market: { close: number; ma: number; above: boolean } | null;
   picks: Pick[];
@@ -526,6 +530,7 @@ export default function GoWizard({
                       shares: p.shares,
                       stop: p.stop,
                       target: p.target,
+                      play: short ? "放空（反向 ETF）" : playTitle,
                     },
                     ...trades.filter((t) => t.code !== pick.code),
                   ])
@@ -560,7 +565,7 @@ export default function GoWizard({
                       }
                       className="ml-auto text-xs text-stone-500 underline"
                     >
-                      賣掉了，刪除
+                      沒買成，刪除
                     </button>
                   </li>
                 ))}
