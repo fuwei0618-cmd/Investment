@@ -8,7 +8,7 @@ import type { PlayId } from "@/lib/pickData";
 import GoWizard from "./GoWizard";
 import PlayCard from "./PlayCard";
 
-const HREF: Record<PlayId, string> = {
+export const HREF: Record<PlayId, string> = {
   breakout: "/go/tw-stock",
   trust: "/go/tw-trust",
 };

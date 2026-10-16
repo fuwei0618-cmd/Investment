@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-// 全站是麵包鎮六幕（站牌在每頁上面），選單只留回戲單和課程對照。
+// 全站是麵包鎮六幕（站牌在每頁上面），選單只留回戲單、每天看的實戰頁和課程對照。
 const AREAS = [
   { href: "/", label: "戲單", match: ["/"] },
+  { href: "/desk", label: "實戰", match: ["/desk"] },
   { href: "/courses", label: "課程", match: ["/courses"] },
 ];
 
