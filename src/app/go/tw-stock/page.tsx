@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { OTHER_PLAYS } from "@/lib/otherPlays";
 import { getPicks } from "@/lib/pickData";
 import GoWizard from "./GoWizard";
+import PlayCard from "./PlayCard";
 
 export const metadata = { title: "帶我做：台股短線｜投資羅盤" };
 
@@ -40,6 +41,7 @@ export default function GoTwStock() {
           ④、⑤ 步的停損一定要做。最後按下單的是你自己。
         </p>
       </header>
+      <PlayCard />
       <Suspense
         fallback={
           <p className="rounded-2xl bg-[#f3ead8] p-4 text-sm dark:bg-[#2f281f]">
@@ -72,6 +74,27 @@ export default function GoTwStock() {
                 <b>跟這張卡：</b>
                 {o.vs}
               </span>
+              <details className="mt-1">
+                <summary className="cursor-pointer text-[#b4651e]">
+                  看完整說明：為什麼會賺、怎麼做、什麼時候會賠
+                </summary>
+                <div className="mt-1 space-y-1">
+                  <p>
+                    <b>為什麼會賺：</b>
+                    {o.why}
+                  </p>
+                  <b>怎麼做：</b>
+                  <ol className="list-decimal pl-5">
+                    {o.flow.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ol>
+                  <p>
+                    <b>什麼時候會賠：</b>
+                    {o.lose}
+                  </p>
+                </div>
+              </details>
               {o.href && (
                 <Link
                   href={o.href}

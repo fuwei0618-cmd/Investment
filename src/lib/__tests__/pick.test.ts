@@ -82,3 +82,11 @@ describe("brief 資訊模板", () => {
     ]);
   });
 });
+
+describe("plan 還沒突破", () => {
+  it("前高在買價之上時，停損只用少 7%，不會算出負的賠錢", () => {
+    const r = plan(50_000, 66.9, 67.9);
+    expect(r.stop).toBe(62.22);
+    expect(r.stopLoss).toBeGreaterThan(0);
+  });
+});
