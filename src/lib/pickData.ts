@@ -46,7 +46,30 @@ export interface Pick extends Check {
   /** 今天外資、投信買超（億） */
   foreign: number;
   trust: number;
+  /** 最近幾天的新聞標題，幫你做「為什麼爆量」的功課 */
+  news: News[];
 }
+
+export interface News {
+  date: string;
+  title: string;
+  link: string;
+  source: string;
+}
+
+const toNews = (rows: Record<string, unknown>[]): News[] =>
+  rows
+    .map((r) => ({
+      date: String(r.date ?? "").slice(0, 10),
+      title: String(r.title ?? ""),
+      link: String(r.link ?? ""),
+      source: String(r.source ?? ""),
+    }))
+    .filter((n) => n.title && /^https?:\/\//.test(n.link))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    // 同一則新聞常被不同網站轉載，標題一樣的只留一則
+    .filter((n, i, a) => a.findIndex((m) => m.title === n.title) === i)
+    .slice(0, 5);
 
 // 今天的候選：大戶逛街地圖裡外資投信同買的前 8 檔，每檔抓 45 天股價和法人買賣細查
 export async function getPicks(): Promise<
@@ -68,12 +91,13 @@ export async function getPicks(): Promise<
       fm("TaiwanStockPrice", INVERSE.code, 15).catch(() => []),
       ...list.map((c) =>
         (async () => {
-          const [p, i] = await Promise.all([
+          const [p, i, n] = await Promise.all([
             fm("TaiwanStockPrice", c.code, 45),
             fm("TaiwanStockInstitutionalInvestorsBuySell", c.code, 15),
+            fm("TaiwanStockNews", c.code, 4).catch(() => []), // 新聞抓不到不影響篩選
           ]);
           const k = check(toBars(p), i as unknown as InstRow[]);
-          return k ? { ...c, ...k } : null;
+          return k ? { ...c, ...k, news: toNews(n) } : null;
         })().catch(() => null),
       ), // 一檔抓不到就跳過，不拖垮整份名單
     ]);
