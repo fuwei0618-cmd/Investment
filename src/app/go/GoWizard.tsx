@@ -7,6 +7,7 @@ import type { Pick } from "@/lib/pickData";
 import type { RiskResult } from "@/lib/risk";
 import { fmt, usePersistentState } from "@/lib/storage";
 import Brief from "./Brief";
+import CheatSheet from "./CheatSheet";
 
 interface Trade {
   saved: string;
@@ -28,6 +29,7 @@ const STEPS = [
 ];
 const box =
   "rounded-2xl bg-[#fffdf8] p-4 shadow-[0_1px_2px_rgba(60,40,10,.06),0_6px_16px_rgba(60,40,10,.08)] dark:bg-[#221d16]";
+const r2 = (n: number) => Math.round(n * 100) / 100;
 const yes = (ok: boolean) => (ok ? "text-red-600" : "text-stone-400");
 
 // 打勾清單：每一行做完自己勾
@@ -381,6 +383,43 @@ export default function GoWizard({
         {step === 3 && pick && p && (
           <>
             <h2 className="text-xl font-black">④ 照著下單（券商 App）</h2>
+            <CheatSheet
+              title="下單小抄（照 App 畫面由上往下填）"
+              rows={[
+                {
+                  label: "股票代號",
+                  value: `${pick.code} ${pick.name}`,
+                  copy: pick.code,
+                },
+                { label: "買或賣", value: "現股買進" },
+                ...(p.lots > 0
+                  ? [
+                      {
+                        label: "整股數量",
+                        value: `${p.lots} 張`,
+                        copy: String(p.lots),
+                      },
+                    ]
+                  : []),
+                ...(p.odd > 0
+                  ? [
+                      {
+                        label: "盤中零股",
+                        value: `${p.odd} 股`,
+                        copy: String(p.odd),
+                      },
+                    ]
+                  : []),
+                {
+                  label: "價格（限價）",
+                  value: fmt(pick.close, 2),
+                  copy: String(r2(pick.close)),
+                },
+              ]}
+            />
+            <p className="text-sm text-stone-500">
+              第一次下單不熟的話，照下面一步一步勾：
+            </p>
             <Todo
               items={[
                 "打開你的券商 App 並登入，點「下單」或「證券交易」。",
@@ -423,6 +462,32 @@ export default function GoWizard({
             <h2 className="text-xl font-black">
               ⑤ 先設好停損和停利，再去做別的事
             </h2>
+            <CheatSheet
+              title="條件單小抄（兩張各設一次）"
+              rows={[
+                { label: "股票代號", value: pick.code, copy: pick.code },
+                {
+                  label: "停損觸發價",
+                  value: `≤ ${fmt(p.stop, 2)}`,
+                  copy: String(r2(p.stop)),
+                },
+                {
+                  label: "停損賣出",
+                  value: `全部 ${fmt(p.shares)} 股`,
+                  copy: String(p.shares),
+                },
+                {
+                  label: "停利觸發價",
+                  value: `≥ ${fmt(p.target, 2)}`,
+                  copy: String(r2(p.target)),
+                },
+                {
+                  label: "停利賣出",
+                  value: `一半 ${fmt(Math.floor(p.shares / 2))} 股`,
+                  copy: String(Math.floor(p.shares / 2)),
+                },
+              ]}
+            />
             <Todo
               items={[
                 "在券商 App 找「條件單」「觸價單」或「智慧單」。",

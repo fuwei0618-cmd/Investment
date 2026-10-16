@@ -13,6 +13,7 @@ import { usdLevel, usdStats } from "@/lib/usd";
 import LiveBoard from "../go/daytrade/LiveBoard";
 import { GO_PLAYS, HREF } from "../go/GoPage";
 import Holdings from "./Holdings";
+import LineSetup from "./LineSetup";
 import TrackedNews from "./TrackedNews";
 
 export const metadata = { title: "實戰｜投資羅盤" };
@@ -393,6 +394,7 @@ export default function Desk() {
       </Section>
       <Section id="hold" title="⑦ 我的持股提醒">
         <Holdings />
+        <LineSetup />
       </Section>
     </div>
   );
