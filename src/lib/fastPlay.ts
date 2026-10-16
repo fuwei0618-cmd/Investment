@@ -15,7 +15,7 @@ export const STEPS: { key: keyof Omit<FastPlay, "title">; name: string }[] = [
   { key: "when", name: "① 什麼時候出手" },
   { key: "size", name: "② 放多少錢" },
   { key: "entry", name: "③ 怎麼買" },
-  { key: "stop", name: "④ 停損：先想好怎麼認輸" },
+  { key: "stop", name: "④ 停損：怎麼認輸" },
   { key: "exit", name: "⑤ 怎麼下車" },
   { key: "mistake", name: "⑥ 最常犯的錯" },
 ];

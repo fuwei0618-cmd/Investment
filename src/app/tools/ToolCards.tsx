@@ -72,7 +72,7 @@ function FastCard({ id }: { id: string }) {
       <p className="mb-2 font-black">
         📋 衝一把／短線操作卡：{f.title}
       </p>
-      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <ol className="grid gap-2 sm:grid-cols-3 lg:grid-cols-6 lg:text-[13px] lg:leading-snug">
         {STEPS.map((s) => (
           <li key={s.key} className={s.key === "stop" ? "rounded-xl bg-red-50 p-2.5 dark:bg-red-950/50" : chip}>
             <b className="block text-xs">{s.name}</b>
@@ -153,7 +153,12 @@ function Card({ t, view, close }: { t: Tool; view: View; close: () => void }) {
                 );
               })}
           </ol>
-          {fast && <FastCard id={t.id} />}
+        </div>
+      )}
+      {/* 操作卡橫跨整張卡，六步排一行 */}
+      {view !== "info" && fast && (
+        <div className="md:col-span-2">
+          <FastCard id={t.id} />
         </div>
       )}
     </li>
