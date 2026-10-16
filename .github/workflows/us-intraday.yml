@@ -1,0 +1,15 @@
+# 美股盤中每 15 分鐘叫網站檢查美股持股（台灣晚上到清晨）。
+# 夏令冬令開盤時間差一小時，所以排寬一點，網站自己會略過不是盤中的那幾次。
+# 跟盤中警報共用 SITE_URL 和 CRON_SECRET。
+name: 美股盤中警報
+on:
+  schedule:
+    - cron: "*/15 13-20 * * 1-5" # 紐約 9:30–16:00（台灣 21:30–04:00，冬令 22:30–05:00）
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [ -z "${{ secrets.SITE_URL }}" ]; then echo "還沒設 SITE_URL"; exit 0; fi
+          curl -sS -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "${{ secrets.SITE_URL }}/api/cron/usintraday"
