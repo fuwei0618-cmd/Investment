@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { plan } from "@/lib/pick";
+import { INVERSE, plan } from "@/lib/pick";
 import type { Pick } from "@/lib/pickData";
 import type { RiskResult } from "@/lib/risk";
 import { fmt, usePersistentState } from "@/lib/storage";
@@ -65,18 +65,40 @@ export default function GoWizard({
   date,
   market,
   picks,
+  inverse,
 }: {
   date: string;
   market: { close: number; ma: number; above: boolean } | null;
   picks: Pick[];
+  /** 反向 ETF 收盤價 */
+  inverse: number | null;
 }) {
   const [step, setStep] = useState(0);
   const [capital, setCapital] = usePersistentState<number>("go.capital.v1", 0);
   const [risk] = usePersistentState<RiskResult | null>("risk.result.v1", null);
   const [trades, setTrades] = usePersistentState<Trade[]>("go.trades.v1", []);
   const [code, setCode] = useState<string | null>(null);
-  const pick = picks.find((p) => p.code === code) ?? null;
-  const p = pick ? plan(capital, pick.close, pick.high20) : null;
+  // 大盤在月線下可以改走放空：買反向 ETF
+  const [short, setShort] = useState(false);
+  const inv: Pick | null =
+    inverse == null
+      ? null
+      : {
+          code: INVERSE.code,
+          name: INVERSE.name,
+          street: "反向 ETF",
+          foreign: 0,
+          trust: 0,
+          close: inverse,
+          high20: 0,
+          volRatio: 0,
+          streak: 0,
+          breakout: false,
+          pass: true,
+          score: 3,
+        };
+  const pick = short ? inv : (picks.find((p) => p.code === code) ?? null);
+  const p = pick ? plan(capital, pick.close, pick.high20, short) : null;
   const passed = picks.filter((x) => x.pass);
   const canNext =
     step === 0
@@ -118,6 +140,37 @@ export default function GoWizard({
                   ? `大盤 ${fmt(market.close)} 在月線 ${fmt(market.ma)} 之上，操作卡說可以出手。`
                   : `大盤 ${fmt(market.close)} 在月線 ${fmt(market.ma)} 之下。操作卡說這時候不衝，建議今天停在這裡；要繼續就當練習。`}
             </p>
+            {market && !market.above && (
+              <div className="space-y-2 rounded-xl border-2 border-dashed border-green-300 p-3 dark:border-green-900">
+                <p className="text-sm">
+                  大盤往下走的時候，也可以<b>放空</b>：買反向 ETF（
+                  {INVERSE.code} {INVERSE.name}
+                  ），大盤跌它就漲。一般帳戶就能買，最多賠光本金，但只適合放幾天到兩週。
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setShort(true)}
+                    aria-pressed={short}
+                    className={`rounded-full px-4 py-2 text-sm font-bold ${short ? "bg-green-700 text-white" : "bg-green-50 text-green-900 dark:bg-green-950 dark:text-green-100"}`}
+                  >
+                    {short ? "✓ 這次走放空" : "改走放空：反向 ETF"}
+                  </button>
+                  {short && (
+                    <button
+                      onClick={() => setShort(false)}
+                      className="rounded-full bg-[#f3ead8] px-4 py-2 text-sm font-bold dark:bg-[#2f281f]"
+                    >
+                      回到買股票
+                    </button>
+                  )}
+                </div>
+                {short && inverse == null && (
+                  <p className="text-xs text-red-700">
+                    反向 ETF 的價格暫時抓不到，等一下再來。
+                  </p>
+                )}
+              </div>
+            )}
             <p className="text-sm">
               {risk ? (
                 <>
@@ -161,7 +214,34 @@ export default function GoWizard({
           </>
         )}
 
-        {step === 1 && (
+        {step === 1 && short && inv && (
+          <>
+            <h2 className="text-xl font-black">② 放空用哪一檔</h2>
+            <div className="rounded-xl border-2 border-green-400 bg-green-50 p-3 dark:bg-green-950/40">
+              <b className="text-lg">
+                {inv.name}{" "}
+                <span className="text-sm text-stone-500">{inv.code}</span>
+              </b>
+              <span className="block text-sm">
+                收盤 {fmt(inv.close, 2)}・台灣 50 指數跌 1%，它大約漲 1%
+              </span>
+            </div>
+            <ul className="list-disc space-y-1 pl-5 text-sm">
+              <li>
+                它每天重新對準「當天跌多少」，放久了即使大盤沒怎麼動也會慢慢變少，所以最多放兩週。
+              </li>
+              <li>
+                它是用一般帳戶「現股買進」，不用開信用帳戶、不用融券，最多賠光放進去的錢。
+              </li>
+              <li>
+                大盤收盤站回月線 {market ? fmt(market.ma) : ""}
+                ，代表往下的理由不見了，就要賣。
+              </li>
+            </ul>
+          </>
+        )}
+
+        {step === 1 && !short && (
           <>
             <h2 className="text-xl font-black">② 挑一檔（{date} 的資料）</h2>
             <p className="text-sm text-stone-600 dark:text-stone-400">
@@ -268,14 +348,17 @@ export default function GoWizard({
                     {fmt(p.target, 2)}
                   </dd>
                   <dd className="text-xs text-stone-500">
-                    賺 15% 先賣一半，剩下跌破 10 日均線再賣完
+                    {short
+                      ? "賺 8% 先賣一半，剩下大盤站回月線或放滿兩週就賣完"
+                      : "賺 15% 先賣一半，剩下跌破 10 日均線再賣完"}
                   </dd>
                 </div>
               </dl>
             )}
             <p className="text-xs text-stone-500">
-              價格用今天收盤價估。停損取「跌破突破點 {fmt(pick.high20, 2)}
-              」和「買價少 7%」兩個裡面比較高、會先碰到的那個。
+              {short
+                ? `價格用今天收盤價估。放空的規則是一般常識整理：跌 5% 停損、漲 8% 先賣一半，大盤站回月線或放滿兩週就全部賣。`
+                : `價格用今天收盤價估。停損取「跌破突破點 ${fmt(pick.high20, 2)}」和「買價少 7%」兩個裡面比較高、會先碰到的那個。`}
             </p>
           </>
         )}
@@ -309,9 +392,10 @@ export default function GoWizard({
                     ]
                   : []),
                 <>
-                  價格選<b>「限價」</b>，填 <b>{fmt(pick.close, 2)}</b>{" "}
-                  左右。隔天買的話，開盤後股價沒跌破 {fmt(pick.high20, 2)}{" "}
-                  才買。
+                  價格選<b>「限價」</b>，填 <b>{fmt(pick.close, 2)}</b> 左右。
+                  {short
+                    ? "大盤當天如果已經大漲站回月線，就不要買。"
+                    : `隔天買的話，開盤後股價沒跌破 ${fmt(pick.high20, 2)} 才買。`}
                 </>,
                 "時間：收盤前（13:00 到 13:25）下單，或隔天拉回時。",
                 "按確認前再看一次：代號、張數或股數、價格、是「買進」。",
@@ -339,6 +423,14 @@ export default function GoWizard({
                   <b>賣出一半</b>（{fmt(Math.floor(p.shares / 2))} 股）。
                 </>,
                 "券商沒有條件單的話：手機設每天 13:20 的鬧鐘，看一次收盤價對照上面兩個價。",
+                ...(short
+                  ? [
+                      <>
+                        另外兩個一定要賣的時候：<b>大盤收盤站回月線</b>，或
+                        <b>放滿兩週</b>（手機設一個兩週後的提醒）。
+                      </>,
+                    ]
+                  : []),
                 <>
                   跟自己約好：跌破 {fmt(p.stop, 2)} 隔天開盤就賣，
                   <b>不等、不加碼、不改說要長抱</b>。

@@ -1,6 +1,7 @@
 import { cacheLife } from "next/cache";
 import { getStreets } from "./chipsData";
 import {
+  INVERSE,
   aboveMonthLine,
   candidates,
   check,
@@ -49,7 +50,12 @@ export interface Pick extends Check {
 
 // 今天的候選：大戶逛街地圖裡外資投信同買的前 8 檔，每檔抓 45 天股價和法人買賣細查
 export async function getPicks(): Promise<
-  | { date: string; market: ReturnType<typeof aboveMonthLine>; picks: Pick[] }
+  | {
+      date: string;
+      market: ReturnType<typeof aboveMonthLine>;
+      picks: Pick[];
+      inverse: number | null;
+    }
   | { error: string }
 > {
   "use cache";
@@ -57,8 +63,9 @@ export async function getPicks(): Promise<
     const map = await getStreets();
     if (!("streets" in map)) throw new Error(map.error);
     const list = candidates(map.streets);
-    const [taiex, ...rows] = await Promise.all([
+    const [taiex, inv, ...rows] = await Promise.all([
       fm("TaiwanStockPrice", "TAIEX", 45).catch(() => []),
+      fm("TaiwanStockPrice", INVERSE.code, 15).catch(() => []),
       ...list.map((c) =>
         (async () => {
           const [p, i] = await Promise.all([
@@ -75,7 +82,15 @@ export async function getPicks(): Promise<
         b.score - a.score || b.foreign + b.trust - (a.foreign + a.trust),
     );
     cacheLife("hours");
-    return { date: map.date, market: aboveMonthLine(toBars(taiex)), picks };
+    const invBars = toBars(inv).sort((a, b) => a.date.localeCompare(b.date));
+    // 反向 ETF 的收盤價，給大盤在月線下時的放空流程
+    const inverse = invBars.length ? invBars[invBars.length - 1].close : null;
+    return {
+      date: map.date,
+      market: aboveMonthLine(toBars(taiex)),
+      picks,
+      inverse,
+    };
   } catch (e) {
     cacheLife("seconds");
     return { error: e instanceof Error ? e.message : "失敗" };
