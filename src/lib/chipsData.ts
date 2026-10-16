@@ -39,7 +39,7 @@ export async function getStreets(): Promise<{ date: string; streets: Street[] } 
     const base = process.env.TWSE_BASE ?? "https://www.twse.com.tw";
     const open = process.env.TWSE_OPENAPI ?? "https://openapi.twse.com.tw";
     const get = async (url: string) => {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) }); // 證交所慢的時候不要拖垮整頁
       if (!res.ok) throw new Error(String(res.status));
       return res.json();
     };

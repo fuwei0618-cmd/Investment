@@ -32,7 +32,8 @@ function H({ id, children }: { id: string; children: React.ReactNode }) {
 // 每天收盤後的真資料：劇場、氣氛燈、逛街地圖、猜猜明天、今天的數字
 async function Live() {
   await connection(); // 每次開頁都拿最新的，不在建置時固定
-  const [data, map] = await Promise.all([getChips(), getStreets()]);
+  // 劇場只借用地圖的「最愛的街」，地圖慢就先不等它
+  const [data, map] = await Promise.all([getChips(), Promise.race([getStreets(), new Promise<null>((r) => setTimeout(() => r(null), 3000))])]);
   if (!data || data.days.length === 0)
     return <p className={`${chip} text-sm text-stone-500`}>今天的大戶資料暫時抓不到，等一下再來看。收盤後大約下午三點半會更新。</p>;
   const { days, margin } = data;
@@ -72,8 +73,16 @@ async function Live() {
       )}
 
       <section className="space-y-2">
-        <H id="map">🗺️ 大戶逛街地圖{map ? `・${md(map.date)}` : ""}</H>
-        {map ? <StreetMap streets={map.streets} /> : <p className={`${chip} text-sm text-stone-500`}>證交所的逛街資料暫時抓不到，等一下再來看。</p>}
+        <Suspense
+          fallback={
+            <>
+              <H id="map">🗺️ 大戶逛街地圖</H>
+              <p className={`${chip} text-sm text-stone-500`}>到證交所抓每條街的資料中…</p>
+            </>
+          }
+        >
+          <MapSection />
+        </Suspense>
       </section>
 
       <section className="space-y-2">
@@ -86,6 +95,16 @@ async function Live() {
         <Numbers days={days} margin={margin} />
       </section>
     </div>
+  );
+}
+
+async function MapSection() {
+  const map = await getStreets();
+  return (
+    <>
+      <H id="map">🗺️ 大戶逛街地圖{map ? `・${md(map.date)}` : ""}</H>
+      {map ? <StreetMap streets={map.streets} /> : <p className={`${chip} text-sm text-stone-500`}>證交所的逛街資料暫時抓不到，等一下再來看。</p>}
+    </>
   );
 }
 
