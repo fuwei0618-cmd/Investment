@@ -37,11 +37,11 @@ export async function getChips() {
 export async function getStreets(): Promise<{ date: string; streets: Street[] } | { error: string }> {
   "use cache";
   const base = process.env.TWSE_BASE ?? "https://www.twse.com.tw";
-  const get = async (step: string, url: string, init?: RequestInit) => {
+  const get = async (step: string, url: string, init?: RequestInit, text = false) => {
     try {
       const res = await fetch(url, { ...init, signal: AbortSignal.timeout(8000) }); // 慢的時候不要拖垮整頁
       if (!res.ok) throw new Error(String(res.status));
-      return await res.json();
+      return text ? await res.text() : await res.json();
     } catch (e) {
       throw new Error(`${step}（${e instanceof Error ? e.message : "失敗"}）`);
     }
@@ -52,7 +52,7 @@ export async function getStreets(): Promise<{ date: string; streets: Street[] } 
     const headers: HeadersInit = process.env.FINMIND_TOKEN ? { Authorization: `Bearer ${process.env.FINMIND_TOKEN}` } : {};
     const [t86, prices, info] = await Promise.all([
       get("法人日報", `${base}/rwd/zh/fund/T86?selectType=ALLBUT0999&response=json`),
-      get("收盤價", `${base}/rwd/zh/afterTrading/STOCK_DAY_ALL?response=json`),
+      get("收盤價", `${base}/rwd/zh/afterTrading/STOCK_DAY_ALL?response=json`, undefined, true),
       get("產業別", fm.toString(), { headers }),
     ]);
     if (t86.stat !== "OK") throw new Error(`法人日報（${t86.stat}）`);

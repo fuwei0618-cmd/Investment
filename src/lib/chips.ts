@@ -186,13 +186,25 @@ export interface Street {
 const num = (s: unknown) => Number(String(s ?? "").replace(/,/g, "")) || 0;
 const col = (fields: string[] | undefined, word: string) => (fields ?? []).findIndex((f) => f.includes(word));
 
-/** 證交所每日收盤行情（STOCK_DAY_ALL）→ 代號對收盤價 */
-export function parsePrices(t: { fields?: string[]; data?: unknown[][] }): Map<string, number> {
-  const iC = col(t.fields, "證券代號");
-  const iP = col(t.fields, "收盤價");
+// 一行 CSV 拆欄：值可能用雙引號包起來、裡面有逗號（例如 "1,000.00"）
+const csvRow = (line: string) => [...line.matchAll(/"([^"]*)"|([^,]+)|(?<=,|^)(?=,|$)/g)].map((m) => m[1] ?? m[2] ?? "");
+
+/** 證交所每日收盤行情（STOCK_DAY_ALL）→ 代號對收盤價。正式站拿到的是 CSV 文字，也接受 JSON */
+export function parsePrices(t: string | { fields?: string[]; data?: unknown[][] }): Map<string, number> {
+  let fields: string[] | undefined;
+  let data: unknown[][] | undefined;
+  if (typeof t === "string") {
+    const text = t.replace(/^\uFEFF/, "").trim();
+    if (text.startsWith("{")) return parsePrices(JSON.parse(text));
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    fields = csvRow(lines[0] ?? "").map((f) => f.trim());
+    data = lines.slice(1).map(csvRow);
+  } else ({ fields, data } = t);
+  const iC = col(fields, "證券代號");
+  const iP = col(fields, "收盤價");
   const m = new Map<string, number>();
   if (iC < 0 || iP < 0) return m;
-  for (const r of t.data ?? []) {
+  for (const r of data ?? []) {
     const p = num(r[iP]);
     if (p > 0) m.set(String(r[iC]).trim(), p);
   }
