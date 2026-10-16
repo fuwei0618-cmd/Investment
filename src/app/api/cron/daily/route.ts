@@ -4,6 +4,7 @@ import { taipeiToday, verdict, type Holding } from "@/lib/desk";
 import { getTaiex } from "@/lib/deskData";
 import { getChips } from "@/lib/chipsData";
 import { mood } from "@/lib/chips";
+import { cronOk } from "@/lib/cronAuth";
 import { pushLine } from "@/lib/line";
 import { composeMessage } from "@/lib/notify";
 import { HOLDINGS_KEY, load, passOk, storeReady } from "@/lib/store";
@@ -36,8 +37,7 @@ async function run() {
 }
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`)
+  if (!cronOk(request))
     return Response.json({ error: "只給排程用" }, { status: 401 });
   try {
     return Response.json({ sent: await run() });

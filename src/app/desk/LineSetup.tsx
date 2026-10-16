@@ -14,6 +14,7 @@ const STEPS = [
   "Vercel → 專案 → Storage → 建立 Upstash（Redis），連到這個專案。這是放持股清單的小倉庫，免費。",
   "Vercel → 專案 → Settings → Environment Variables 加四個：LINE_CHANNEL_ACCESS_TOKEN、LINE_USER_ID、PUSH_PASSCODE（自己訂的通關密語）、CRON_SECRET（隨便打一長串英數字）。",
   "Deployments → ⋯ → Create Deployment → main 重新上線，回到這裡輸入通關密語，按「同步並傳一則測試」。",
+  "（要盤中警報才做）GitHub 的 Investment 專案 → Settings → Secrets and variables → Actions，加 SITE_URL（網站網址，例如 https://investment-beige-iota.vercel.app）和 CRON_SECRET（跟 Vercel 那個一樣）。",
 ];
 
 // LINE 盤後提醒：設定狀態、把持股同步到雲端、傳一則測試
@@ -68,10 +69,18 @@ export default function LineSetup() {
   return (
     <div className="space-y-2 rounded-xl bg-[#f3ead8] p-3 text-sm dark:bg-[#2f281f]">
       <p className="font-bold">LINE 盤後提醒</p>
-      <p>
-        每個交易日 14:40 左右，網站自己檢查上面的持股，碰到停損或停利就傳 LINE
-        給你，順便告訴你明天能不能出手。
-      </p>
+      <ul className="list-disc space-y-0.5 pl-5">
+        <li>
+          <b>盤前 8:30：</b>今天能不能出手、近兩天大事、策略卡全過的股票。
+        </li>
+        <li>
+          <b>盤中每 10 分鐘看一次：</b>持股碰到停損停利或大漲大跌 5%
+          才傳，同一件事一天只傳一次。
+        </li>
+        <li>
+          <b>盤後 14:40：</b>每檔持股收在哪、要不要賣，明天能不能出手。
+        </li>
+      </ul>
       {st && (
         <p className="text-xs">
           {dot(st.line)} LINE 金鑰　{dot(st.store)} 雲端倉庫　{dot(st.pass)}{" "}
@@ -99,7 +108,7 @@ export default function LineSetup() {
       ) : (
         <details open={!!st}>
           <summary className="cursor-pointer font-bold">
-            還沒設定好，照這 7 步做一次（約 20 分鐘）
+            還沒設定好，照這 8 步做一次（約 25 分鐘）
           </summary>
           <ol className="mt-1 list-decimal space-y-1 pl-5">
             {STEPS.map((s) => (
