@@ -1,4 +1,5 @@
 // 實戰分頁：把景氣、大盤、大戶三盞燈合成「今天能不能出手」，排出近期大事，提醒持股該不該賣。
+import type { PhaseKey } from "./industry";
 import type { Light } from "./today";
 
 export interface Verdict {
@@ -233,3 +234,31 @@ export function closeAndMa(close: number, ma: number): [string, string] {
   const d = Math.round(close) === Math.round(ma) ? 2 : 0;
   return [close.toFixed(d), ma.toFixed(d)];
 }
+
+/* ── 景氣四季各自最適合的工具（景氣時鐘，又叫美林時鐘） ── */
+
+export const SEASON_TOOLS: Record<
+  PhaseKey,
+  { name: string; tools: string; why: string }
+> = {
+  recovery: {
+    name: "復甦",
+    tools: "股票、整條街（指數 ETF）",
+    why: "公司賺錢開始變多、利率還低，是股票最好賺的時候。",
+  },
+  expansion: {
+    name: "擴張",
+    tools: "股票挑強的、黃金、原物料",
+    why: "東西越賣越貴，抓實物的工具跟著漲；股票還能抱，但只挑還在成長的。",
+  },
+  slowdown: {
+    name: "趨緩",
+    tools: "定存、現金，股票減一點",
+    why: "央行不敢降息，股票和債券都不好過，先把現金留起來。",
+  },
+  recession: {
+    name: "衰退",
+    tools: "借錢給人（債券）、現金",
+    why: "央行開始降息，債券會漲；股票先少買，等轉向復甦再進場。",
+  },
+};

@@ -23,12 +23,48 @@ import {
   Macro,
   MarketSwitch,
   Section,
+  TopThree,
+  Why,
   more,
   sign,
   wait,
 } from "../parts";
 
 export const metadata = { title: "美股實戰｜投資羅盤" };
+
+// 最上面：今晚買不買、買哪一檔、手上哪檔要賣，加一行這一季適合的工具
+async function Top() {
+  await connection();
+  const [bars, t, picks] = await Promise.all([
+    getUsBars(["^GSPC", "^VIX"]),
+    getTodayAnswers(),
+    getUsPicks(),
+  ]);
+  const spx = aboveMa20(bars["^GSPC"]);
+  const v = usVerdict({
+    above: spx?.above ?? null,
+    vix: bars["^VIX"].at(-1)?.close ?? null,
+    season: t.season?.light ?? null,
+  });
+  const x = "picks" in picks ? picks.picks.find((p) => p.pass) : undefined;
+  return (
+    <TopThree
+      v={v}
+      pick={
+        x
+          ? {
+              name: x.name,
+              code: x.code,
+              href: "/go/us-stock",
+              note: `三個條件全過（強勢股突破），收 ${Math.round(x.close * 100) / 100} 美元。`,
+            }
+          : null
+      }
+      phase={t.season?.phase ?? null}
+      market="us"
+    />
+  );
+}
 
 const pct = (n: number | null, d = 1) =>
   n == null ? "—" : `${sign(n * 100, d)}%`;
@@ -216,8 +252,13 @@ export default function DeskUs() {
         <MarketSwitch now="us" />
         <p className="text-sm text-stone-600 dark:text-stone-400">
           美股在台灣晚上開盤（21:30，11 月到 3 月是 22:30）。晚上 21:00
-          看這一頁決定要不要買，早上起床再看持股提醒。
+          看最上面三個問題決定要不要買；想知道為什麼，再打開下面的「為什麼？」。
         </p>
+      </header>
+      <Suspense fallback={wait}>
+        <Top />
+      </Suspense>
+      <Why>
         <nav className="flex flex-wrap gap-1.5 text-xs">
           {[
             ["go", "能不能出手"],
@@ -237,39 +278,39 @@ export default function DeskUs() {
             </a>
           ))}
         </nav>
-      </header>
-      <Section id="go" title="① 今天能不能出手">
-        <Suspense fallback={wait}>
-          <Go />
-        </Suspense>
-      </Section>
-      <Section id="macro" title="② 總體經濟">
-        <Suspense fallback={wait}>
-          <Macro />
-        </Suspense>
-      </Section>
-      <Section id="market" title="③ 市場情況">
-        <Suspense fallback={wait}>
-          <Market />
-        </Suspense>
-      </Section>
-      <Section id="news" title="④ 今天必知大事">
-        <Suspense fallback={wait}>
-          <Calendar market="us" />
-        </Suspense>
-      </Section>
-      <Section id="watch" title="⑤ 我的追蹤清單">
-        <LiveBoard suggest={[]} market="us" />
-      </Section>
-      <Section id="picks" title="⑥ 今天的策略卡名單">
-        <Suspense fallback={wait}>
-          <Picks />
-        </Suspense>
-      </Section>
-      <Section id="hold" title="⑦ 我的持股提醒">
-        <Holdings market="us" />
-        <LineSetup />
-      </Section>
+        <Section id="go" title="① 今天能不能出手">
+          <Suspense fallback={wait}>
+            <Go />
+          </Suspense>
+        </Section>
+        <Section id="macro" title="② 總體經濟">
+          <Suspense fallback={wait}>
+            <Macro />
+          </Suspense>
+        </Section>
+        <Section id="market" title="③ 市場情況">
+          <Suspense fallback={wait}>
+            <Market />
+          </Suspense>
+        </Section>
+        <Section id="news" title="④ 今天必知大事">
+          <Suspense fallback={wait}>
+            <Calendar market="us" />
+          </Suspense>
+        </Section>
+        <Section id="watch" title="⑤ 我的追蹤清單">
+          <LiveBoard suggest={[]} market="us" />
+        </Section>
+        <Section id="picks" title="⑥ 今天的策略卡名單">
+          <Suspense fallback={wait}>
+            <Picks />
+          </Suspense>
+        </Section>
+        <Section id="hold" title="⑦ 我的持股提醒">
+          <Holdings market="us" />
+          <LineSetup />
+        </Section>
+      </Why>
     </div>
   );
 }
