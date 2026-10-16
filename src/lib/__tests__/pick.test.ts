@@ -32,3 +32,11 @@ describe("帶我做：台股短線", () => {
     expect(plan(3000000, 100, 80)).toMatchObject({ lots: 3, odd: 0, stop: 93 });
   });
 });
+
+describe("plan 放空", () => {
+  it("反向 ETF 跌 5% 停損、漲 8% 停利", () => {
+    const r = plan(500_000, 20, 0, true);
+    expect(r.stop).toBe(19);
+    expect(r.target).toBe(21.6);
+  });
+});

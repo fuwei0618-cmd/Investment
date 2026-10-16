@@ -15,7 +15,14 @@ async function Live() {
         <span className="block text-xs text-stone-500">卡在：{data.error}</span>
       </p>
     );
-  return <GoWizard date={data.date} market={data.market} picks={data.picks} />;
+  return (
+    <GoWizard
+      date={data.date}
+      market={data.market}
+      picks={data.picks}
+      inverse={data.inverse}
+    />
+  );
 }
 
 export default function GoTwStock() {

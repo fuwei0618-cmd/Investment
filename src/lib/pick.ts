@@ -86,15 +86,34 @@ export function aboveMonthLine(bars: Bar[]) {
   return { close, ma, above: close > ma };
 }
 
-/** 照操作卡：每筆最多總資金一成；停損＝跌破突破點或少 7%（取先碰到的較高價）；賺 15% 先賣一半 */
-export function plan(capital: number, price: number, high20: number) {
+/** 反向 ETF 放空：大盤跌它漲。一般常識整理的規則：跌 5% 停損、漲 8% 先賣一半、最多放兩週 */
+export const INVERSE = {
+  code: "00632R",
+  name: "元大台灣50反1",
+  stopPct: 0.05,
+  targetPct: 0.08,
+};
+
+/** 照操作卡：每筆最多總資金一成；停損＝跌破突破點或少 7%（取先碰到的較高價）；賺 15% 先賣一半。
+ *  反向 ETF 傳 short，停損停利改用 INVERSE 的比例 */
+export function plan(
+  capital: number,
+  price: number,
+  high20: number,
+  short = false,
+) {
   const budget = Math.floor(capital * 0.1);
   const shares = Math.floor(budget / price);
   const lots = Math.floor(shares / 1000);
   const odd = shares % 1000;
   const fee = (n: number) => Math.max(20, Math.round(n * price * 0.001425));
-  const stop = Math.round(Math.max(high20, price * 0.93) * 100) / 100;
-  const target = Math.round(price * 1.15 * 100) / 100;
+  const stop =
+    Math.round(
+      (short ? price * (1 - INVERSE.stopPct) : Math.max(high20, price * 0.93)) *
+        100,
+    ) / 100;
+  const target =
+    Math.round(price * (short ? 1 + INVERSE.targetPct : 1.15) * 100) / 100;
   return {
     budget,
     shares,
