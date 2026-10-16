@@ -70,6 +70,8 @@ it("一成買不到一整股就改買碎股", () => {
   expect(p.shares).toBe(0.88);
   expect(p.half).toBe(0.44);
   expect(p.cost).toBeLessThanOrEqual(1000);
+  // 碎股最少 100 美元
+  expect(usPlan(900, 1136.36, 1056, 0.15).shares).toBe(0);
 });
 
 it("美股盤中：夏令台灣 22:00 是盤中、白天不是", () => {

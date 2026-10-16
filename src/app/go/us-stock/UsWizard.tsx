@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Holding } from "@/lib/desk";
-import { usPlan } from "@/lib/us";
+import { ODD_MIN, usPlan } from "@/lib/us";
 import type { UsPick } from "@/lib/usData";
 import { fmt, usePersistentState } from "@/lib/storage";
 import CheatSheet from "../CheatSheet";
@@ -178,8 +178,9 @@ export default function UsWizard({
             </h2>
             {p.shares === 0 ? (
               <p className="text-sm">
-                這次最多用 {fmt(p.budget)} 美元，連碎股都買不到（每股約{" "}
-                {fmt(pick.close, 2)} 美元）。換一檔，或把總資金調高。
+                這次最多用 {fmt(p.budget)} 美元，買不到一整股（每股約{" "}
+                {fmt(pick.close, 2)} 美元），碎股又最少要買 {ODD_MIN}{" "}
+                美元。換一檔，或把總資金調高。
               </p>
             ) : (
               <dl className="grid gap-2 sm:grid-cols-2">
@@ -193,7 +194,7 @@ export default function UsWizard({
                   <dd className="text-xs text-stone-500">
                     約 {fmt(p.cost, 2)} 美元，手續費另計
                     {p.odd &&
-                      `。一成 ${fmt(p.budget)} 美元買不到一整股，改買碎股`}
+                      `。一成 ${fmt(p.budget)} 美元買不到一整股，改用碎股買 ${fmt(p.budget)} 美元`}
                   </dd>
                 </div>
                 <div className="rounded-xl bg-[#f3ead8] p-3 dark:bg-[#2f281f]">
@@ -220,8 +221,9 @@ export default function UsWizard({
               </dl>
             )}
             <p className="text-xs text-stone-500">
-              停損{pick.stopText}{" "}
-              複委託通常有最低手續費，金額太小很划不來，下單前先看你的費率。
+              停損{pick.stopText} 國泰複委託碎股的手續費是
+              0.08%、沒有最低收費（ETF 一筆 3 美元），下單前還是看一下 App
+              顯示的費率。
             </p>
           </>
         )}
@@ -245,13 +247,19 @@ export default function UsWizard({
                   value: p.odd ? "碎股（上面分頁切到碎股）" : "整股",
                 },
                 { label: "買或賣", value: "買進" },
+                p.odd
+                  ? {
+                      label: "買進金額",
+                      value: `${fmt(p.budget)} 美元（約 ${fmt(p.shares, 2)} 股）`,
+                      copy: String(p.budget),
+                    }
+                  : {
+                      label: "股數",
+                      value: `${fmt(p.shares)} 股`,
+                      copy: String(p.shares),
+                    },
                 {
-                  label: "股數",
-                  value: `${fmt(p.shares, p.odd ? 2 : 0)} 股`,
-                  copy: String(p.shares),
-                },
-                {
-                  label: "價格（限價）",
+                  label: "價格（限價＝最多付多少）",
                   value: fmt(pick.close, 2),
                   copy: String(r2(pick.close)),
                 },
@@ -267,8 +275,7 @@ export default function UsWizard({
                 22:30），可以白天先掛「預約單」。
               </li>
               <li>
-                限價＝你「最多」願意付多少。App
-                會自己帶一個價格進去，改成上面這個數字就好；現價比較低時會用比較低的價格成交，不會多付。
+                上面的限價是網站打開那一刻的價格。限價＝你「最多」願意付多少，現價比較低時會用比較低的價格成交，不會多付；開盤後漲到比限價高就買不到，可以重新打開這頁拿新價格。
               </li>
               <li>{pick.entryNote}</li>
               <li>
