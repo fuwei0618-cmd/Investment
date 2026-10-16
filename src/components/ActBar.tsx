@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ACTS, actOf, isHere, type ActPage } from "@/lib/acts";
+import { ACTS, SCENES, actOf, isHere, type ActPage } from "@/lib/acts";
+import { Face } from "./Stage";
 
 // 看市場一頁跨三幕，要跟著 #level-N 換站牌
 function useLevel() {
@@ -45,6 +46,10 @@ export function ActSign() {
   const level = useLevel();
   const act = actOf(pathname, level);
   if (!act) return null;
+  // 這一幕主持角色的第一句台詞
+  const sc = SCENES[act.n];
+  const [who, say] = sc.lines.find(([w]) => sc.cast[w].face !== "麥") ?? sc.lines[0];
+  const host = sc.cast[who];
   return (
     <nav aria-label="麵包鎮六幕" className={`${paper} mb-5 space-y-2.5 p-3`}>
       <ol className="grid grid-cols-6 gap-1">
@@ -64,13 +69,17 @@ export function ActSign() {
           );
         })}
       </ol>
-      <div className="px-1">
-        <p className="text-lg font-black">
-          第{act.n}幕・{act.title}
-        </p>
-        <p className="text-xs text-stone-600 dark:text-stone-400">
-          投資第 {act.n} 步：{act.q}走完這一幕，你會帶走{act.take.split("：")[0]}。
-        </p>
+      <div className="flex items-start gap-2.5 px-1">
+        <Face c={host} />
+        <div className="min-w-0">
+          <p className="text-lg font-black leading-tight">
+            第{act.n}幕・{act.title}
+            <span className="ml-2 text-xs font-bold text-[#8a6a3f]">投資第 {act.n} 步：{act.q}</span>
+          </p>
+          <p className="mt-0.5 text-sm text-stone-700 dark:text-stone-300">
+            <b>{host.name}：</b>「{say}」
+          </p>
+        </div>
       </div>
       {act.pages.length > 1 && (
         <ul className="flex flex-wrap gap-1.5">

@@ -4,7 +4,7 @@ import LightDot from "@/components/Light";
 import { getTodayAnswers } from "@/lib/todayData";
 import { mood } from "@/lib/chips";
 import { getChips } from "@/lib/chipsData";
-import { ACTS } from "@/lib/acts";
+import Stage from "@/components/Stage";
 
 async function Today() {
   const [t, chips] = await Promise.all([getTodayAnswers(), getChips()]);
@@ -34,79 +34,33 @@ async function Today() {
   );
 }
 
-// 首頁就是戲單：六幕照順序，一幕一步
-function Programme() {
+// 後台：不在六幕裡、隨時可以進去的地方
+function Backstage() {
   return (
-    <section className="space-y-3 rounded-2xl bg-[#f4eee2] p-3 dark:bg-[#18150f]">
-      <div className="px-1">
-        <h2 className="text-xl font-black">麵包鎮小劇場：新鎮民小麥的一天</h2>
-        <p className="text-sm text-stone-600 dark:text-stone-400">投資分六步，一步一幕，從早上演到晚上。第一次照順序走；季節換了，再從第二幕走一次。</p>
-      </div>
-      <ol className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-        {ACTS.map((a) => (
-          <li key={a.n} className="flex flex-col gap-2 rounded-2xl bg-[#fffdf8] p-3 shadow-[0_1px_2px_rgba(60,40,10,.06),0_6px_16px_rgba(60,40,10,.08)] dark:bg-[#221d16]">
-            <div>
-              <p className="text-xs font-bold text-[#8a6a3f]">
-                第{a.n}幕・投資第 {a.n} 步
-              </p>
-              <h3 className="text-lg font-black leading-tight">{a.title}</h3>
-              <p className="text-sm font-bold">{a.q}</p>
-            </div>
-            <ul className="space-y-1">
-              {a.pages.map((p) => {
-                const inner = (
-                  <>
-                    <b className="block text-sm">{p.name} →</b>
-                    <span className="text-xs text-stone-600 dark:text-stone-400">{p.note}</span>
-                  </>
-                );
-                const cls = "block rounded-xl bg-[#f3ead8] px-2.5 py-1.5 hover:bg-[#ecdfc4] dark:bg-[#2f281f]";
-                return (
-                  <li key={p.href}>
-                    {p.href.endsWith(".html") ? (
-                      <a href={p.href} className={cls}>
-                        {inner}
-                      </a>
-                    ) : (
-                      <Link href={p.href} className={cls}>
-                        {inner}
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            <p className="mt-auto border-t-2 border-dashed border-[#d9c7a3] pt-1.5 text-xs">
-              <b>帶走：</b>
-              {a.take}
-            </p>
-          </li>
-        ))}
-      </ol>
-      <p className="px-1 text-xs text-stone-500">
-        後台隨時可以進去：
-        <Link href="/courses" className="text-blue-600">
-          課程對照
-        </Link>
-        、
-        <Link href="/market" className="text-blue-600">
-          問 AI（看市場最上面）
-        </Link>
-        、
-        <a href="/game/bakery.html" className="text-blue-600">
-          麵包鎮大富翁
-        </a>
-      </p>
-    </section>
+    <p className="rounded-2xl bg-[#f4eee2] px-4 py-3 text-sm dark:bg-[#18150f]">
+      <b>後台隨時可以進去：</b>
+      <Link href="/courses" className="text-blue-600">
+        圖書館（課程對照）
+      </Link>
+      、
+      <Link href="/market" className="text-blue-600">
+        問路處（問 AI，在看市場最上面）
+      </Link>
+      、
+      <a href="/game/bakery.html" className="text-blue-600">
+        遊樂場（麵包鎮大富翁）
+      </a>
+    </p>
   );
 }
 
 export default function Home() {
   return (
     <div className="space-y-6">
-      <Programme />
+      <Stage />
+      <Backstage />
       <section className="rounded-lg border-2 border-amber-400 bg-amber-50 p-4 dark:bg-amber-950">
-        <h1 className="text-lg font-semibold">今天的市場，一句話</h1>
+        <h2 className="text-lg font-semibold">今天的市場，一句話</h2>
         <Suspense fallback={<p className="py-3 text-sm text-zinc-500">讀取今天的數字…</p>}>
           <Today />
         </Suspense>
