@@ -14,19 +14,25 @@ const TONE = {
 };
 
 // 我的持股提醒：讀「帶我做」第六步記下來的單子，拿現價比停損停利
-export default function Holdings() {
-  const [trades, , loaded] = usePersistentState<Holding[]>("go.trades.v1", []);
+export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
+  const us = market === "us";
+  const [trades, , loaded] = usePersistentState<Holding[]>(
+    us ? "us.trades.v1" : "go.trades.v1",
+    [],
+  );
   const [quotes, setQuotes] = useState<Live[]>([]);
   const [err, setErr] = useState(false);
   const codes = trades.map((t) => t.code).join(",");
 
   useEffect(() => {
     if (!codes) return;
-    fetch(`/api/live?codes=${codes}`, { cache: "no-store" })
+    fetch(`${us ? "/api/uslive" : "/api/live"}?codes=${codes}`, {
+      cache: "no-store",
+    })
       .then((r) => r.json() as Promise<{ quotes?: Live[] }>)
       .then((j) => setQuotes(j.quotes ?? []))
       .catch(() => setErr(true));
-  }, [codes]);
+  }, [codes, us]);
 
   if (!loaded) return <p className="text-sm text-stone-500">讀取中⋯⋯</p>;
   if (!trades.length)
@@ -34,7 +40,7 @@ export default function Holdings() {
       <p className="text-sm">
         還沒有記下來的持股。照策略卡「帶我做」買完，第六步按「記下來」，這裡就會每天幫你盯停損停利。
         <Link
-          href="/go/tw-stock"
+          href={us ? "/go/us-stock" : "/go/tw-stock"}
           className="ml-1 text-blue-700 underline dark:text-blue-400"
         >
           去帶我做 →
@@ -68,7 +74,8 @@ export default function Holdings() {
                   }
                 >
                   現價 {fmt(now, 2)}，{a.pnl >= 0 ? "賺" : "賠"}{" "}
-                  {fmt(Math.abs(a.pnl))} 元（{(a.pct * 100).toFixed(1)}%）
+                  {fmt(Math.abs(a.pnl))} {us ? "美元" : "元"}（
+                  {(a.pct * 100).toFixed(1)}%）
                 </span>
               )}
             </div>

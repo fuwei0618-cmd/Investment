@@ -2,18 +2,47 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { isTradingTime, type Live } from "@/lib/dayTrade";
+import { isUsTradingTime } from "@/lib/us";
 import { fmt, usePersistentState } from "@/lib/storage";
+
+// 台股、美股的設定不一樣：存哪裡、預設追蹤誰、跟誰要報價、幾點開盤
+const MARKET = {
+  tw: {
+    key: "live.codes.v1",
+    defaults: ["2330", "0050"],
+    api: "/api/live",
+    open: isTradingTime,
+    hours: "週一到週五 9:00–13:30",
+    valid: /^[0-9A-Z]{4,6}$/,
+    placeholder: "輸入股票代號，例如 2317",
+    vol: "張",
+    up: "text-red-600",
+    down: "text-green-700",
+  },
+  us: {
+    key: "us.codes.v1",
+    defaults: ["NVDA", "AAPL", "MSFT", "TSM", "VOO"],
+    api: "/api/uslive",
+    open: isUsTradingTime,
+    hours: "台灣時間晚上 21:30 或 22:30 到隔天清晨",
+    valid: /^[A-Z][A-Z.-]{0,6}$/,
+    placeholder: "輸入美股代號，例如 GOOGL",
+    vol: "千股",
+    up: "text-red-600",
+    down: "text-green-700",
+  },
+};
 
 // 盤中即時看：自己的追蹤清單，開盤時間每 30 秒更新一次
 export default function LiveBoard({
   suggest,
+  market = "tw",
 }: {
   suggest: { code: string; name: string }[];
+  market?: "tw" | "us";
 }) {
-  const [codes, setCodes] = usePersistentState<string[]>("live.codes.v1", [
-    "2330",
-    "0050",
-  ]);
+  const M = MARKET[market];
+  const [codes, setCodes] = usePersistentState<string[]>(M.key, M.defaults);
   const [quotes, setQuotes] = useState<Live[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [at, setAt] = useState<string>("");
@@ -23,7 +52,7 @@ export default function LiveBoard({
   const load = useCallback(async () => {
     if (!codes.length) return setQuotes([]);
     try {
-      const res = await fetch(`/api/live?codes=${codes.join(",")}`, {
+      const res = await fetch(`${M.api}?codes=${codes.join(",")}`, {
         cache: "no-store",
       });
       const j = (await res.json()) as { quotes?: Live[]; error?: string };
@@ -34,15 +63,15 @@ export default function LiveBoard({
     } catch (e) {
       setErr(e instanceof Error ? e.message : "抓不到即時報價");
     }
-  }, [codes]);
+  }, [codes, M.api]);
 
   useEffect(() => {
     const first = setTimeout(() => {
-      setOpen(isTradingTime());
+      setOpen(M.open());
       load();
     }, 0);
     const id = setInterval(() => {
-      const o = isTradingTime();
+      const o = M.open();
       setOpen(o);
       if (o) load();
     }, 30_000);
@@ -50,11 +79,11 @@ export default function LiveBoard({
       clearTimeout(first);
       clearInterval(id);
     };
-  }, [load]);
+  }, [load, M]);
 
   const push = (c: string) => {
     const v = c.trim().toUpperCase();
-    if (/^[0-9A-Z]{4,6}$/.test(v) && !codes.includes(v))
+    if (M.valid.test(v) && !codes.includes(v))
       setCodes([...codes, v].slice(0, 20));
     setAdd("");
   };
@@ -64,7 +93,7 @@ export default function LiveBoard({
       <p className="text-sm">
         {open
           ? "現在是盤中，每 30 秒自動更新一次。"
-          : "現在不是盤中（週一到週五 9:00–13:30），顯示的是最後一筆價格。"}
+          : `現在不是盤中（${M.hours}），顯示的是最後一筆價格。`}
         {at && <span className="text-xs text-stone-500">　上次更新 {at}</span>}
         <button
           onClick={load}
@@ -75,8 +104,10 @@ export default function LiveBoard({
       </p>
       {err && (
         <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">
-          即時報價暫時抓不到：{err}
-          。如果一直這樣，代表證交所擋了網站的主機，要改用富果的行情 API。
+          即時報價暫時抓不到：{err}。
+          {market === "tw"
+            ? "如果一直這樣，代表證交所擋了網站的主機，要改用富果的行情 API。"
+            : "如果一直這樣，代表雅虎擋了網站的主機，要改用 FMP。"}
         </p>
       )}
       <ul className="grid gap-2 sm:grid-cols-2">
@@ -121,8 +152,8 @@ export default function LiveBoard({
                   )}
                   <span className="block text-xs text-stone-500">
                     昨收 {fmt(q.prev, 2)}・最高 {q.high ? fmt(q.high, 2) : "—"}
-                    ・最低 {q.low ? fmt(q.low, 2) : "—"}・成交 {fmt(q.vol)} 張・
-                    {q.time}
+                    ・最低 {q.low ? fmt(q.low, 2) : "—"}・成交 {fmt(q.vol)}{" "}
+                    {M.vol}・{q.time}
                   </span>
                 </>
               ) : (
@@ -139,7 +170,7 @@ export default function LiveBoard({
           value={add}
           onChange={(e) => setAdd(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && push(add)}
-          placeholder="輸入股票代號，例如 2317"
+          placeholder={M.placeholder}
           className="rounded-xl border-2 border-stone-200 bg-white px-3 py-1.5 dark:border-stone-700 dark:bg-stone-900"
         />
         <button

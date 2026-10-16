@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         mood: m?.light ?? null,
         season: t.season?.light ?? null,
       }),
-      events: upcoming(taipeiToday(), 1),
+      events: upcoming(taipeiToday(), 1, "tw"),
       picks: plays.map((p, i) => {
         const d = lists[i];
         return {
