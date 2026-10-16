@@ -2,8 +2,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Crumb from "@/components/Crumb";
-import { PLAYERS, streak } from "@/lib/chips";
-import { getChips } from "@/lib/chipsData";
+import LightDot from "@/components/Light";
+import { PLAYERS, hotStreets, mood, story, streak, type Day } from "@/lib/chips";
+import { getChips, getStreets } from "@/lib/chipsData";
+import Guess from "./Guess";
+import StreetMap from "./StreetMap";
 
 export const metadata = { title: "麵包鎮的大戶｜投資羅盤" };
 
@@ -15,12 +18,78 @@ const UP = "text-red-600 dark:text-red-400";
 const DOWN = "text-emerald-700 dark:text-emerald-400";
 const md = (d: string) => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
 
-async function Today() {
+const SCENE_BG = ["bg-sky-50 dark:bg-sky-950/40", "bg-amber-50 dark:bg-amber-950/40", "bg-violet-50 dark:bg-violet-950/40", "bg-rose-50 dark:bg-rose-950/40"];
+const MOOD_BG = { green: "bg-emerald-50 dark:bg-emerald-950/40", yellow: "bg-amber-50 dark:bg-amber-950/40", red: "bg-red-50 dark:bg-red-950/40" };
+
+function H({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className="scroll-mt-16 font-semibold">
+      {children}
+    </h2>
+  );
+}
+
+// 每天收盤後的真資料：劇場、氣氛燈、逛街地圖、猜猜明天、今天的數字
+async function Live() {
   await connection(); // 每次開頁都拿最新的，不在建置時固定
-  const data = await getChips();
+  const [data, map] = await Promise.all([getChips(), getStreets()]);
   if (!data || data.days.length === 0)
     return <p className={`${chip} text-sm text-stone-500`}>今天的大戶資料暫時抓不到，等一下再來看。收盤後大約下午三點半會更新。</p>;
   const { days, margin } = data;
+  const last = days.at(-1)!;
+  const scenes = story(days, margin, map ? hotStreets(map.streets) : undefined);
+  const m = mood(days, margin?.change ?? null);
+  return (
+    <div className="space-y-6">
+      <section className="space-y-2">
+        <H id="theater">🎭 今日大戶劇場・{md(last.date)}</H>
+        <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {scenes.map((sc, i) => (
+            <li key={i} className={`animate-rise relative rounded-2xl p-3 shadow-sm ${SCENE_BG[i]}`} style={{ animationDelay: `${i * 180}ms` }}>
+              <span className="absolute right-2 top-1.5 text-xs font-black text-stone-400">{i + 1}</span>
+              <span className="block text-4xl leading-none">{sc.icon}</span>
+              <b className="mt-1.5 block">{sc.title}</b>
+              <span className="text-sm">{sc.text}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {m && (
+        <section className="space-y-2">
+          <H id="mood">🚦 鎮上氣氛燈</H>
+          <div className={`flex items-start gap-3 rounded-2xl p-3 ${MOOD_BG[m.light]}`}>
+            <span className="mt-1.5">
+              <LightDot light={m.light} />
+            </span>
+            <p className="text-sm">
+              <b className="block text-lg font-black">{m.name}</b>
+              {m.line}
+              <span className="block text-xs text-stone-500">看外資和投信這五天加起來，再看鎮民有沒有追著借錢。首頁也看得到這顆燈。</span>
+            </p>
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-2">
+        <H id="map">🗺️ 大戶逛街地圖{map ? `・${md(map.date)}` : ""}</H>
+        {map ? <StreetMap streets={map.streets} /> : <p className={`${chip} text-sm text-stone-500`}>證交所的逛街資料暫時抓不到，等一下再來看。</p>}
+      </section>
+
+      <section className="space-y-2">
+        <H id="guess">🔮 猜猜明天</H>
+        <Guess days={days.map((d) => ({ date: d.date, foreign: d.net.foreign }))} />
+      </section>
+
+      <section className="space-y-2">
+        <H id="numbers">📋 今天的數字</H>
+        <Numbers days={days} margin={margin} />
+      </section>
+    </div>
+  );
+}
+
+function Numbers({ days, margin }: { days: Day[]; margin: { date: string; today: number; change: number } | null }) {
   const last = days.at(-1)!;
   const max = Math.max(...days.map((d) => Math.abs(d.net.foreign)), 1);
   return (
@@ -87,8 +156,27 @@ export default function ChipsPage() {
         </p>
       </header>
 
+      <nav className="flex flex-wrap gap-1.5 text-sm">
+        {[
+          ["theater", "🎭 劇場"],
+          ["mood", "🚦 氣氛燈"],
+          ["map", "🗺️ 逛街地圖"],
+          ["guess", "🔮 猜猜明天"],
+          ["numbers", "📋 數字"],
+          ["who", "👥 誰是大戶"],
+        ].map(([id, name]) => (
+          <a key={id} href={`#${id}`} className="rounded-full bg-[#f3ead8] px-3 py-1 font-semibold dark:bg-[#2f281f]">
+            {name}
+          </a>
+        ))}
+      </nav>
+
+      <Suspense fallback={<p className={`${chip} text-sm text-stone-500`}>抓今天的資料中…</p>}>
+        <Live />
+      </Suspense>
+
       <section className="space-y-2">
-        <h2 className="font-semibold">鎮上有三種大戶（三大法人），加上一群鎮民</h2>
+        <H id="who">👥 鎮上有三種大戶（三大法人），加上一群鎮民</H>
         <ul className="grid gap-2 md:grid-cols-2">
           {PLAYERS.map((p) => (
             <li key={p.id} className={`${paper} flex gap-3`}>
@@ -120,14 +208,7 @@ export default function ChipsPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-semibold">📋 今天大戶買了多少</h2>
-        <Suspense fallback={<p className={`${chip} text-sm text-stone-500`}>抓資料中…</p>}>
-          <Today />
-        </Suspense>
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-semibold">🔑 怎麼看才不會被騙</h2>
+        <H id="tips">🔑 怎麼看才不會被騙</H>
         <ol className="grid gap-2 text-sm md:grid-cols-3">
           <li className={chip}>
             <b className="block">看連續，不看一天</b>
@@ -145,7 +226,7 @@ export default function ChipsPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-semibold">🧭 跟這個 App 哪裡有關</h2>
+        <H id="links">🧭 跟這個 App 哪裡有關</H>
         <ul className="grid gap-2 text-sm sm:grid-cols-2">
           <li className={chip}>
             <Link href="/usd" className="font-bold text-blue-600">
