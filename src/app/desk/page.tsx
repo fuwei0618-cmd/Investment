@@ -12,6 +12,7 @@ import LiveBoard from "../go/daytrade/LiveBoard";
 import { GO_PLAYS, HREF } from "../go/GoPage";
 import Jump from "./Jump";
 import { BigDropLine, DipCard, OvernightBox } from "./Overnight";
+import TwDayBox from "./TwDay";
 import Holdings from "./Holdings";
 import Scorecard from "./Scorecard";
 import LineSetup from "./LineSetup";
@@ -286,6 +287,7 @@ export default function Desk() {
           {[
             ["go", "能不能出手"],
             ["overnight", "昨晚美股"],
+            ["twday", "台股發生什麼"],
             ["macro", "總體經濟"],
             ["market", "市場情況"],
             ["news", "必知大事"],
@@ -311,6 +313,9 @@ export default function Desk() {
         </Section>
         <Suspense fallback={wait}>
           <OvernightBox market="tw" />
+        </Suspense>
+        <Suspense fallback={wait}>
+          <TwDayBox />
         </Suspense>
         <div className="grid gap-4 lg:grid-cols-3">
           <Section id="macro" title="② 總體經濟">

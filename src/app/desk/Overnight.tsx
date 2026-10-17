@@ -4,6 +4,7 @@ import { getTaiex } from "@/lib/deskData";
 import {
   dipCheck,
   downStreak,
+  factsText,
   fromHigh,
   move,
   overnight,
@@ -13,6 +14,7 @@ import { aboveMa20, changeOver, US_SECTORS } from "@/lib/us";
 import { getUsBars } from "@/lib/usData";
 import HoldingsNow from "./HoldingsNow";
 import Jump from "./Jump";
+import NewsWhy from "./NewsWhy";
 import { box, more } from "./parts";
 
 // 昨晚美股發生什麼、大跌提醒、低接卡（台股、美股實戰頁共用）
@@ -31,20 +33,43 @@ const SYMS = [
 
 async function night() {
   const bars = await getUsBars(SYMS);
-  const r = overnight({
-    spx: move("標普 500", bars["^GSPC"]),
-    ndx: move("那斯達克", bars["^IXIC"]),
-    sox: move("費城半導體", bars["^SOX"]),
-    soxStreak: downStreak(bars["^SOX"]),
-    sectors: US_SECTORS.map(([s, name]) => ({
-      name,
-      d: changeOver(bars[s], 1),
-    })),
-    tnx: tenYear(bars["^TNX"]),
-    oil: move("原油", bars["CL=F"]),
-    gold: move("黃金", bars["GC=F"]),
+  const spx = move("標普 500", bars["^GSPC"]);
+  const ndx = move("那斯達克", bars["^IXIC"]);
+  const sox = move("費城半導體", bars["^SOX"]);
+  const oil = move("原油", bars["CL=F"]);
+  const gold = move("黃金", bars["GC=F"]);
+  const soxStreak = downStreak(bars["^SOX"]);
+  const sectors = US_SECTORS.map(([s, name]) => ({
+    name,
+    d: changeOver(bars[s], 1),
+  }));
+  const tnx = tenYear(bars["^TNX"]);
+  const r = overnight({ spx, ndx, sox, soxStreak, sectors, tnx, oil, gold });
+  const facts = factsText({
+    moves: [spx, ndx, sox, move("恐慌指數", bars["^VIX"]), oil, gold],
+    soxStreak,
+    sectors,
+    tnx,
   });
-  return { bars, r };
+  const d = (x: { d: number | null } | null) => x?.d ?? null;
+  const topics = [
+    {
+      words: ["費半", "半導體", "晶片", "輝達", "台積"],
+      name: "費城半導體",
+      d: d(sox),
+    },
+    { words: ["那斯達克", "那指", "科技股"], name: "那斯達克", d: d(ndx) },
+    { words: ["油"], name: "原油", d: d(oil) },
+    { words: ["黃金", "金價"], name: "黃金", d: d(gold) },
+    {
+      words: ["美債", "殖利率", "公債"],
+      name: "十年美債利率",
+      d: changeOver(bars["^TNX"], 1),
+    },
+    { words: ["恐慌"], name: "恐慌指數", d: changeOver(bars["^VIX"], 1) },
+    { words: ["美股", "標普", "道瓊", "華爾街"], name: "標普 500", d: d(spx) },
+  ];
+  return { bars, r, facts, topics };
 }
 
 const pct = (d: number | null | undefined) =>
@@ -85,7 +110,7 @@ export async function BigDropLine() {
 /** 昨晚發生什麼：數字、為什麼、我可以做什麼、我手上的 */
 export async function OvernightBox({ market }: { market: "tw" | "us" }) {
   await connection();
-  const [{ bars, r }, taiex] = await Promise.all([
+  const [{ bars, r, facts, topics }, taiex] = await Promise.all([
     night(),
     market === "tw" ? getTaiex() : Promise.resolve(null),
   ]);
@@ -173,8 +198,15 @@ export async function OvernightBox({ market }: { market: "tw" | "us" }) {
         </li>
       </ul>
 
+      <NewsWhy market="us" date={date} facts={facts} topics={topics} />
+
       <div className="space-y-1">
-        <h3 className="font-bold">為什麼{r.head.slice(2)}</h3>
+        <h3 className="font-bold">
+          數字看到的
+          <span className="ml-2 text-xs font-normal text-stone-500">
+            跌漲最多的是哪一類是事實，後面的解釋是推測
+          </span>
+        </h3>
         <ul className="list-disc space-y-0.5 pl-5 text-sm">
           {r.why.map((w) => (
             <li key={w}>{w}</li>
@@ -251,10 +283,6 @@ export async function OvernightBox({ market }: { market: "tw" | "us" }) {
           ))}
         </ol>
       </div>
-      <p className="text-xs text-stone-500">
-        「為什麼」是看數字整理出來的（哪一類跌最多、利率、油價），不是抄新聞。想看完整原因，可以去「問
-        AI」貼新聞。
-      </p>
     </section>
   );
 }
