@@ -1,0 +1,66 @@
+import { connection } from "next/server";
+import { getTaiex } from "@/lib/deskData";
+import Jump from "./Jump";
+import NewsWhy from "./NewsWhy";
+import { box } from "./parts";
+
+// 昨天台股發生什麼：加權指數收盤、漲跌、月線，加上新聞說的原因
+
+export default async function TwDayBox() {
+  await connection();
+  const t = await getTaiex();
+  const wrap = `${box} min-w-0 scroll-mt-20 border-t-4 border-emerald-600`;
+  if (!t)
+    return (
+      <section id="twday" className={wrap}>
+        <h2 className="text-xl font-black">台股發生什麼</h2>
+        <p className="text-sm text-stone-500">
+          台股數字暫時抓不到，等一下再來。
+        </p>
+      </section>
+    );
+  const d = t.change;
+  const move =
+    d == null
+      ? "漲跌抓不到"
+      : `${d < 0 ? "跌" : "漲"} ${Math.abs(d * 100).toFixed(1)}%`;
+  return (
+    <section id="twday" className={wrap}>
+      <h2 className="text-xl font-black">
+        台股發生什麼
+        <span className="ml-2 text-sm font-normal text-stone-500">
+          收盤日 {t.date}
+        </span>
+      </h2>
+      <ul className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+        <li className="rounded-xl bg-[#e9e9e4] p-2 tabular-nums dark:bg-[#2a2e34]">
+          <span className="block text-xs text-stone-500">加權指數</span>
+          <b>{Math.round(t.close)}</b>{" "}
+          <span
+            className={
+              d == null
+                ? "text-stone-500"
+                : d < 0
+                  ? "text-emerald-700 dark:text-emerald-400"
+                  : "text-red-600 dark:text-red-400"
+            }
+          >
+            {move}
+          </span>
+        </li>
+        <li className="rounded-xl bg-[#e9e9e4] p-2 tabular-nums dark:bg-[#2a2e34]">
+          <span className="block text-xs text-stone-500">月線</span>
+          <b>{Math.round(t.ma)}</b>{" "}
+          <span className="text-stone-500">
+            {t.above ? "大盤在上面" : "大盤在下面"}
+          </span>
+        </li>
+      </ul>
+      <NewsWhy market="tw" date={t.date} moves={`加權指數 ${move}`} />
+      <p className="text-sm">
+        要不要放空、手上的怎麼辦，看上面{" "}
+        <Jump to="overnight">我可以做什麼</Jump>。
+      </p>
+    </section>
+  );
+}

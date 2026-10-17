@@ -13,6 +13,7 @@ import { aboveMa20, changeOver, US_SECTORS } from "@/lib/us";
 import { getUsBars } from "@/lib/usData";
 import HoldingsNow from "./HoldingsNow";
 import Jump from "./Jump";
+import NewsWhy from "./NewsWhy";
 import { box, more } from "./parts";
 
 // 昨晚美股發生什麼、大跌提醒、低接卡（台股、美股實戰頁共用）
@@ -173,8 +174,15 @@ export async function OvernightBox({ market }: { market: "tw" | "us" }) {
         </li>
       </ul>
 
+      <NewsWhy market="us" date={date} moves={r.why[0].replace(/。$/, "")} />
+
       <div className="space-y-1">
-        <h3 className="font-bold">為什麼{r.head.slice(2)}</h3>
+        <h3 className="font-bold">
+          數字看到的
+          <span className="ml-2 text-xs font-normal text-stone-500">
+            跌漲最多的是哪一類是事實，後面的解釋是推測
+          </span>
+        </h3>
         <ul className="list-disc space-y-0.5 pl-5 text-sm">
           {r.why.map((w) => (
             <li key={w}>{w}</li>
@@ -251,10 +259,6 @@ export async function OvernightBox({ market }: { market: "tw" | "us" }) {
           ))}
         </ol>
       </div>
-      <p className="text-xs text-stone-500">
-        「為什麼」是看數字整理出來的（哪一類跌最多、利率、油價），不是抄新聞。想看完整原因，可以去「問
-        AI」貼新聞。
-      </p>
     </section>
   );
 }
