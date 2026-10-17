@@ -324,6 +324,82 @@ const STEPS: { what: string; where: React.ReactNode }[] = [
   },
 ];
 
+/** 八區各在回答什麼：區、問題、跟賺錢的關係、多久看一次、第幾步、最上面哪裡也看得到 */
+const AREAS: [string, string, string, string, string, string, string][] = [
+  [
+    "go",
+    "① 今天能不能出手",
+    "今天可以買股票嗎？",
+    "擋掉大盤往下時亂買",
+    "每天",
+    "第 1 步",
+    "第一張卡",
+  ],
+  [
+    "macro",
+    "② 總體經濟",
+    "景氣在哪一季？",
+    "決定用哪種工具、放多少錢",
+    "一個月",
+    "第 1 步",
+    "季節那一行",
+  ],
+  [
+    "market",
+    "③ 市場情況",
+    "哪些產業最強？",
+    "挑股票時偏向強的產業",
+    "一週",
+    "第 2 步",
+    "",
+  ],
+  [
+    "news",
+    "④ 今天必知大事",
+    "這幾天有沒有地雷？",
+    "避開大起大落的日子",
+    "每天掃一眼",
+    "第 1 步",
+    "",
+  ],
+  [
+    "picks",
+    "⑤ 策略卡名單",
+    "今天買哪一檔？",
+    "找到買點",
+    "每天",
+    "第 2 步",
+    "第二張卡",
+  ],
+  [
+    "watch",
+    "⑥ 追蹤清單",
+    "我想買的現在多少錢？",
+    "等買點",
+    "想看時",
+    "第 2 步",
+    "",
+  ],
+  [
+    "hold",
+    "⑦ 持股提醒",
+    "手上的要不要賣？",
+    "停住賠的、守住賺的",
+    "每天（LINE 會傳）",
+    "第 5、6 步",
+    "第三張卡",
+  ],
+  [
+    "score",
+    "⑧ 成績單",
+    "跟著做到底有沒有賺？",
+    "知道哪種玩法有效",
+    "賣掉一筆時",
+    "第 6 步",
+    "成績那一行",
+  ],
+];
+
 /** 這頁怎麼用：一筆交易的六步，加景氣四季各用什麼工具。平常收起來 */
 function DeskMap({
   phase,
@@ -356,6 +432,55 @@ function DeskMap({
               </li>
             ))}
           </ol>
+        </div>
+        <div className="space-y-2">
+          <h3 className="font-bold">每一區在回答什麼</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-left text-sm">
+              <thead className="text-xs text-stone-500">
+                <tr>
+                  {[
+                    "區",
+                    "回答的問題",
+                    "跟賺錢的關係",
+                    "多久看一次",
+                    "第幾步",
+                    "最上面也看得到",
+                  ].map((h) => (
+                    <th key={h} className="px-2 py-1.5 font-normal">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {AREAS.map(([id, name, q, why, often, step, top]) => (
+                  <tr
+                    key={id}
+                    className="border-t border-stone-200 align-top dark:border-stone-700"
+                  >
+                    <td className="whitespace-nowrap px-2 py-1.5">
+                      <Jump to={id}>{name}</Jump>
+                    </td>
+                    <td className="px-2 py-1.5">{q}</td>
+                    <td className="px-2 py-1.5">
+                      <span
+                        className={`mr-1.5 rounded-full px-2 text-xs font-bold text-white ${NOTE[id].main ? "bg-emerald-600" : "bg-stone-500"}`}
+                      >
+                        {NOTE[id].main ? "主要" : "背景"}
+                      </span>
+                      {why}
+                    </td>
+                    <td className="px-2 py-1.5">{often}</td>
+                    <td className="whitespace-nowrap px-2 py-1.5">{step}</td>
+                    <td className="px-2 py-1.5 text-stone-500">
+                      {top || "只在下面"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         <div className="space-y-2">
           <h3 className="font-bold">景氣四季，各用什麼工具</h3>
