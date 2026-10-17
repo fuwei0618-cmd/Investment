@@ -74,3 +74,13 @@ describe("matchHeadline", () => {
     expect(matchHeadline("央行理監事會", topics)).toBeNull();
   });
 });
+
+describe("matchHeadline 連 N 黑", () => {
+  it("「連八黑」算跌", () => {
+    expect(
+      matchHeadline("費半連八黑", [
+        { words: ["費半"], name: "費城半導體", d: -0.01 },
+      ])?.tone,
+    ).toBe("ok");
+  });
+});

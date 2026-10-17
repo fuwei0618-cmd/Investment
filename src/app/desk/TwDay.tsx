@@ -37,12 +37,12 @@ export default async function TwDayBox() {
     .filter(Boolean)
     .join("\n");
   const topics = [
+    { words: ["台股", "加權", "大盤", "指數"], name: "加權指數", d },
     {
       words: ["台積電", "半導體", "晶片"],
       name: "前一晚費半",
       d: sox?.d ?? null,
     },
-    { words: ["台股", "加權", "大盤", "指數"], name: "加權指數", d },
   ];
   return (
     <section id="twday" className={wrap}>
