@@ -34,7 +34,10 @@ const NOTE: Record<string, { main: boolean; text: string }> = {
     main: false,
     text: "第 1 步的背景。避開大起大落的日子。每天掃一眼。",
   },
-  watch: { main: false, text: "第 2 步之前。想買的先放這裡等買點。想看再看。" },
+  watch: {
+    main: false,
+    text: "第 2 步。想買但還沒到買點的先放這裡。想看再看。",
+  },
   picks: {
     main: true,
     text: "第 2 步。找到買點，按「帶我做」接第 3、4 步。每天看。",
@@ -45,7 +48,7 @@ const NOTE: Record<string, { main: boolean; text: string }> = {
   },
   score: {
     main: true,
-    text: "第 6 步之後。看跟著網站做到底有沒有賺。賣掉一筆看一次。",
+    text: "第 6 步。看跟著網站做到底有沒有賺。賣掉一筆看一次。",
   },
 };
 
@@ -62,7 +65,7 @@ export function Section({
   return (
     <section
       id={id}
-      className={`${box} scroll-mt-20 border-t-4 ${n?.main ? "border-emerald-600" : "border-stone-300 dark:border-stone-600"}`}
+      className={`${box} min-w-0 scroll-mt-20 border-t-4 ${n?.main ? "border-emerald-600" : "border-stone-300 dark:border-stone-600"}`}
     >
       <h2 className="text-xl font-black">{title}</h2>
       {n && (
@@ -170,7 +173,7 @@ export async function Calendar({ market }: { market: "tw" | "us" }) {
   );
 }
 
-// ⑥ 今天的策略卡名單
+// ⑤ 今天的策略卡名單
 
 /** 頁面最上面的「台股｜美股」切換 */
 export function MarketSwitch({ now }: { now: "tw" | "us" }) {
@@ -296,8 +299,8 @@ const STEPS: { what: string; where: React.ReactNode }[] = [
     what: "買哪一檔？策略卡三個條件全過",
     where: (
       <>
-        看 <Jump to="picks">⑥ 策略卡名單</Jump>，想買的先放{" "}
-        <Jump to="watch">⑤</Jump>
+        看 <Jump to="picks">⑤ 策略卡名單</Jump>，想買的先放{" "}
+        <Jump to="watch">⑥ 追蹤清單</Jump>
       </>
     ),
   },
@@ -385,6 +388,18 @@ function DeskMap({
         </div>
       </div>
     </details>
+  );
+}
+
+/** 「為什麼？」裡照六步分段的小標 */
+export function StepHead({ n, title }: { n: string; title: string }) {
+  return (
+    <h3 className="flex items-center gap-2 pt-2 text-sm font-bold text-stone-600 dark:text-stone-400">
+      <span className="rounded-full bg-[#1f2328] px-2 py-0.5 text-white dark:bg-[#e8edf3] dark:text-[#1f2328]">
+        第 {n} 步
+      </span>
+      {title}
+    </h3>
   );
 }
 

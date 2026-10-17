@@ -24,6 +24,7 @@ import {
   Macro,
   MarketSwitch,
   Section,
+  StepHead,
   TopThree,
   Why,
   more,
@@ -204,7 +205,7 @@ async function Market() {
   );
 }
 
-// ⑥ 今天的策略卡名單（強勢股突破）
+// ⑤ 今天的策略卡名單（強勢股突破）
 async function Picks() {
   await connection();
   const d = await getUsPicks();
@@ -266,8 +267,8 @@ export default function DeskUs() {
             ["macro", "總體經濟"],
             ["market", "市場情況"],
             ["news", "必知大事"],
-            ["watch", "追蹤清單"],
             ["picks", "策略卡名單"],
+            ["watch", "追蹤清單"],
             ["hold", "持股提醒"],
             ["score", "成績單"],
           ].map(([id, t]) => (
@@ -280,38 +281,50 @@ export default function DeskUs() {
             </a>
           ))}
         </nav>
+        <StepHead n="1" title="能不能出手？" />
         <Section id="go" title="① 今天能不能出手">
           <Suspense fallback={wait}>
             <Go />
           </Suspense>
         </Section>
-        <Section id="macro" title="② 總體經濟">
-          <Suspense fallback={wait}>
-            <Macro />
-          </Suspense>
-        </Section>
-        <Section id="market" title="③ 市場情況">
-          <Suspense fallback={wait}>
-            <Market />
-          </Suspense>
-        </Section>
-        <Section id="news" title="④ 今天必知大事">
-          <Suspense fallback={wait}>
-            <Calendar market="us" />
-          </Suspense>
-        </Section>
-        <Section id="watch" title="⑤ 我的追蹤清單">
-          <LiveBoard suggest={[]} market="us" />
-        </Section>
-        <Section id="picks" title="⑥ 今天的策略卡名單">
-          <Suspense fallback={wait}>
-            <Picks />
-          </Suspense>
-        </Section>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Section id="macro" title="② 總體經濟">
+            <Suspense fallback={wait}>
+              <Macro />
+            </Suspense>
+          </Section>
+          <Section id="market" title="③ 市場情況">
+            <Suspense fallback={wait}>
+              <Market />
+            </Suspense>
+          </Section>
+          <Section id="news" title="④ 今天必知大事">
+            <Suspense fallback={wait}>
+              <Calendar market="us" />
+            </Suspense>
+          </Section>
+        </div>
+        <StepHead n="2" title="買哪一檔？" />
+        <div className="grid items-start gap-4 lg:grid-cols-2">
+          <Section id="picks" title="⑤ 今天的策略卡名單">
+            <Suspense fallback={wait}>
+              <Picks />
+            </Suspense>
+          </Section>
+          <Section id="watch" title="⑥ 我的追蹤清單">
+            <LiveBoard suggest={[]} market="us" />
+          </Section>
+        </div>
+        <StepHead n="3、4" title="買多少、下單" />
+        <p className="text-sm text-stone-600 dark:text-stone-400">
+          按策略卡名單上的「帶我做」，會幫你算買多少、給你下單小抄。
+        </p>
+        <StepHead n="5" title="盯停損停利" />
         <Section id="hold" title="⑦ 我的持股提醒">
           <Holdings market="us" />
           <LineSetup />
         </Section>
+        <StepHead n="6" title="賣掉，記下來" />
         <Section id="score" title="⑧ 我的成績單">
           <Scorecard market="us" />
         </Section>
