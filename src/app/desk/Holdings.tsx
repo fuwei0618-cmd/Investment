@@ -11,7 +11,7 @@ const TONE = {
   red: "bg-red-50 text-red-900 dark:bg-red-950/40 dark:text-red-100",
   green:
     "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100",
-  plain: "bg-[#f3ead8] dark:bg-[#2f281f]",
+  plain: "bg-[#e9e9e4] dark:bg-[#2a2e34]",
 };
 
 /** 讀「帶我做」第六步記下來的單子和現價（持股提醒、最上面「哪檔要賣」共用） */
@@ -111,7 +111,7 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
             ) : (
               <button
                 onClick={() => setSelling(t.code)}
-                className="mt-1 text-xs font-bold text-[#b4651e] underline"
+                className="mt-1 text-xs font-bold text-[#1f2328] underline dark:text-[#e8edf3]"
               >
                 賣掉了，記進成績單
               </button>
@@ -178,7 +178,7 @@ function SellForm({
       <button
         disabled={!ok}
         onClick={() => onSave(Number(sell), Number(b), date)}
-        className="rounded-full bg-[#b4651e] px-3 py-1 font-bold text-white disabled:opacity-40"
+        className="rounded-full bg-[#1f2328] px-3 py-1 font-bold text-white dark:bg-[#e8edf3] dark:text-[#1f2328] disabled:opacity-40"
       >
         記下來
       </button>

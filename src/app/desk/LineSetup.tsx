@@ -68,7 +68,7 @@ export default function LineSetup() {
 
   const dot = (ok: boolean | undefined) => (ok ? "✓" : "✗");
   return (
-    <div className="space-y-2 rounded-xl bg-[#f3ead8] p-3 text-sm dark:bg-[#2f281f]">
+    <div className="space-y-2 rounded-xl bg-[#e9e9e4] p-3 text-sm dark:bg-[#2a2e34]">
       <p className="font-bold">LINE 提醒（台股、美股共用）</p>
       <ul className="list-disc space-y-0.5 pl-5">
         <li>
@@ -113,7 +113,7 @@ export default function LineSetup() {
           <button
             onClick={test}
             disabled={!pass}
-            className="rounded-full bg-[#b4651e] px-4 py-1 font-bold text-white disabled:opacity-40"
+            className="rounded-full bg-[#1f2328] px-4 py-1 font-bold text-white dark:bg-[#e8edf3] dark:text-[#1f2328] disabled:opacity-40"
           >
             同步並傳一則測試
           </button>

@@ -19,7 +19,7 @@ export default function QCard({
 }) {
   return (
     <div
-      className={`space-y-0.5 rounded-2xl border-l-[6px] bg-[#fffdf8] p-4 shadow-[0_1px_2px_rgba(60,40,10,.06),0_6px_16px_rgba(60,40,10,.08)] dark:bg-[#221d16] ${EDGE[tone ?? "none"]}`}
+      className={`space-y-0.5 rounded-2xl border-l-[6px] bg-white p-4 shadow-[0_1px_2px_rgba(20,25,30,.06),0_6px_16px_rgba(20,25,30,.08)] dark:bg-[#1f2328] ${EDGE[tone ?? "none"]}`}
     >
       <p className="text-sm text-stone-500">{q}</p>
       {children}

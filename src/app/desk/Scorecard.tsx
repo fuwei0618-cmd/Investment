@@ -60,7 +60,7 @@ export default function Scorecard({ market }: { market: "tw" | "us" }) {
           return (
             <div
               key={p}
-              className="rounded-xl bg-[#f3ead8] p-3 dark:bg-[#2f281f]"
+              className="rounded-xl bg-[#e9e9e4] p-3 dark:bg-[#2a2e34]"
             >
               <b>{p}</b>
               <p>{summary(s)}</p>
