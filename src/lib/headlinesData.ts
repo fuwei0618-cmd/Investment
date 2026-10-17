@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { cacheLife } from "next/cache";
 import { fresh, parseReasons, parseRss, type Headline } from "./headlines";
 
-// 新聞說的原因：有 AI 金鑰時讓 AI 上網找當天新聞（英文新聞也會翻成中文），附來源；沒有金鑰就只列新聞標題
+// 新聞說的原因：有 AI 金鑰時讓 AI 上網找當天新聞（英文新聞也會翻成中文），再拿當天數字對照是不是真的，附來源；沒有金鑰就只列新聞標題
 
 const RSS = process.env.NEWS_RSS_BASE ?? "https://tw.stock.yahoo.com";
 
@@ -32,7 +32,7 @@ export interface Reasons {
 export async function getReasons(
   market: "us" | "tw",
   date: string,
-  moves: string,
+  facts: string,
 ): Promise<Reasons | null> {
   "use cache";
   if (!process.env.ANTHROPIC_API_KEY || !date) {
@@ -40,12 +40,14 @@ export async function getReasons(
     return null;
   }
   const where = market === "us" ? "美國股市" : "台灣股市";
-  const q = `${where} ${date} 收盤：${moves}。
-請上網找這一天的財經新聞（英文新聞也可以），整理這天漲跌的主要原因。
+  const q = `${where} ${date} 收盤的數字：
+${facts}
+
+請上網找這一天的財經新聞（英文新聞也可以），整理這天漲跌的主要原因，再用上面的數字對照每個原因是不是真的。
 規則：
-- 只寫新聞上有寫的事，不要自己猜。找不到原因就寫「新聞沒有明確原因」。
-- 用繁體中文白話寫 3 到 4 點，每點一句，每點用「- 」開頭。
-- 不要夾英文字，公司、人名用台灣常見的中文譯名。
+- 只寫新聞上有寫的原因，不要自己猜。
+- 寫 3 到 4 點，每點一行，用「- 」開頭，格式是「- 新聞說的原因｜對得上：哪個數字證明」或「- 新聞說的原因｜對不上：哪個數字不一樣」或「- 新聞說的原因｜沒有數字可以對」。
+- 繁體中文白話，不要夾英文字，公司、人名用台灣常見的中文譯名。
 - 除了這幾點，不要寫其他文字。`;
   try {
     const client = new Anthropic();

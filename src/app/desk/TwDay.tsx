@@ -1,5 +1,7 @@
 import { connection } from "next/server";
 import { getTaiex } from "@/lib/deskData";
+import { move } from "@/lib/overnight";
+import { getUsBars } from "@/lib/usData";
 import Jump from "./Jump";
 import NewsWhy from "./NewsWhy";
 import { box } from "./parts";
@@ -8,7 +10,7 @@ import { box } from "./parts";
 
 export default async function TwDayBox() {
   await connection();
-  const t = await getTaiex();
+  const [t, us] = await Promise.all([getTaiex(), getUsBars(["^SOX"])]);
   const wrap = `${box} min-w-0 scroll-mt-20 border-t-4 border-emerald-600`;
   if (!t)
     return (
@@ -20,10 +22,20 @@ export default async function TwDayBox() {
       </section>
     );
   const d = t.change;
-  const move =
+  const chg =
     d == null
       ? "漲跌抓不到"
       : `${d < 0 ? "跌" : "漲"} ${Math.abs(d * 100).toFixed(1)}%`;
+  const sox = move("費城半導體", us["^SOX"]);
+  const facts = [
+    `加權指數 ${Math.round(t.close)}（${chg}）`,
+    `月線 ${Math.round(t.ma)}，大盤在月線${t.above ? "上面" : "下面"}`,
+    sox?.d != null
+      ? `前一晚美國費城半導體 ${sox.d > 0 ? "+" : ""}${(sox.d * 100).toFixed(1)}%`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
   return (
     <section id="twday" className={wrap}>
       <h2 className="text-xl font-black">
@@ -45,7 +57,7 @@ export default async function TwDayBox() {
                   : "text-red-600 dark:text-red-400"
             }
           >
-            {move}
+            {chg}
           </span>
         </li>
         <li className="rounded-xl bg-[#e9e9e4] p-2 tabular-nums dark:bg-[#2a2e34]">
@@ -56,7 +68,7 @@ export default async function TwDayBox() {
           </span>
         </li>
       </ul>
-      <NewsWhy market="tw" date={t.date} moves={`加權指數 ${move}`} />
+      <NewsWhy market="tw" date={t.date} facts={facts} />
       <p className="text-sm">
         要不要放空、手上的怎麼辦，看上面{" "}
         <Jump to="overnight">我可以做什麼</Jump>。

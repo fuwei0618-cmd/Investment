@@ -158,3 +158,27 @@ export function usShortCheck(
     mustSell: "標普站回月線上，或放滿兩週",
   };
 }
+
+/** 給 AI 對照新聞用的數字（只放事實，不放解釋） */
+export function factsText(o: {
+  moves: (Move | null)[];
+  soxStreak: number;
+  sectors: { name: string; d: number | null }[];
+  tnx: number | null;
+}) {
+  const l = o.moves
+    .filter((m): m is Move => m?.d != null)
+    .map((m) => `${m.name} ${m.close.toFixed(1)}（${pct(m.d!)}）`);
+  const s = o.sectors
+    .filter((x) => x.d != null)
+    .sort((a, b) => a.d! - b.d!)
+    .map((x) => `${x.name} ${pct(x.d!)}`);
+  return [
+    l.join("、"),
+    o.soxStreak >= 2 ? `費城半導體連跌 ${o.soxStreak} 天` : "",
+    s.length ? `各類股（跌最多排前面）：${s.join("、")}` : "",
+    o.tnx != null ? `十年美債利率 ${o.tnx.toFixed(2)}%` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}

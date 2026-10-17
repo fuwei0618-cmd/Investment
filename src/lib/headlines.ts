@@ -55,3 +55,15 @@ export function parseReasons(text: string) {
     .filter(Boolean)
     .slice(0, 5);
 }
+
+/** 一條原因拆成「新聞說的」和「數字對照」 */
+export function splitCheck(line: string) {
+  const [why, ...rest] = line.split("｜");
+  const check = rest.join("｜").trim();
+  const tone = check.startsWith("對得上")
+    ? "ok"
+    : check.startsWith("對不上")
+      ? "bad"
+      : "none";
+  return { why: why.trim(), check, tone } as const;
+}

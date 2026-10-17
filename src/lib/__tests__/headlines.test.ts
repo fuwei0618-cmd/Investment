@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fresh, parseReasons, parseRss } from "../headlines";
+import { fresh, parseReasons, parseRss, splitCheck } from "../headlines";
 
 const xml = `<rss><channel>
 <item><title><![CDATA[美股收黑 半導體重挫]]></title><link>https://a.tw/1</link><pubDate>Fri, 16 Oct 2026 21:00:00 GMT</pubDate></item>
@@ -29,5 +29,17 @@ describe("parseReasons", () => {
     expect(
       parseReasons("以下是原因：\n- **半導體**連跌\n- 油價漲\n\n其他說明"),
     ).toEqual(["半導體連跌", "油價漲"]);
+  });
+});
+
+describe("splitCheck", () => {
+  it("拆出數字對照", () => {
+    expect(splitCheck("半導體連跌｜對得上：費半 -3.8%")).toEqual({
+      why: "半導體連跌",
+      check: "對得上：費半 -3.8%",
+      tone: "ok",
+    });
+    expect(splitCheck("油價漲｜對不上：原油 -0.5%").tone).toBe("bad");
+    expect(splitCheck("聯準會主席發言").tone).toBe("none");
   });
 });

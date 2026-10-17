@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dipCheck,
   downStreak,
+  factsText,
   fromHigh,
   overnight,
   tenYear,
@@ -43,5 +44,22 @@ describe("昨晚發生什麼", () => {
   it("低接卡條件", () => {
     expect(dipCheck(20, -0.05).pass).toBe(false);
     expect(dipCheck(32, -0.12).pass).toBe(true);
+  });
+});
+
+describe("factsText", () => {
+  it("只列數字，類股跌最多排前面", () => {
+    const t = factsText({
+      moves: [{ name: "標普 500", close: 7659, d: -0.011 }, null],
+      soxStreak: 8,
+      sectors: [
+        { name: "金融", d: 0.002 },
+        { name: "科技", d: -0.03 },
+      ],
+      tnx: 5.1,
+    });
+    expect(t).toBe(
+      "標普 500 7659.0（-1.1%）\n費城半導體連跌 8 天\n各類股（跌最多排前面）：科技 -3.0%、金融 +0.2%\n十年美債利率 5.10%",
+    );
   });
 });

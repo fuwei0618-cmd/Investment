@@ -4,6 +4,7 @@ import { getTaiex } from "@/lib/deskData";
 import {
   dipCheck,
   downStreak,
+  factsText,
   fromHigh,
   move,
   overnight,
@@ -32,20 +33,25 @@ const SYMS = [
 
 async function night() {
   const bars = await getUsBars(SYMS);
-  const r = overnight({
-    spx: move("標普 500", bars["^GSPC"]),
-    ndx: move("那斯達克", bars["^IXIC"]),
-    sox: move("費城半導體", bars["^SOX"]),
-    soxStreak: downStreak(bars["^SOX"]),
-    sectors: US_SECTORS.map(([s, name]) => ({
-      name,
-      d: changeOver(bars[s], 1),
-    })),
-    tnx: tenYear(bars["^TNX"]),
-    oil: move("原油", bars["CL=F"]),
-    gold: move("黃金", bars["GC=F"]),
+  const spx = move("標普 500", bars["^GSPC"]);
+  const ndx = move("那斯達克", bars["^IXIC"]);
+  const sox = move("費城半導體", bars["^SOX"]);
+  const oil = move("原油", bars["CL=F"]);
+  const gold = move("黃金", bars["GC=F"]);
+  const soxStreak = downStreak(bars["^SOX"]);
+  const sectors = US_SECTORS.map(([s, name]) => ({
+    name,
+    d: changeOver(bars[s], 1),
+  }));
+  const tnx = tenYear(bars["^TNX"]);
+  const r = overnight({ spx, ndx, sox, soxStreak, sectors, tnx, oil, gold });
+  const facts = factsText({
+    moves: [spx, ndx, sox, move("恐慌指數", bars["^VIX"]), oil, gold],
+    soxStreak,
+    sectors,
+    tnx,
   });
-  return { bars, r };
+  return { bars, r, facts };
 }
 
 const pct = (d: number | null | undefined) =>
@@ -86,7 +92,7 @@ export async function BigDropLine() {
 /** 昨晚發生什麼：數字、為什麼、我可以做什麼、我手上的 */
 export async function OvernightBox({ market }: { market: "tw" | "us" }) {
   await connection();
-  const [{ bars, r }, taiex] = await Promise.all([
+  const [{ bars, r, facts }, taiex] = await Promise.all([
     night(),
     market === "tw" ? getTaiex() : Promise.resolve(null),
   ]);
@@ -174,7 +180,7 @@ export async function OvernightBox({ market }: { market: "tw" | "us" }) {
         </li>
       </ul>
 
-      <NewsWhy market="us" date={date} moves={r.why[0].replace(/。$/, "")} />
+      <NewsWhy market="us" date={date} facts={facts} />
 
       <div className="space-y-1">
         <h3 className="font-bold">
