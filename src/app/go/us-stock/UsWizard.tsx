@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Holding } from "@/lib/desk";
+import { US_INVERSE } from "@/lib/overnight";
 import { ODD_MIN, usPlan } from "@/lib/us";
 import type { UsPick } from "@/lib/usData";
 import { fmt, usePersistentState } from "@/lib/storage";
@@ -75,7 +76,7 @@ export default function UsWizard({
                 標普 500 收 {fmt(market.close)}，月線 {fmt(market.ma)}，
                 {market.above
                   ? "在月線上，可以照名單挑。"
-                  : "在月線下，美股先不買。下面的名單只當參考。"}
+                  : "在月線下，美股先不買股票。可以走放空：下一步第一個就是反向標普 500（SH）。"}
               </p>
             ) : (
               <p className="text-stone-500">
@@ -349,7 +350,10 @@ export default function UsWizard({
                       shares: p.shares,
                       stop: p.stop,
                       target: p.target,
-                      play: "美股強勢股突破",
+                      play:
+                        pick.code === US_INVERSE.code
+                          ? "放空（反向 ETF）"
+                          : "美股強勢股突破",
                     },
                     ...trades.filter((t) => t.code !== pick.code),
                   ])

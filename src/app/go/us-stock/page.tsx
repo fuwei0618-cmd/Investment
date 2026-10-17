@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { US_INVERSE, usShortCheck } from "@/lib/overnight";
 import { aboveMa20 } from "@/lib/us";
 import { getUsBars, getUsPicks } from "@/lib/usData";
 import UsWizard from "./UsWizard";
@@ -9,7 +10,10 @@ export const metadata = { title: "帶我做：美股強勢股突破｜投資羅�
 
 async function Live() {
   await connection();
-  const [d, bars] = await Promise.all([getUsPicks(), getUsBars(["^GSPC"])]);
+  const [d, bars] = await Promise.all([
+    getUsPicks(),
+    getUsBars(["^GSPC", US_INVERSE.code]),
+  ]);
   if ("error" in d)
     return (
       <p className="rounded-2xl bg-[#f3ead8] p-4 text-sm dark:bg-[#2f281f]">
@@ -17,9 +21,25 @@ async function Live() {
         <span className="block text-xs text-stone-500">卡在：{d.error}</span>
       </p>
     );
-  return (
-    <UsWizard date={d.date} market={aboveMa20(bars["^GSPC"])} picks={d.picks} />
-  );
+  const market = aboveMa20(bars["^GSPC"]);
+  // 標普在月線下：第一個放反向標普 500（SH），走放空
+  const sh = bars[US_INVERSE.code].at(-1);
+  const picks =
+    market && !market.above && sh
+      ? [
+          {
+            ...usShortCheck(sh.close, market),
+            code: US_INVERSE.code,
+            name: US_INVERSE.name,
+            street: "美股",
+            foreign: 0,
+            trust: 0,
+            news: [] as [],
+          },
+          ...d.picks,
+        ]
+      : d.picks;
+  return <UsWizard date={d.date} market={market} picks={picks} />;
 }
 
 export default function UsStock() {
