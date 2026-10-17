@@ -124,7 +124,7 @@ async function Go() {
   ] as const;
   return (
     <>
-      <div className="flex items-start gap-3 rounded-xl bg-[#f3ead8] p-3 dark:bg-[#2f281f]">
+      <div className="flex items-start gap-3 rounded-xl bg-[#e9e9e4] p-3 dark:bg-[#2a2e34]">
         <span className="mt-2">
           <LightDot light={v.light} />
         </span>
@@ -173,7 +173,7 @@ async function Market() {
           return (
             <li
               key={s}
-              className="rounded-xl bg-[#f3ead8] p-2.5 dark:bg-[#2f281f]"
+              className="rounded-xl bg-[#e9e9e4] p-2.5 dark:bg-[#2a2e34]"
             >
               <span className="block text-xs text-stone-500">{name}</span>
               <b className="text-lg">
@@ -217,7 +217,7 @@ async function Picks() {
     .filter((x) => !x.pass && x.score === 2)
     .slice(0, 5 - passed.length);
   return (
-    <div className="space-y-2 rounded-xl bg-[#f3ead8] p-3 text-sm dark:bg-[#2f281f]">
+    <div className="space-y-2 rounded-xl bg-[#e9e9e4] p-3 text-sm dark:bg-[#2a2e34]">
       <b className="text-base">強勢股突破（資料日 {d.date}）</b>
       <ul className="space-y-1">
         {passed.map((x) => (
@@ -247,7 +247,7 @@ async function Picks() {
 
 export default function DeskUs() {
   return (
-    <div className="space-y-4">
+    <div className="-mx-2 space-y-4 rounded-3xl bg-[#f2f2ee] p-2 sm:p-4 dark:bg-[#16181b]">
       <header className="space-y-1">
         <h1 className="text-2xl font-black">實戰</h1>
         <MarketSwitch now="us" />
@@ -274,7 +274,7 @@ export default function DeskUs() {
             <a
               key={id}
               href={`#${id}`}
-              className="rounded-full bg-[#f3ead8] px-2.5 py-0.5 dark:bg-[#2f281f]"
+              className="rounded-full bg-[#e9e9e4] px-2.5 py-0.5 dark:bg-[#2a2e34]"
             >
               {t}
             </a>
