@@ -16,6 +16,8 @@ import {
 import { getUsBars, getUsPicks } from "@/lib/usData";
 import { usdLevel, usdStats } from "@/lib/usd";
 import LiveBoard from "../../go/daytrade/LiveBoard";
+import Jump from "../Jump";
+import { BigDropLine, DipCard, OvernightBox } from "../Overnight";
 import Holdings from "../Holdings";
 import Scorecard from "../Scorecard";
 import LineSetup from "../LineSetup";
@@ -260,10 +262,14 @@ export default function DeskUs() {
       <Suspense fallback={wait}>
         <Top />
       </Suspense>
+      <Suspense fallback={null}>
+        <BigDropLine />
+      </Suspense>
       <Why>
         <nav className="flex flex-wrap gap-1.5 text-xs">
           {[
             ["go", "能不能出手"],
+            ["overnight", "昨晚美股"],
             ["macro", "總體經濟"],
             ["market", "市場情況"],
             ["news", "必知大事"],
@@ -287,6 +293,9 @@ export default function DeskUs() {
             <Go />
           </Suspense>
         </Section>
+        <Suspense fallback={wait}>
+          <OvernightBox market="us" />
+        </Suspense>
         <div className="grid gap-4 lg:grid-cols-3">
           <Section id="macro" title="② 總體經濟">
             <Suspense fallback={wait}>
@@ -299,6 +308,10 @@ export default function DeskUs() {
             </Suspense>
           </Section>
           <Section id="news" title="④ 今天必知大事">
+            <p className="text-sm">
+              昨晚美股發生什麼、對你有什麼影響，看{" "}
+              <Jump to="overnight">昨晚美股發生什麼</Jump>。
+            </p>
             <Suspense fallback={wait}>
               <Calendar market="us" />
             </Suspense>
@@ -307,6 +320,9 @@ export default function DeskUs() {
         <StepHead n="2" title="買哪一檔？" />
         <div className="grid items-start gap-4 lg:grid-cols-2">
           <Section id="picks" title="⑤ 今天的策略卡名單">
+            <Suspense fallback={null}>
+              <DipCard market="us" />
+            </Suspense>
             <Suspense fallback={wait}>
               <Picks />
             </Suspense>
