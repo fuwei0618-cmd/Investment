@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { fresh, parseReasons, parseRss, splitCheck } from "../headlines";
+import {
+  fresh,
+  matchHeadline,
+  parseReasons,
+  parseRss,
+  splitCheck,
+} from "../headlines";
 
 const xml = `<rss><channel>
 <item><title><![CDATA[美股收黑 半導體重挫]]></title><link>https://a.tw/1</link><pubDate>Fri, 16 Oct 2026 21:00:00 GMT</pubDate></item>
@@ -41,5 +47,30 @@ describe("splitCheck", () => {
     });
     expect(splitCheck("油價漲｜對不上：原油 -0.5%").tone).toBe("bad");
     expect(splitCheck("聯準會主席發言").tone).toBe("none");
+  });
+});
+
+describe("matchHeadline", () => {
+  const topics = [
+    { words: ["半導體", "晶片"], name: "費城半導體", d: -0.038 },
+    { words: ["油"], name: "原油", d: -0.005 },
+    { words: ["黃金"], name: "黃金", d: null },
+  ];
+  it("說跌、真的跌：對得上", () => {
+    expect(matchHeadline("費半連八黑 半導體重挫", topics)).toEqual({
+      tone: "ok",
+      text: "對得上：費城半導體 -3.8%",
+    });
+  });
+  it("說漲、其實跌：對不上", () => {
+    expect(matchHeadline("油價突破百元", topics)?.tone).toBe("bad");
+  });
+  it("看不出漲跌就只列數字；沒講到的、沒數字的不對", () => {
+    expect(matchHeadline("晶片新規上路", topics)).toEqual({
+      tone: "none",
+      text: "費城半導體 -3.8%",
+    });
+    expect(matchHeadline("黃金大漲", topics)).toBeNull();
+    expect(matchHeadline("央行理監事會", topics)).toBeNull();
   });
 });

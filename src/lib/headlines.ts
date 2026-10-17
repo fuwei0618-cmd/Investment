@@ -67,3 +67,52 @@ export function splitCheck(line: string) {
       : "none";
   return { why: why.trim(), check, tone } as const;
 }
+
+export interface Topic {
+  words: string[];
+  name: string;
+  d: number | null;
+}
+
+const UP = [
+  "漲",
+  "升",
+  "揚",
+  "攀",
+  "突破",
+  "創高",
+  "飆",
+  "收紅",
+  "反彈",
+  "走高",
+];
+const DOWN = [
+  "跌",
+  "挫",
+  "收黑",
+  "殺",
+  "摔",
+  "崩",
+  "下滑",
+  "賣壓",
+  "走低",
+  "重創",
+];
+
+/** 沒有 AI 時：看標題講到哪個數字、說漲還是跌，跟數字對一下 */
+export function matchHeadline(title: string, topics: Topic[]) {
+  const t = topics.find(
+    (x) => x.d != null && x.words.some((w) => title.includes(w)),
+  );
+  if (!t) return null;
+  const up = UP.some((w) => title.includes(w));
+  const down = DOWN.some((w) => title.includes(w));
+  const d = t.d!;
+  const num = `${t.name} ${d > 0 ? "+" : ""}${(d * 100).toFixed(1)}%`;
+  if (up === down) return { tone: "none" as const, text: num };
+  const ok = up ? d > 0 : d < 0;
+  return {
+    tone: ok ? ("ok" as const) : ("bad" as const),
+    text: `${ok ? "對得上" : "對不上"}：${num}`,
+  };
+}

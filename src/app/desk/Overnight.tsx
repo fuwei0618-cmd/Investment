@@ -51,7 +51,25 @@ async function night() {
     sectors,
     tnx,
   });
-  return { bars, r, facts };
+  const d = (x: { d: number | null } | null) => x?.d ?? null;
+  const topics = [
+    {
+      words: ["費半", "半導體", "晶片", "輝達", "台積"],
+      name: "費城半導體",
+      d: d(sox),
+    },
+    { words: ["那斯達克", "那指", "科技股"], name: "那斯達克", d: d(ndx) },
+    { words: ["油"], name: "原油", d: d(oil) },
+    { words: ["黃金", "金價"], name: "黃金", d: d(gold) },
+    {
+      words: ["美債", "殖利率", "公債"],
+      name: "十年美債利率",
+      d: changeOver(bars["^TNX"], 1),
+    },
+    { words: ["恐慌"], name: "恐慌指數", d: changeOver(bars["^VIX"], 1) },
+    { words: ["美股", "標普", "道瓊", "華爾街"], name: "標普 500", d: d(spx) },
+  ];
+  return { bars, r, facts, topics };
 }
 
 const pct = (d: number | null | undefined) =>
@@ -92,7 +110,7 @@ export async function BigDropLine() {
 /** 昨晚發生什麼：數字、為什麼、我可以做什麼、我手上的 */
 export async function OvernightBox({ market }: { market: "tw" | "us" }) {
   await connection();
-  const [{ bars, r, facts }, taiex] = await Promise.all([
+  const [{ bars, r, facts, topics }, taiex] = await Promise.all([
     night(),
     market === "tw" ? getTaiex() : Promise.resolve(null),
   ]);
@@ -180,7 +198,7 @@ export async function OvernightBox({ market }: { market: "tw" | "us" }) {
         </li>
       </ul>
 
-      <NewsWhy market="us" date={date} facts={facts} />
+      <NewsWhy market="us" date={date} facts={facts} topics={topics} />
 
       <div className="space-y-1">
         <h3 className="font-bold">

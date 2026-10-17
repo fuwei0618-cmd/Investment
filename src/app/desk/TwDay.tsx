@@ -36,6 +36,14 @@ export default async function TwDayBox() {
   ]
     .filter(Boolean)
     .join("\n");
+  const topics = [
+    {
+      words: ["台積電", "半導體", "晶片"],
+      name: "前一晚費半",
+      d: sox?.d ?? null,
+    },
+    { words: ["台股", "加權", "大盤", "指數"], name: "加權指數", d },
+  ];
   return (
     <section id="twday" className={wrap}>
       <h2 className="text-xl font-black">
@@ -68,7 +76,7 @@ export default async function TwDayBox() {
           </span>
         </li>
       </ul>
-      <NewsWhy market="tw" date={t.date} facts={facts} />
+      <NewsWhy market="tw" date={t.date} facts={facts} topics={topics} />
       <p className="text-sm">
         要不要放空、手上的怎麼辦，看上面{" "}
         <Jump to="overnight">我可以做什麼</Jump>。

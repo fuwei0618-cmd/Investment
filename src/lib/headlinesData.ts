@@ -14,7 +14,7 @@ export async function getHeadlines(cat: "intl-markets" | "tw-market") {
       signal: AbortSignal.timeout(8000),
     });
     if (!r.ok) throw new Error(String(r.status));
-    const list = fresh(parseRss(await r.text()), Date.now()).slice(0, 5);
+    const list = fresh(parseRss(await r.text()), Date.now()).slice(0, 30);
     cacheLife("hours");
     return list;
   } catch {
