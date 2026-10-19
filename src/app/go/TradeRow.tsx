@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Holding } from "@/lib/desk";
+import { buyFeeOf, type Market } from "@/lib/fees";
 import { fmt } from "@/lib/storage";
 
 const FIELDS = [
@@ -14,10 +15,12 @@ const FIELDS = [
 // 一筆操作紀錄：實際成交跟計畫不一樣時可以改
 export default function TradeRow({
   t,
+  market,
   onSave,
   onDelete,
 }: {
   t: Holding;
+  market: Market;
   onSave: (h: Holding) => void;
   onDelete: () => void;
 }) {
@@ -31,6 +34,7 @@ export default function TradeRow({
         </b>
         <TradeEdit
           t={t}
+          market={market}
           onSave={(h) => {
             onSave(h);
             setEditing(false);
@@ -73,11 +77,13 @@ export default function TradeRow({
 /** 改一筆紀錄的股數、成交價、停損、停利（帶我做和實戰頁持股共用） */
 export function TradeEdit({
   t,
+  market,
   onSave,
   onCancel,
   className = "",
 }: {
   t: Holding;
+  market: Market;
   onSave: (h: Holding) => void;
   onCancel: () => void;
   className?: string;
@@ -85,7 +91,18 @@ export function TradeEdit({
   const [draft, setDraft] = useState<Record<string, string>>(() =>
     Object.fromEntries(FIELDS.map(([k]) => [k, String(t[k])])),
   );
-  const [fee, setFee] = useState(t.buyFee ? String(t.buyFee) : "");
+  // 原本就是自動算的就留空，改股數、價格時跟著重算
+  const [fee, setFee] = useState(
+    t.buyFee == null || t.buyFee === buyFeeOf(market, t.code, t.price, t.shares)
+      ? ""
+      : String(t.buyFee),
+  );
+  const est = buyFeeOf(
+    market,
+    t.code,
+    Number(draft.price) || 0,
+    Number(draft.shares) || 0,
+  );
   const ok = FIELDS.every(([k]) => Number(draft[k]) > 0) && !(Number(fee) < 0);
   return (
     <div className={`space-y-2 text-sm ${className}`}>
@@ -108,15 +125,14 @@ export function TradeEdit({
             type="number"
             inputMode="decimal"
             value={fee}
-            placeholder="0"
+            placeholder={`自動算 ${fmt(est, 2)}`}
             onChange={(e) => setFee(e.target.value)}
             className="w-full rounded-lg border border-stone-300 bg-white px-2 py-1 dark:border-stone-600 dark:bg-[#221d16]"
           />
         </label>
       </div>
       <p className="text-xs text-stone-500">
-        成交價請填券商成交明細上的「成交價」，不要填含手續費的均價。手續費填明細上的手續費（或「庫存成本」減掉
-        成交價×股數），賣掉後成績單會扣掉。
+        成交價請填券商成交明細上的「成交價」，不要填含手續費的均價。手續費空著就照國泰費率自動算，跟明細不一樣再改。
       </p>
       <div className="flex gap-2">
         <button
@@ -128,7 +144,7 @@ export function TradeEdit({
               price: Number(draft.price),
               stop: Number(draft.stop),
               target: Number(draft.target),
-              buyFee: Number(fee) || 0,
+              buyFee: fee.trim() === "" ? est : Number(fee),
             });
           }}
           className="rounded-full bg-[#b4651e] px-3 py-1 font-bold text-white disabled:opacity-40"

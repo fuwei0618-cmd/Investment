@@ -141,7 +141,7 @@ export const US_INDICES: [string, string][] = [
 ];
 
 /** 常見 ETF 的名字（只拿來顯示，不放進篩選） */
-const US_ETF: Record<string, string> = {
+export const US_ETF: Record<string, string> = {
   VOO: "標普 500 ETF",
   SPY: "標普 500 ETF",
   QQQ: "那斯達克 100 ETF",
