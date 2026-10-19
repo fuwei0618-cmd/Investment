@@ -41,7 +41,7 @@ export default function HoldingsNow({ market }: { market: "tw" | "us" }) {
               <b>
                 {t.name} {t.code}
               </b>
-              {now != null && <>　現在 {fmt(now, 2)}</>}　停損 {t.stop}
+              {now != null && <>　現在 {fmt(now, 2)}</>}　停損 {fmt(t.stop, 2)}
               {a?.tone === "plain" && (
                 <>，離停損 {((now! / t.stop - 1) * 100).toFixed(1)}%</>
               )}
