@@ -7,6 +7,7 @@ import { US_INVERSE } from "@/lib/overnight";
 import { ODD_MIN, usPlan } from "@/lib/us";
 import type { UsPick } from "@/lib/usData";
 import { fmt, usePersistentState } from "@/lib/storage";
+import TradeRow from "../TradeRow";
 import CheatSheet from "../CheatSheet";
 
 const STEPS = [
@@ -365,33 +366,16 @@ export default function UsWizard({
             )}
             <ul className="space-y-1.5">
               {trades.map((t) => (
-                <li
+                <TradeRow
                   key={t.code}
-                  className="flex flex-wrap items-center gap-x-3 rounded-xl bg-[#f3ead8] px-3 py-2 text-sm dark:bg-[#2f281f]"
-                >
-                  <b>
-                    {t.name} {t.code}
-                  </b>
-                  <span>
-                    {t.saved} 買{" "}
-                    {fmt(t.shares, Number.isInteger(t.shares) ? 0 : 2)} 股 @{" "}
-                    {fmt(t.price, 2)}
-                  </span>
-                  <span className="text-green-700 dark:text-green-400">
-                    停損 {fmt(t.stop, 2)}
-                  </span>
-                  <span className="text-red-700 dark:text-red-400">
-                    停利 {fmt(t.target, 2)}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setTrades(trades.filter((x) => x.code !== t.code))
-                    }
-                    className="ml-auto text-xs text-stone-500 underline"
-                  >
-                    沒買成，刪除
-                  </button>
-                </li>
+                  t={t}
+                  onSave={(h) =>
+                    setTrades(trades.map((x) => (x.code === t.code ? h : x)))
+                  }
+                  onDelete={() =>
+                    setTrades(trades.filter((x) => x.code !== t.code))
+                  }
+                />
               ))}
             </ul>
             <p className="text-sm">

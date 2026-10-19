@@ -7,6 +7,7 @@ import type { Pick } from "@/lib/pickData";
 import type { RiskResult } from "@/lib/risk";
 import { fmt, usePersistentState } from "@/lib/storage";
 import Brief from "./Brief";
+import TradeRow from "./TradeRow";
 import CheatSheet from "./CheatSheet";
 
 interface Trade {
@@ -543,31 +544,16 @@ export default function GoWizard({
             {trades.length > 0 ? (
               <ul className="space-y-1.5">
                 {trades.map((t) => (
-                  <li
+                  <TradeRow
                     key={t.code}
-                    className="flex flex-wrap items-center gap-x-3 rounded-xl bg-[#f3ead8] px-3 py-2 text-sm dark:bg-[#2f281f]"
-                  >
-                    <b>
-                      {t.name} {t.code}
-                    </b>
-                    <span>
-                      {t.saved} 買 {fmt(t.shares)} 股 @ {fmt(t.price, 2)}
-                    </span>
-                    <span className="text-green-700 dark:text-green-400">
-                      停損 {fmt(t.stop, 2)}
-                    </span>
-                    <span className="text-red-700 dark:text-red-400">
-                      停利 {fmt(t.target, 2)}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setTrades(trades.filter((x) => x.code !== t.code))
-                      }
-                      className="ml-auto text-xs text-stone-500 underline"
-                    >
-                      沒買成，刪除
-                    </button>
-                  </li>
+                    t={t}
+                    onSave={(h) =>
+                      setTrades(trades.map((x) => (x.code === t.code ? h : x)))
+                    }
+                    onDelete={() =>
+                      setTrades(trades.filter((x) => x.code !== t.code))
+                    }
+                  />
                 ))}
               </ul>
             ) : (
