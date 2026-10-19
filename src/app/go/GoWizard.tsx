@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { INVERSE, plan } from "@/lib/pick";
+import { buyFeeOf } from "@/lib/fees";
 import type { Pick } from "@/lib/pickData";
 import type { RiskResult } from "@/lib/risk";
 import { fmt, usePersistentState } from "@/lib/storage";
@@ -19,6 +20,7 @@ interface Trade {
   stop: number;
   target: number;
   play?: string;
+  buyFee?: number;
 }
 
 const STEPS = [
@@ -529,6 +531,7 @@ export default function GoWizard({
                       name: pick.name,
                       price: pick.close,
                       shares: p.shares,
+                      buyFee: buyFeeOf("tw", pick.code, pick.close, p.shares),
                       stop: p.stop,
                       target: p.target,
                       play: short ? "放空（反向 ETF）" : playTitle,
@@ -545,6 +548,7 @@ export default function GoWizard({
               <ul className="space-y-1.5">
                 {trades.map((t) => (
                   <TradeRow
+                    market="tw"
                     key={t.code}
                     t={t}
                     onSave={(h) =>

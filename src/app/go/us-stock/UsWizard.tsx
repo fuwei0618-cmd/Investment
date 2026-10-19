@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Holding } from "@/lib/desk";
 import { US_INVERSE } from "@/lib/overnight";
+import { buyFeeOf } from "@/lib/fees";
 import { ODD_MIN, usPlan } from "@/lib/us";
 import type { UsPick } from "@/lib/usData";
 import { fmt, usePersistentState } from "@/lib/storage";
@@ -351,6 +352,7 @@ export default function UsWizard({
                       name: pick.name,
                       price: pick.close,
                       shares: p.shares,
+                      buyFee: buyFeeOf("us", pick.code, pick.close, p.shares),
                       stop: p.stop,
                       target: p.target,
                       play:
@@ -369,6 +371,7 @@ export default function UsWizard({
             <ul className="space-y-1.5">
               {trades.map((t) => (
                 <TradeRow
+                  market="us"
                   key={t.code}
                   t={t}
                   onSave={(h) =>

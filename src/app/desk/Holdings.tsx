@@ -6,6 +6,7 @@ import type { Live } from "@/lib/dayTrade";
 import { holdingAlert, taipeiToday, type Holding } from "@/lib/desk";
 import { close, JOURNAL_KEY, type Closed } from "@/lib/journal";
 import { fmt, usePersistentState } from "@/lib/storage";
+import { buyFeeOf, sellFeeOf } from "@/lib/fees";
 import { TradeEdit } from "../go/TradeRow";
 
 const TONE = {
@@ -65,6 +66,13 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
         const q = quotes.find((x) => x.code === t.code);
         const now = q?.price || q?.prev || null;
         const a = now ? holdingAlert(t, now) : null;
+        // 帳面賺賠扣掉買進手續費和現在賣掉要付的手續費，跟券商「投資損益」對得起來
+        const bf = t.buyFee ?? buyFeeOf(market, t.code, t.price, t.shares);
+        const net = now
+          ? (now - t.price) * t.shares -
+            bf -
+            sellFeeOf(market, t.code, now, t.shares)
+          : 0;
         return (
           <li
             key={t.code}
@@ -81,14 +89,14 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
               {a && now && (
                 <span
                   className={
-                    a.pnl >= 0
+                    net >= 0
                       ? "font-bold text-red-700 dark:text-red-400"
                       : "font-bold text-green-700 dark:text-green-400"
                   }
                 >
-                  現價 {fmt(now, 2)}，{a.pnl >= 0 ? "賺" : "賠"}{" "}
-                  {fmt(Math.abs(a.pnl))} {us ? "美元" : "元"}（
-                  {(a.pct * 100).toFixed(1)}%）
+                  現價 {fmt(now, 2)}，扣完手續費{net >= 0 ? "賺" : "賠"}{" "}
+                  {fmt(Math.abs(net), us ? 2 : 0)} {us ? "美元" : "元"}（
+                  {((net / (t.price * t.shares)) * 100).toFixed(1)}%）
                 </span>
               )}
             </div>
@@ -101,7 +109,8 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
             {selling === t.code ? (
               <SellForm
                 buy={t.price}
-                buyFee={t.buyFee}
+                buyFee={bf}
+                sellFeeAt={(p) => sellFeeOf(market, t.code, p, t.shares)}
                 now={now}
                 unit={us ? "美元" : "元"}
                 onCancel={() => setSelling(null)}
@@ -117,6 +126,7 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
             ) : editing === t.code ? (
               <TradeEdit
                 t={t}
+                market={market}
                 className="mt-2"
                 onSave={(h) => {
                   setTrades(trades.map((x) => (x.code === t.code ? h : x)));
@@ -151,13 +161,15 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
 function SellForm({
   buy,
   buyFee,
+  sellFeeAt,
   now,
   unit,
   onCancel,
   onSave,
 }: {
   buy: number;
-  buyFee?: number;
+  buyFee: number;
+  sellFeeAt: (price: number) => number;
   now: number | null;
   unit: string;
   onCancel: () => void;
@@ -171,7 +183,7 @@ function SellForm({
 }) {
   const [sell, setSell] = useState(now ? String(now) : "");
   const [b, setB] = useState(String(buy));
-  const [bf, setBf] = useState(buyFee ? String(buyFee) : "");
+  const [bf, setBf] = useState(String(buyFee));
   const [sf, setSf] = useState("");
   const [date, setDate] = useState(() => taipeiToday());
   const ok = Number(sell) > 0 && Number(b) > 0;
@@ -215,7 +227,9 @@ function SellForm({
           inputMode="decimal"
           value={sf}
           onChange={(e) => setSf(e.target.value)}
-          placeholder="0"
+          placeholder={
+            Number(sell) > 0 ? `自動算 ${fmt(sellFeeAt(Number(sell)), 2)}` : ""
+          }
           className={input}
         />
       </label>
@@ -237,7 +251,7 @@ function SellForm({
             Number(b),
             date,
             Number(bf) || 0,
-            Number(sf) || 0,
+            sf.trim() === "" ? sellFeeAt(Number(sell)) : Number(sf),
           )
         }
         className="rounded-full bg-[#1f2328] px-3 py-1 font-bold text-white dark:bg-[#e8edf3] dark:text-[#1f2328] disabled:opacity-40"
