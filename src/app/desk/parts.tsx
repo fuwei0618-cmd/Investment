@@ -4,6 +4,8 @@ import LightDot from "@/components/Light";
 import { SEASON_TOOLS, taipeiToday, upcoming, type Verdict } from "@/lib/desk";
 import type { PhaseKey } from "@/lib/industry";
 import { getSeries } from "@/lib/fred";
+import { US_INVERSE } from "@/lib/overnight";
+import { INVERSE } from "@/lib/pick";
 import { getTodayAnswers } from "@/lib/todayData";
 import { usdLevel, usdStats } from "@/lib/usd";
 import Jump from "./Jump";
@@ -212,6 +214,10 @@ export function TopThree({
   market: "tw" | "us";
 }) {
   const s = phase ? SEASON_TOOLS[phase] : null;
+  const short =
+    market === "tw"
+      ? { ...INVERSE, href: "/go/tw-stock" }
+      : { ...US_INVERSE, href: "/go/us-stock" };
   return (
     <div className="space-y-3">
       <div className="grid gap-3 md:grid-cols-3">
@@ -221,12 +227,26 @@ export function TopThree({
         </QCard>
         <QCard
           q="買哪一檔？"
-          tone={v.light === "red" || !pick ? null : "green"}
+          tone={v.light === "red" ? "yellow" : !pick ? null : "green"}
         >
           {v.light === "red" ? (
             <>
-              <p className="text-xl font-black">今天先不買</p>
-              <p className="text-sm">大盤在月線下，名單先不用看。</p>
+              <p className="text-sm text-stone-500">
+                股票先不買，想做可以放空：
+              </p>
+              <p className="text-xl font-black">
+                {short.name}
+                <span className="ml-2 text-base text-stone-500">
+                  {short.code}
+                </span>
+              </p>
+              <p className="text-sm">
+                大盤跌它就漲。跌 5% 停損、漲 8%
+                先賣一半、最多放兩週、錢最多一成。
+                <Link href={short.href} className={`ml-1 ${more}`}>
+                  帶我做放空 →
+                </Link>
+              </p>
             </>
           ) : pick ? (
             <>
