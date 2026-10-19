@@ -21,56 +21,22 @@ export default function TradeRow({
   onSave: (h: Holding) => void;
   onDelete: () => void;
 }) {
-  const [draft, setDraft] = useState<Record<string, string> | null>(null);
-  const ok = !!draft && FIELDS.every(([k]) => Number(draft[k]) > 0);
+  const [editing, setEditing] = useState(false);
 
-  if (draft)
+  if (editing)
     return (
       <li className="space-y-2 rounded-xl bg-[#f3ead8] px-3 py-2 text-sm dark:bg-[#2f281f]">
         <b>
           {t.name} {t.code}
         </b>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {FIELDS.map(([k, label]) => (
-            <label key={k} className="space-y-0.5">
-              <span className="text-xs text-stone-500">{label}</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={draft[k]}
-                onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}
-                className="w-full rounded-lg border border-stone-300 bg-white px-2 py-1 dark:border-stone-600 dark:bg-[#221d16]"
-              />
-            </label>
-          ))}
-        </div>
-        <p className="text-xs text-stone-500">
-          成交價請填券商成交明細上的「成交價」，不要填含手續費的均價。
-        </p>
-        <div className="flex gap-2">
-          <button
-            disabled={!ok}
-            onClick={() => {
-              onSave({
-                ...t,
-                shares: Number(draft.shares),
-                price: Number(draft.price),
-                stop: Number(draft.stop),
-                target: Number(draft.target),
-              });
-              setDraft(null);
-            }}
-            className="rounded-full bg-[#b4651e] px-3 py-1 font-bold text-white disabled:opacity-40"
-          >
-            存好
-          </button>
-          <button
-            onClick={() => setDraft(null)}
-            className="rounded-full px-3 py-1 text-stone-500 underline"
-          >
-            不改了
-          </button>
-        </div>
+        <TradeEdit
+          t={t}
+          onSave={(h) => {
+            onSave(h);
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+        />
       </li>
     );
 
@@ -91,9 +57,7 @@ export default function TradeRow({
       </span>
       <span className="ml-auto flex gap-3 text-xs">
         <button
-          onClick={() =>
-            setDraft(Object.fromEntries(FIELDS.map(([k]) => [k, String(t[k])])))
-          }
+          onClick={() => setEditing(true)}
           className="font-bold text-[#b4651e] underline"
         >
           修改
@@ -103,5 +67,67 @@ export default function TradeRow({
         </button>
       </span>
     </li>
+  );
+}
+
+/** 改一筆紀錄的股數、成交價、停損、停利（帶我做和實戰頁持股共用） */
+export function TradeEdit({
+  t,
+  onSave,
+  onCancel,
+  className = "",
+}: {
+  t: Holding;
+  onSave: (h: Holding) => void;
+  onCancel: () => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState<Record<string, string>>(() =>
+    Object.fromEntries(FIELDS.map(([k]) => [k, String(t[k])])),
+  );
+  const ok = FIELDS.every(([k]) => Number(draft[k]) > 0);
+  return (
+    <div className={`space-y-2 text-sm ${className}`}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {FIELDS.map(([k, label]) => (
+          <label key={k} className="space-y-0.5">
+            <span className="text-xs text-stone-500">{label}</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={draft[k]}
+              onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}
+              className="w-full rounded-lg border border-stone-300 bg-white px-2 py-1 dark:border-stone-600 dark:bg-[#221d16]"
+            />
+          </label>
+        ))}
+      </div>
+      <p className="text-xs text-stone-500">
+        成交價請填券商成交明細上的「成交價」，不要填含手續費的均價。
+      </p>
+      <div className="flex gap-2">
+        <button
+          disabled={!ok}
+          onClick={() => {
+            onSave({
+              ...t,
+              shares: Number(draft.shares),
+              price: Number(draft.price),
+              stop: Number(draft.stop),
+              target: Number(draft.target),
+            });
+          }}
+          className="rounded-full bg-[#b4651e] px-3 py-1 font-bold text-white disabled:opacity-40"
+        >
+          存好
+        </button>
+        <button
+          onClick={onCancel}
+          className="rounded-full px-3 py-1 text-stone-500 underline"
+        >
+          不改了
+        </button>
+      </div>
+    </div>
   );
 }

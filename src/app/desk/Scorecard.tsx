@@ -9,6 +9,7 @@ import {
   type Closed,
 } from "@/lib/journal";
 import { fmt, usePersistentState } from "@/lib/storage";
+import Jump from "./Jump";
 
 const WHY = { stop: "停損", target: "停利", other: "自己賣" };
 
@@ -23,14 +24,10 @@ export function ScoreLine({ market }: { market: "tw" | "us" }) {
       {list.length
         ? summary(stats(list))
         : "還沒有賣掉的紀錄。持股賣掉後按「賣掉了，記進成績單」，這裡就會算勝率。"}
-      {list.length > 0 && (
-        <a
-          href="#score"
-          className="ml-1 text-blue-700 underline dark:text-blue-400"
-        >
-          看每一筆
-        </a>
-      )}
+      <span className="ml-2 inline-flex gap-3">
+        <Jump to="hold">我的持股（改紀錄、賣掉了）</Jump>
+        <Jump to="score">成績單</Jump>
+      </span>
     </p>
   );
 }

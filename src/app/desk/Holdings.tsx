@@ -6,6 +6,7 @@ import type { Live } from "@/lib/dayTrade";
 import { holdingAlert, taipeiToday, type Holding } from "@/lib/desk";
 import { close, JOURNAL_KEY, type Closed } from "@/lib/journal";
 import { fmt, usePersistentState } from "@/lib/storage";
+import { TradeEdit } from "../go/TradeRow";
 
 const TONE = {
   red: "bg-red-50 text-red-900 dark:bg-red-950/40 dark:text-red-100",
@@ -43,6 +44,7 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
   const { trades, setTrades, loaded, quotes, err } = useHoldingQuotes(market);
   const [journal, setJournal] = usePersistentState<Closed[]>(JOURNAL_KEY, []);
   const [selling, setSelling] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
 
   if (!loaded) return <p className="text-sm text-stone-500">讀取中⋯⋯</p>;
   if (!trades.length)
@@ -108,13 +110,31 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
                   setSelling(null);
                 }}
               />
+            ) : editing === t.code ? (
+              <TradeEdit
+                t={t}
+                className="mt-2"
+                onSave={(h) => {
+                  setTrades(trades.map((x) => (x.code === t.code ? h : x)));
+                  setEditing(null);
+                }}
+                onCancel={() => setEditing(null)}
+              />
             ) : (
-              <button
-                onClick={() => setSelling(t.code)}
-                className="mt-1 text-xs font-bold text-[#1f2328] underline dark:text-[#e8edf3]"
-              >
-                賣掉了，記進成績單
-              </button>
+              <p className="mt-1 flex gap-4 text-xs font-bold text-[#1f2328] dark:text-[#e8edf3]">
+                <button
+                  onClick={() => setEditing(t.code)}
+                  className="underline"
+                >
+                  修改股數、價格
+                </button>
+                <button
+                  onClick={() => setSelling(t.code)}
+                  className="underline"
+                >
+                  賣掉了，記進成績單
+                </button>
+              </p>
             )}
           </li>
         );
