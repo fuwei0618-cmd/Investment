@@ -95,7 +95,7 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
             <p className="mt-1">
               {a ? a.text : err ? "現價暫時抓不到。" : "讀取現價中⋯⋯"}
               <span className="text-stone-500">
-                　停損 {t.stop}・停利 {t.target}
+                　停損 {fmt(t.stop, 2)}・停利 {fmt(t.target, 2)}
               </span>
             </p>
             {selling === t.code ? (

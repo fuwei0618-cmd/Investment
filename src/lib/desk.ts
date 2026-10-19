@@ -209,14 +209,14 @@ export function holdingAlert(h: Holding, now: number): Alert {
       tone: "red",
       pnl,
       pct,
-      text: `已經跌破停損價 ${h.stop}，照計畫要賣掉，不要等它漲回來。`,
+      text: `已經跌破停損價 ${h.stop.toFixed(2)}，照計畫要賣掉，不要等它漲回來。`,
     };
   if (now >= h.target)
     return {
       tone: "green",
       pnl,
       pct,
-      text: `已經到停利價 ${h.target}，照計畫先賣一半，剩下照策略卡的出場規則。`,
+      text: `已經到停利價 ${h.target.toFixed(2)}，照計畫先賣一半，剩下照策略卡的出場規則。`,
     };
   const toStop = now / h.stop - 1;
   return {
