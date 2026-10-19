@@ -191,6 +191,8 @@ export interface Holding {
   target: number;
   /** 哪一張策略卡（成績單分開算） */
   play?: string;
+  /** 買進手續費（券商成交明細上的，跟股價同一種貨幣） */
+  buyFee?: number;
 }
 
 export interface Alert {

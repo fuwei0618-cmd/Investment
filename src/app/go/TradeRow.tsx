@@ -85,7 +85,8 @@ export function TradeEdit({
   const [draft, setDraft] = useState<Record<string, string>>(() =>
     Object.fromEntries(FIELDS.map(([k]) => [k, String(t[k])])),
   );
-  const ok = FIELDS.every(([k]) => Number(draft[k]) > 0);
+  const [fee, setFee] = useState(t.buyFee ? String(t.buyFee) : "");
+  const ok = FIELDS.every(([k]) => Number(draft[k]) > 0) && !(Number(fee) < 0);
   return (
     <div className={`space-y-2 text-sm ${className}`}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -101,9 +102,21 @@ export function TradeEdit({
             />
           </label>
         ))}
+        <label className="space-y-0.5">
+          <span className="text-xs text-stone-500">買進手續費</span>
+          <input
+            type="number"
+            inputMode="decimal"
+            value={fee}
+            placeholder="0"
+            onChange={(e) => setFee(e.target.value)}
+            className="w-full rounded-lg border border-stone-300 bg-white px-2 py-1 dark:border-stone-600 dark:bg-[#221d16]"
+          />
+        </label>
       </div>
       <p className="text-xs text-stone-500">
-        成交價請填券商成交明細上的「成交價」，不要填含手續費的均價。
+        成交價請填券商成交明細上的「成交價」，不要填含手續費的均價。手續費填明細上的手續費（或「庫存成本」減掉
+        成交價×股數），賣掉後成績單會扣掉。
       </p>
       <div className="flex gap-2">
         <button
@@ -115,6 +128,7 @@ export function TradeEdit({
               price: Number(draft.price),
               stop: Number(draft.stop),
               target: Number(draft.target),
+              buyFee: Number(fee) || 0,
             });
           }}
           className="rounded-full bg-[#b4651e] px-3 py-1 font-bold text-white disabled:opacity-40"
