@@ -9,6 +9,8 @@ const AREAS = [
   { href: "/play", label: "戲單", match: ["/play"] },
   { href: "/courses", label: "課程", match: ["/courses"] },
 ];
+// 信念頁（Origina 床邊）的投資分頁：跟上面三個工具不同類，用金色底＋框區分
+const BELIEF = { href: "https://fuwei0618-cmd.github.io/Entry/bedside/#money", label: "宇宙印鈔機" };
 
 export default function Nav() {
   const pathname = usePathname();
@@ -35,6 +37,12 @@ export default function Nav() {
               </Link>
             );
           })}
+          <a
+            href={BELIEF.href}
+            className="ml-1 rounded-md border border-[#c9a55a] bg-[#f6ecd6] px-3 py-1.5 font-semibold text-[#7a5a1e] hover:bg-[#efe0bd] dark:border-[#c9a55a] dark:bg-[#3d3322] dark:text-[#e6c98e]"
+          >
+            {BELIEF.label}
+          </a>
         </div>
       </div>
     </nav>
