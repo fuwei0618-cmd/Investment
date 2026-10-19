@@ -123,7 +123,7 @@ export function ActNext() {
             ← 第{prev.n}幕・{prev.title}
           </Go>
         ) : (
-          <Link href="/" className="rounded-full bg-[#fffdf8] px-4 py-2 text-sm font-bold dark:bg-[#2f281f]">
+          <Link href="/play" className="rounded-full bg-[#fffdf8] px-4 py-2 text-sm font-bold dark:bg-[#2f281f]">
             ← 回戲單
           </Link>
         )}
@@ -132,7 +132,7 @@ export function ActNext() {
             下一幕：{next.title} →
           </Go>
         ) : (
-          <Link href="/" className="rounded-full bg-[#b4651e] px-4 py-2 text-sm font-bold text-white">
+          <Link href="/play" className="rounded-full bg-[#b4651e] px-4 py-2 text-sm font-bold text-white">
             謝幕，回戲單 →
           </Link>
         )}

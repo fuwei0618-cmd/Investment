@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "投資羅盤",
     short_name: "投資",
-    start_url: "/",
+    start_url: "/desk",
     display: "standalone",
     background_color: "#ECE8E1",
     theme_color: "#ECE8E1",
