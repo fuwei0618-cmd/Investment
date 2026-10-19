@@ -13,12 +13,16 @@ export interface Closed {
   sellPrice: number;
   /** 照什麼賣的 */
   why: "stop" | "target" | "other";
+  /** 買進加賣出的手續費（舊紀錄沒有就當 0） */
+  fees?: number;
 }
 
 export const JOURNAL_KEY = "journal.v1";
 
-export const pnlOf = (c: Closed) => (c.sellPrice - c.buyPrice) * c.shares;
-export const pctOf = (c: Closed) => c.sellPrice / c.buyPrice - 1;
+/** 扣掉手續費後真的賺賠多少 */
+export const pnlOf = (c: Closed) =>
+  (c.sellPrice - c.buyPrice) * c.shares - (c.fees ?? 0);
+export const pctOf = (c: Closed) => pnlOf(c) / (c.buyPrice * c.shares);
 
 /** 持股賣掉 → 一筆成績。原因看賣價碰到停損還是停利 */
 export function close(
@@ -27,6 +31,7 @@ export function close(
   sellPrice: number,
   buyPrice: number,
   sellDate: string,
+  sellFee = 0,
 ): Closed {
   return {
     market,
@@ -40,6 +45,7 @@ export function close(
     sellPrice,
     why:
       sellPrice <= h.stop ? "stop" : sellPrice >= h.target ? "target" : "other",
+    fees: (h.buyFee ?? 0) + sellFee,
   };
 }
 

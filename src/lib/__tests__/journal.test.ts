@@ -31,6 +31,15 @@ describe("交易成績單", () => {
     expect(s.total).toBe(10500 - 3500 + 7000);
     expect(summary(s)).toContain("勝率 67%");
   });
+  it("賺賠要扣掉買賣手續費", () => {
+    const sh = { ...h, code: "SH", price: 32.31, shares: 3, buyFee: 3 };
+    const c = close(sh, "us", 34.89, 32.31, "2026-10-30", 3);
+    expect(c.fees).toBe(6);
+    expect(stats([c]).total).toBeCloseTo(7.74 - 6);
+    expect(stats([c]).wins).toBe(1);
+    const tiny = close(sh, "us", 33.5, 32.31, "2026-10-30", 3);
+    expect(stats([tiny]).wins).toBe(0);
+  });
   it("沒有紀錄", () => {
     expect(summary(stats([]))).toBe("還沒有賣掉的紀錄。");
   });

@@ -101,11 +101,15 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
             {selling === t.code ? (
               <SellForm
                 buy={t.price}
+                buyFee={t.buyFee}
                 now={now}
                 unit={us ? "美元" : "元"}
                 onCancel={() => setSelling(null)}
-                onSave={(sell, buy, date) => {
-                  setJournal([close(t, market, sell, buy, date), ...journal]);
+                onSave={(sell, buy, date, buyFee, sellFee) => {
+                  setJournal([
+                    close({ ...t, buyFee }, market, sell, buy, date, sellFee),
+                    ...journal,
+                  ]);
                   setTrades(trades.filter((x) => x.code !== t.code));
                   setSelling(null);
                 }}
@@ -146,19 +150,29 @@ export default function Holdings({ market = "tw" }: { market?: "tw" | "us" }) {
 // 賣掉後填實際成交價，買價也可以改成實際成交的（測試單常常跟小抄差一點）
 function SellForm({
   buy,
+  buyFee,
   now,
   unit,
   onCancel,
   onSave,
 }: {
   buy: number;
+  buyFee?: number;
   now: number | null;
   unit: string;
   onCancel: () => void;
-  onSave: (sell: number, buy: number, date: string) => void;
+  onSave: (
+    sell: number,
+    buy: number,
+    date: string,
+    buyFee: number,
+    sellFee: number,
+  ) => void;
 }) {
   const [sell, setSell] = useState(now ? String(now) : "");
   const [b, setB] = useState(String(buy));
+  const [bf, setBf] = useState(buyFee ? String(buyFee) : "");
+  const [sf, setSf] = useState("");
   const [date, setDate] = useState(() => taipeiToday());
   const ok = Number(sell) > 0 && Number(b) > 0;
   const input =
@@ -186,6 +200,26 @@ function SellForm({
         />
       </label>
       <label className="grid gap-0.5">
+        買進手續費
+        <input
+          inputMode="decimal"
+          value={bf}
+          onChange={(e) => setBf(e.target.value)}
+          placeholder="0"
+          className={input}
+        />
+      </label>
+      <label className="grid gap-0.5">
+        賣出手續費
+        <input
+          inputMode="decimal"
+          value={sf}
+          onChange={(e) => setSf(e.target.value)}
+          placeholder="0"
+          className={input}
+        />
+      </label>
+      <label className="grid gap-0.5">
         賣出日
         <input
           id="sell-date"
@@ -197,7 +231,15 @@ function SellForm({
       </label>
       <button
         disabled={!ok}
-        onClick={() => onSave(Number(sell), Number(b), date)}
+        onClick={() =>
+          onSave(
+            Number(sell),
+            Number(b),
+            date,
+            Number(bf) || 0,
+            Number(sf) || 0,
+          )
+        }
         className="rounded-full bg-[#1f2328] px-3 py-1 font-bold text-white dark:bg-[#e8edf3] dark:text-[#1f2328] disabled:opacity-40"
       >
         記下來

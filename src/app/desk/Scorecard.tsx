@@ -102,7 +102,8 @@ export default function Scorecard({ market }: { market: "tw" | "us" }) {
                 }
               >
                 {(pctOf(c) * 100).toFixed(1)}%，{pnl >= 0 ? "賺" : "賠"}{" "}
-                {fmt(Math.abs(pnl))} {unit}
+                {fmt(Math.abs(pnl), market === "us" ? 2 : 0)} {unit}
+                {c.fees ? `（已扣手續費 ${fmt(c.fees, 2)}）` : ""}
               </span>
               <button
                 onClick={() => setJournal(journal.filter((x) => x !== c))}
