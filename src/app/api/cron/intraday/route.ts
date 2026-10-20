@@ -7,7 +7,7 @@ import { pushLine } from "@/lib/line";
 import { intradayAlerts } from "@/lib/notify";
 import { HOLDINGS_KEY, load, save, storeReady } from "@/lib/store";
 
-// 盤中每 10 分鐘（GitHub 排程呼叫）：持股碰到停損停利或大漲大跌才傳，同一件事一天只傳一次
+// 盤中每 5 分鐘（cron-job.org 呼叫，GitHub 排程當備援）：持股碰到停損停利或大漲大跌才傳，同一件事一天只傳一次
 export async function GET(request: NextRequest) {
   if (!cronOk(request))
     return Response.json({ error: "只給排程用" }, { status: 401 });

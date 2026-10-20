@@ -7,7 +7,7 @@ import { load, save, storeReady, US_HOLDINGS_KEY } from "@/lib/store";
 import { isUsTradingTime, usSlot } from "@/lib/us";
 import { getUsLive } from "@/lib/usData";
 
-// 美股盤中每 15 分鐘（GitHub 排程呼叫）：美股持股碰到停損停利或大漲大跌才傳，同一件事一天只傳一次。
+// 美股盤中每 5 分鐘（cron-job.org 呼叫，GitHub 排程當備援）：美股持股碰到停損停利或大漲大跌才傳，同一件事一天只傳一次。
 // 碎股不能在券商設停損單，靠這個提醒；整股還是要先在 App 設好觸價單。
 export async function GET(request: NextRequest) {
   if (!cronOk(request))
