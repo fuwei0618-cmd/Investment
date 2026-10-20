@@ -11,8 +11,11 @@ describe("手續費估算", () => {
     expect(buyFeeOf("us", "NVDA", 100, 10)).toBe(0.8);
     expect(buyFeeOf("us", "SH", 32, 1.5)).toBe(0.04);
   });
-  it("台股手續費最低 20 元，賣出加證交稅", () => {
-    expect(buyFeeOf("tw", "2330", 50, 100)).toBe(20);
+  it("台股整張最低 20 元、零股最低 1 元，賣出加證交稅", () => {
+    expect(buyFeeOf("tw", "2330", 5, 1000)).toBe(20);
+    expect(buyFeeOf("tw", "2330", 50, 100)).toBe(7);
+    expect(buyFeeOf("tw", "00632R", 9.75, 102)).toBe(1);
+    expect(buyFeeOf("tw", "00632R", 1, 10)).toBe(1);
     expect(buyFeeOf("tw", "2330", 1000, 1000)).toBe(1425);
     expect(sellFeeOf("tw", "2330", 1000, 1000)).toBe(1425 + 3000);
     expect(sellFeeOf("tw", "00632R", 10, 1000)).toBe(20 + 10);

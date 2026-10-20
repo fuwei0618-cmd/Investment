@@ -1,4 +1,4 @@
-# 盤中每 10 分鐘叫網站檢查持股（Vercel 免費方案的排程一天只能跑一次，所以盤中這段交給 GitHub）
+# 盤中叫網站檢查持股的備援（主要靠 cron-job.org 每 5 分鐘；GitHub 排程常延後到半小時一次）
 # 要在 GitHub 專案 Settings → Secrets and variables → Actions 加 SITE_URL 和 CRON_SECRET
 name: 盤中警報
 on:

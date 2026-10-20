@@ -15,6 +15,7 @@ const STEPS = [
   "Vercel → 專案 → Settings → Environment Variables 加四個：LINE_CHANNEL_ACCESS_TOKEN、LINE_USER_ID、PUSH_PASSCODE（自己訂的通關密語）、CRON_SECRET（隨便打一長串英數字）。",
   "Deployments → ⋯ → Create Deployment → main 重新上線，回到這裡輸入通關密語，按「同步並傳一則測試」。",
   "（要盤中警報和美股提醒才做）GitHub 的 Investment 專案 → Settings → Secrets and variables → Actions，加 SITE_URL（網站網址，例如 https://investment-beige-iota.vercel.app）和 CRON_SECRET（跟 Vercel 那個一樣）。",
+  "（GitHub 排程常延後到半小時一次，要準時再做）到 cron-job.org 註冊，建兩個每 5 分鐘的排程，網址是網站加 /api/cron/intraday 和 /api/cron/usintraday；ADVANCED → Headers 加 Authorization，值填「Bearer 」加 CRON_SECRET。不是盤中網站會自己跳過，不用設時段。",
 ];
 
 // LINE 盤後提醒：設定狀態、把持股同步到雲端、傳一則測試
@@ -75,7 +76,7 @@ export default function LineSetup() {
           <b>盤前 8:30：</b>今天能不能出手、近兩天大事、策略卡全過的股票。
         </li>
         <li>
-          <b>盤中每 10 分鐘看一次：</b>持股碰到停損停利或大漲大跌 5%
+          <b>盤中每 5 分鐘看一次：</b>持股碰到停損停利或大漲大跌 5%
           才傳，同一件事一天只傳一次。
         </li>
         <li>
@@ -86,7 +87,7 @@ export default function LineSetup() {
           今晚能不能出手、標普和恐慌指數、名單全過的股票。
         </li>
         <li>
-          <b>美股盤中每 15 分鐘看一次：</b>美股持股碰到停損停利或大漲大跌 5%
+          <b>美股盤中每 5 分鐘看一次：</b>美股持股碰到停損停利或大漲大跌 5%
           才傳。碎股不能在券商設停損，靠這個提醒；但你睡著就看不到，所以整股一定要先在
           App 設觸價單。
         </li>
