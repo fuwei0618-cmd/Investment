@@ -1,6 +1,6 @@
 // 手續費估算：照國泰證券公告的費率，使用者沒填就用這個算。
 // 美股（複委託 2026 優惠）：個股 0.08% 沒有低消；ETF 每筆 3 美元；碎股 0.08%。
-// 台股：手續費 0.1425%、最低 20 元（不算折扣，寧可算多）；賣出加證交稅，ETF 0.1%、股票 0.3%。
+// 台股：手續費 0.1425%、整張最低 20 元、零股最低 1 元（國泰成交明細實際收 1 元；不算折扣）；賣出加證交稅，ETF 0.1%、股票 0.3%。
 import { US_INVERSE } from "./overnight";
 import { US_ETF, US_SECTORS } from "./us";
 
@@ -22,7 +22,7 @@ function brokerFee(
   const amount = price * shares;
   if (market === "us")
     return Number.isInteger(shares) && usEtf(code) ? 3 : r2(amount * 0.0008);
-  return Math.max(20, Math.floor(amount * 0.001425));
+  return Math.max(shares % 1000 === 0 ? 20 : 1, Math.floor(amount * 0.001425));
 }
 
 /** 買進手續費 */
