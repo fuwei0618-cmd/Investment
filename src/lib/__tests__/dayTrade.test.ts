@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   breakEven,
+  simPnl,
+  simStats,
   isTradingTime,
   parseDayTrade,
   parseMis,
@@ -78,5 +80,26 @@ describe("認識當沖", () => {
     expect(isTradingTime(new Date("2026-10-16T02:00:00Z"))).toBe(true); // 週五 10:00
     expect(isTradingTime(new Date("2026-10-16T06:00:00Z"))).toBe(false); // 14:00
     expect(isTradingTime(new Date("2026-10-17T02:00:00Z"))).toBe(false); // 週六
+  });
+});
+
+describe("當沖模擬紀錄", () => {
+  it("扣完手續費和當沖稅", () => {
+    // 100 元買、101 元賣 1 張：賺 1000，手續費 142+143，稅 151
+    expect(simPnl({ buy: 100, sell: 101, shares: 1000 })).toEqual({
+      cost: 436,
+      net: 564,
+    });
+    // 小賺一檔可能還是賠
+    expect(simPnl({ buy: 50, sell: 50.1, shares: 1000 }).net).toBeLessThan(0);
+  });
+  it("統計勝率與累計", () => {
+    const s = simStats([
+      { id: "a", date: "", name: "", buy: 100, sell: 101, shares: 1000 },
+      { id: "b", date: "", name: "", buy: 100, sell: 99, shares: 1000 },
+    ]);
+    expect(s.count).toBe(2);
+    expect(s.winRate).toBe(0.5);
+    expect(s.net).toBe(564 + (-1000 - 142 - 141 - 148));
   });
 });

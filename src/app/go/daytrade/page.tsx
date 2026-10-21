@@ -7,6 +7,7 @@ import { links } from "@/lib/pick";
 import PlayCard from "../PlayCard";
 import CostCalc from "./CostCalc";
 import LiveBoard from "./LiveBoard";
+import SimLog from "./SimLog";
 
 export const metadata = { title: "認識當沖｜投資羅盤" };
 
@@ -29,7 +30,7 @@ async function Hot() {
     <>
       <LiveBoard suggest={d.rows} />
       <section className={box}>
-        <h2 className="text-xl font-black">③ 昨天當沖最熱的股票（{d.date}）</h2>
+        <h2 className="text-xl font-black">④ 昨天當沖最熱的股票（{d.date}）</h2>
         <p className="text-sm text-stone-600 dark:text-stone-400">
           證交所每天公布每檔股票有多少是當沖成交的。這張表讓你知道同事可能在玩哪些，
           <b>不是推薦</b>
@@ -87,14 +88,19 @@ export default function DayTrade() {
       </section>
 
       <section className={box}>
-        <h2 className="text-xl font-black">② 盤中即時看</h2>
+        <h2 className="text-xl font-black">② 先模擬一個月：記下來看會不會賺</h2>
+        <SimLog />
+      </section>
+
+      <section className={box}>
+        <h2 className="text-xl font-black">③ 盤中即時看</h2>
         <Suspense fallback={<p className="text-sm text-stone-500">讀取中⋯⋯</p>}>
           <Hot />
         </Suspense>
       </section>
 
       <section className={box}>
-        <h2 className="text-xl font-black">④ 開始前一定要知道的事</h2>
+        <h2 className="text-xl font-black">⑤ 開始前一定要知道的事</h2>
         <ul className="list-disc space-y-1 pl-5 text-sm">
           <li>
             <b>資格：</b>

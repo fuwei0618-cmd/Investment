@@ -161,3 +161,36 @@ export function isTradingTime(now = new Date()) {
   const m = tw.getUTCHours() * 60 + tw.getUTCMinutes();
   return d >= 1 && d <= 5 && m >= 540 && m <= 810;
 }
+
+export interface SimTrade {
+  id: string;
+  date: string;
+  name: string;
+  buy: number;
+  sell: number;
+  shares: number;
+}
+
+/** 模擬當沖一筆：扣完兩邊手續費和當沖證交稅（0.15%）後賺賠多少 */
+export function simPnl(t: Pick<SimTrade, "buy" | "sell" | "shares">) {
+  const fee = (p: number) =>
+    Math.max(
+      t.shares % 1000 === 0 ? 20 : 1,
+      Math.floor(p * t.shares * 0.001425),
+    );
+  const cost =
+    fee(t.buy) + fee(t.sell) + Math.floor(t.sell * t.shares * 0.0015);
+  return { cost, net: Math.round((t.sell - t.buy) * t.shares - cost) };
+}
+
+/** 模擬紀錄的成績：筆數、勝率、累計賺賠、成本總共吃掉多少 */
+export function simStats(list: SimTrade[]) {
+  const r = list.map(simPnl);
+  const wins = r.filter((x) => x.net > 0).length;
+  return {
+    count: list.length,
+    winRate: list.length ? wins / list.length : 0,
+    net: r.reduce((s, x) => s + x.net, 0),
+    cost: r.reduce((s, x) => s + x.cost, 0),
+  };
+}
