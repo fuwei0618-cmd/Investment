@@ -77,6 +77,7 @@ export const ACTS: Act[] = [
       { href: "/market#level-7", name: "看市場第 7 到 8 關", note: "值多少錢、什麼時候買賣" },
       { href: "/go/tw-stock", name: "帶我做：台股短線", note: "照條件挑股票、算張數、一步一步下單" },
       { href: "/lottery", name: "股票抽籤", note: "最近哪些新股可以抽、划不划算" },
+      { href: "/stock", name: "查一檔", note: "打股號，一頁看外資投信、EPS、貴不貴" },
       { href: "/portfolio", name: "持股健檢", note: "手上的投資健不健康" },
     ],
     also: ["/go/tw-trust", "/go/daytrade"],
