@@ -381,6 +381,9 @@ export default function MarketPage() {
           <Link href="/tools" className="rounded-full bg-sky-50 px-3 py-1.5 text-sm text-sky-800 dark:bg-sky-950 dark:text-sky-200">
             🧰 工具
           </Link>
+          <Link href="/stock" className="rounded-full bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+            🔍 查一檔
+          </Link>
           <Link href="/chips" className="rounded-full bg-violet-50 px-3 py-1.5 text-sm text-violet-800 dark:bg-violet-950 dark:text-violet-200">
             👥 大戶
           </Link>
