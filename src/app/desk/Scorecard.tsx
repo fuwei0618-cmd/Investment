@@ -9,6 +9,7 @@ import {
   type Closed,
 } from "@/lib/journal";
 import { fmt, usePersistentState } from "@/lib/storage";
+import Link from "next/link";
 import Jump from "./Jump";
 
 const WHY = { stop: "停損", target: "停利", other: "自己賣" };
@@ -27,6 +28,14 @@ export function ScoreLine({ market }: { market: "tw" | "us" }) {
       <span className="ml-2 inline-flex gap-3">
         <Jump to="hold">我的持股（改紀錄、賣掉了）</Jump>
         <Jump to="score">成績單</Jump>
+        {market === "tw" && (
+          <Link
+            href="/lottery"
+            className="font-bold text-[#1f2328] underline decoration-stone-400 underline-offset-2 dark:text-[#e8edf3]"
+          >
+            股票抽籤
+          </Link>
+        )}
       </span>
     </p>
   );
